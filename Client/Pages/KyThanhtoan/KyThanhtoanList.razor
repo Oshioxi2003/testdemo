@@ -1,0 +1,135 @@
+﻿@page "/KyThanhtoanList"
+@using Flic.Shared
+@using System.Net.Http.Headers
+@inject HttpClient _httpClient
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+@inject NavigationManager NavigationManager
+@inject NorthwindService service
+
+<div>
+    <PageTitle>Danh sách Kỳ thanh toán</PageTitle>
+
+    <AuthorizeView>
+        <NotAuthorized>
+            <span>You're not authorize</span>
+        </NotAuthorized>
+        <Authorized Context="Auth">
+            <div class="row">
+                <h3>Danh sách Kỳ thanh toán</h3>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <RadzenButton Click=@(args => OnClick("/KyThanhtoanAdd")) Text="Thêm mới" ButtonStyle="ButtonStyle.Primary" />
+                    <RadzenButton Text="Export XLS" Icon="grid_on" Click="@(args => Export("excel"))" ButtonStyle="ButtonStyle.Primary" />
+                </div>
+                <RadzenDataGrid @ref="grid" AllowColumnPicking="false" AllowFiltering="true"
+                                FilterMode="FilterMode.Advanced" AllowPaging="true" AllowSorting="true"
+                                Data="@_list" TItem="KyThanhtoan" PageSize="40" AllowColumnResize="true">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="KyThanhtoan" Property="Id" Title="ID" Width="140px" Filterable="false" />
+                        <RadzenDataGridColumn TItem="KyThanhtoan" Property="LoaiKhoanthu" Title="Loại khoản thu" />
+                        <RadzenDataGridColumn TItem="KyThanhtoan" Property="Name" Title="Tên" />
+                        <RadzenDataGridColumn TItem="KyThanhtoan" Property="Trangthai" Title="Trạng thái" Width="170px" />
+
+                        <RadzenDataGridColumn TItem="KyThanhtoan" Property="" Title="" Filterable="false">
+                            <Template Context="data">
+                                <a href="/KyThanhtoanEdit/@data.Id">Edit</a> |
+                                <a href="/KyThanhtoanDelete/@data.Id">Delete</a>
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </div>
+
+
+        </Authorized>
+    </AuthorizeView>
+</div>
+
+@*
+<div>
+    <a href="/KyThanhtoanAdd"> Thêm mới</a>
+    @if (ErrMessage != "")
+    {
+        <span>
+            @ErrMessage
+        </span>
+    }
+       
+    
+    @if (list != null)
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th width="20%" scope="col" align="center">ID</th>
+                    <th width="30%" scope="col" align="center"> Tên khoa</th>
+                    <th width="30%" scope="col" align="center"> Tên khoa</th>
+                    <th width ="20%" scope="col"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in list)
+                {
+                    <tr>
+                        <th scope="row">@item.Id</th>
+                        <th scope="row">@item.LoaiKhoanthu</th>
+                        <td>@item.Name</td>
+                        <td>@item.Trangthai</td>
+                        <td scope="col">
+                            <a href="/KyThanhtoanEdit/@item.Id">Edit</a> |
+                            <a href="/KyThanhtoandelete/@item.Id">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>*@
+@code {
+    string ErrMessage = "";
+    List<KyThanhtoan> _list = new List<KyThanhtoan>();
+    RadzenDataGrid<KyThanhtoan> grid;
+
+    void OnClick(string link)
+    {
+        NavigationManager.NavigateTo(link, true);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try{
+            var response = await _httpClient.GetAsync("api/KyThanhtoan/KyThanhtoanGetList");
+            response.EnsureSuccessStatusCode();
+            if (response.IsSuccessStatusCode){
+                _list = await response.Content.ReadFromJsonAsync<List<KyThanhtoan>>();
+            }else {
+                ErrMessage = "Lỗi trong khi lấy danh sách";
+            }            
+            
+        }catch(Exception e){
+            Console.WriteLine(e.Message);
+            ErrMessage = e.Message;
+        }
+        
+#nullable disable
+    }
+    public void Export(string type)
+    {
+        try
+        {
+            Query q = new Query()
+                {
+                    OrderBy = grid.Query.OrderBy,
+                    Filter = grid.Query.Filter,
+                    Select = string.Join(",", grid.ColumnsCollection.Where(c => c.GetVisible()))//.Select(c => c.Property))
+                };
+            service.Export("Students", type, q);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+    }
+}

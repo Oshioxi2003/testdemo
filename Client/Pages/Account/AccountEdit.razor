@@ -1,0 +1,108 @@
+﻿@page "/AccountEdit/{Id}"
+@using Flic.Client.Services
+@using Flic.Shared
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
+@inject HttpClient _httpClient
+
+<h1>Register</h1>
+
+@if (ShowErrors)
+{
+    <div class="alert alert-danger" role="alert">
+        @foreach (var error in Errors)
+        {
+            <p>@error</p>
+        }
+    </div>
+}
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Please enter your details</h5>
+        <EditForm Model="RegisterModel" OnValidSubmit="HandleRegistration">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group">
+                <label for="email">Username</label>
+                <InputText Id="email" class="form-control" @bind-Value="RegisterModel.Username"/>
+                <ValidationMessage For="@(() => RegisterModel.Username)" />
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email address</label>
+                <InputText Id="email" class="form-control" @bind-Value="RegisterModel.Email" />
+                <ValidationMessage For="@(() => RegisterModel.Email)" />
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <InputText Id="password" type="password" class="form-control" @bind-Value="RegisterModel.Password" />
+                <ValidationMessage For="@(() => RegisterModel.Password)" />
+            </div>
+            <div class="form-group">
+                <label for="password">Confirm Password</label>
+                <InputText Id="password" type="password" class="form-control" @bind-Value="RegisterModel.ConfirmPassword" />
+                <ValidationMessage For="@(() => RegisterModel.ConfirmPassword)" />
+            </div>
+
+            <div class="form-group">
+                <label>Vai trò</label>
+                <InputSelect class="form-control" @bind-Value="@RegisterModel.Role">
+                    @foreach (var role in list)
+                    {
+                        <option value="@role.Name">@role.Name</option>
+                    }
+                </InputSelect>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+    private RegisterModel RegisterModel = new RegisterModel();
+    private bool ShowErrors = false;
+    private IEnumerable<string> Errors;
+
+
+    List<Microsoft.AspNetCore.Identity.IdentityRole> list = new List<Microsoft.AspNetCore.Identity.IdentityRole>();
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync("api/Role/GetList");
+            response.EnsureSuccessStatusCode();
+            list = await response.Content.ReadFromJsonAsync<List<Microsoft.AspNetCore.Identity.IdentityRole>>();
+            RegisterModel = await AuthService.GetUserById(Id);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+
+    }
+    private async Task HandleRegistration()
+    {
+        ShowErrors = false;
+
+        if (RegisterModel.Role ==null || RegisterModel.Role == "")
+        {
+            RegisterModel.Role = "TIN03";
+        }
+        var result = await AuthService.Update(RegisterModel);
+
+        if (result.IsSuccessStatusCode)
+        {
+            NavigationManager.NavigateTo("/AccountList");
+        }
+        else
+        {
+            //Errors = result.StatusCode.ToString();
+            ShowErrors = true;
+        }
+    }
+
+}

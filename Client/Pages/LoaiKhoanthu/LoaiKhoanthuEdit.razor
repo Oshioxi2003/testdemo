@@ -1,0 +1,124 @@
+﻿@page "/LoaiKhoanthuEdit/{MaLoaiKhoanthu}"
+@using Flic.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+<AuthorizeView>
+    <NotAuthorized>
+        <span>You're not authorize</span>
+    </NotAuthorized>
+    <Authorized Context="Auth">
+        <div class="row">
+            <h3>Danh sách Loại khoản thu</h3>
+            <RadzenTemplateForm TItem="LoaiKhoanthu" Data=@item Submit=@OnSubmit>            
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Id" Text="Mã loại khoản thu" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenTextBox Name="MaLoaiKhoanThu" @bind-Value=@item.MaLoaiKhoanThu />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="MaLoaiKhoanThu" Text="Nhập mã loại khoản thu" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="MoTa" Text="Mô tả" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenTextBox Name="MoTa" @bind-Value=@item.MoTa />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="MoTa" Text="Nhập Mô tả" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                        
+                    </div>
+                    <div class="col-6">
+                        <RadzenButton ButtonType="ButtonType.Submit" Text="Lưu" />
+                        <RadzenButton ButtonType="ButtonType.Button" Click=@Cancel Text="Hủy" />
+                    </div>
+                    <div class="col-2">
+                        
+                    </div>
+                </div>
+                
+            </RadzenTemplateForm>
+        </div>
+    </Authorized>
+</AuthorizeView>
+@*
+<h2>Sửa Loại khoản thu</h2>
+<div class="row">
+
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="CountryCode">Mã loại khoản thu</label>
+            <input form="CountryCode" class="form-control" @bind="@item.MaLoaiKhoanThu" />
+        </div>
+    </div>
+</div>
+<div class="row">
+
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="CountryCode">Mô tả</label>
+            <input form="CountryCode" class="form-control" @bind="@item.MoTa" />
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="form-group">
+            <input type="button" class="btn btn-primary" @onclick="@Save" value="Save" />
+            <input type="button" class="btn" @onclick="@Cancel" value="Cancel" />
+        </div>
+    </div>
+</div>
+*@
+@code {
+    [Parameter]
+    public string MaLoaiKhoanthu { get; set; }
+    public string ErrMessage { get; set; }
+    LoaiKhoanthu item = new LoaiKhoanthu();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            string url = "api/LoaiKhoanthu/LoaiKhoanthuGetByID/" + MaLoaiKhoanthu;
+            var response = await Http.GetAsync(url);
+            item = await response.Content.ReadFromJsonAsync<LoaiKhoanthu>();
+
+            //item = await Http.GetFromJsonAsync<Khoahoc>("api/Khoahoc/KhoahocGetByID/" + Id);
+            ErrMessage = "";
+        }
+        catch (Exception e)
+        {
+            ErrMessage = e.Message;
+        }
+
+    }
+    protected async Task OnSubmit()
+    {
+        try
+        {
+            var response = await Http.PutAsJsonAsync("api/LoaiKhoanthu/LoaiKhoanthuUpdate", @item);
+            await JsRuntime.InvokeVoidAsync("alert", "Saved Successfully!");
+            NavigationManager.NavigateTo("LoaiKhoanthuList");
+        }
+        catch (Exception e)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error:" + e.Message);
+        }
+
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("LoaiKhoanthuList");
+    }
+}

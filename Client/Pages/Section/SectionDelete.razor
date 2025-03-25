@@ -1,0 +1,50 @@
+﻿@page "/SectionDelete/{Id:int}"
+@using Flic.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+<h2>Xóa mục tin</h2>
+@if (ErrMessage != "")
+{
+    <span>
+        @ErrMessage
+    </span>
+}
+@if (item != null)
+{
+    <p>Bạn chắc chắn xóa mục tin : <b>@item.Name</b>?</p>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <input type="button" class="btn btn-primary" @onclick="@Delete" value="Delete" />
+                <input type="button" class="btn btn-secondary" @onclick="@Cancel" value="Cancel" />
+            </div>
+        </div>
+    </div>
+
+    @code {
+    [Parameter]
+    public int Id { get; set; }
+    Section item = new Section();
+    string ErrMessage = "";
+    protected override async Task OnInitializedAsync()
+    {
+        item = await Http.GetFromJsonAsync<Section>("api/Section/SectionGetByID/" + Id);
+    }
+    protected async Task Delete()
+    {
+        var response = await Http.DeleteAsync("api/Section/SectionDelete/" + Id);
+        bool deleteResponse = await response.Content.ReadFromJsonAsync<bool>();
+        if (deleteResponse)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Deleted Successfully!");
+            NavigationManager.NavigateTo("SectionList");
+            ErrMessage = "";
+        }
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("SectionList");
+    }
+    }
+}

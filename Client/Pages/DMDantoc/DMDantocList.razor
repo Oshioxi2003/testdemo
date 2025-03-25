@@ -1,0 +1,94 @@
+﻿@page "/DMDantocList"
+@using Flic.Shared
+@using System.Net.Http.Headers
+@inject HttpClient _httpClient
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+@inject NavigationManager NavigationManager
+@inject NorthwindService service
+
+<div>
+    <PageTitle>Danh sách Dân tộc</PageTitle>
+
+    <AuthorizeView>
+        <NotAuthorized>
+            <span>You're not authorize</span>
+        </NotAuthorized>
+        <Authorized Context="Auth">
+            <div class="row">
+                <h3>Danh sách Dân tộc</h3>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <RadzenButton Click=@(args => OnClick("/DMDantocAdd")) Text="Thêm mới" ButtonStyle="ButtonStyle.Primary" />
+                    <RadzenButton Text="Export XLS" Icon="grid_on" Click="@(args => Export("excel"))" ButtonStyle="ButtonStyle.Primary" />
+                </div>
+                <RadzenDataGrid @ref="grid" AllowColumnPicking="false" AllowFiltering="true"
+                                FilterMode="FilterMode.Advanced" AllowPaging="true" AllowSorting="true"
+                                Data="@_list" TItem="DMDantoc" PageSize="40" AllowColumnResize="true">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="DMDantoc" Property="Name" Title="ID" Width="140px" Filterable="false" />
+                        <RadzenDataGridColumn TItem="DMDantoc" Property="Description" Title="Mô tả" />
+
+                        <RadzenDataGridColumn TItem="DMDantoc" Property="" Title="" Filterable="false">
+                            <Template Context="data">
+                                <a href="/DMDantocEdit/@data.Id">Edit</a> |
+                                <a href="/DMDantocDelete/@data.Id">Delete</a>
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </div>
+
+
+        </Authorized>
+    </AuthorizeView>
+</div>
+
+@code {
+    List<DMDantoc> _list = new List<DMDantoc>();
+    string ErrMessage = "";
+    RadzenDataGrid<DMDantoc> grid;
+
+    void OnClick(string link)
+    {
+        NavigationManager.NavigateTo(link, true);
+    }
+    protected override async Task OnInitializedAsync()
+    {
+
+        try
+        {
+            var response = await _httpClient.GetAsync("api/DMDantoc/DMDantocGetList");
+            response.EnsureSuccessStatusCode();
+            _list = await response.Content.ReadFromJsonAsync<List<DMDantoc>>();
+            ErrMessage = "";
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            string ErrMessage = e.Message;
+        }
+
+#nullable disable
+    }
+    public void Export(string type)
+    {
+        try
+        {
+            Query q = new Query()
+                {
+                    OrderBy = grid.Query.OrderBy,
+                    Filter = grid.Query.Filter,
+                    Select = string.Join(",", grid.ColumnsCollection.Where(c => c.GetVisible()))//.Select(c => c.Property))
+                };
+            service.Export("DMTinh", type, q);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+    }
+
+}
+

@@ -1,0 +1,114 @@
+﻿@page "/SinhvienPhongKTXList"
+@using Flic.Shared
+@using System.Net.Http.Headers
+@inject HttpClient Http
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+@inject NavigationManager NavigationManager
+@inject NorthwindService service
+
+<div>
+    <PageTitle>Danh sách sinh viên ở KTX</PageTitle>
+
+    <AuthorizeView>
+        <NotAuthorized>
+            <span>You're not authorize</span>
+        </NotAuthorized>
+        <Authorized Context="Auth">
+            <div class="row">
+                <h3>Danh sách sinh viên ở KTX</h3>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <RadzenButton Click=@(args => OnClick("/SinhvienPhongKTXAdd")) Text="Thêm mới" ButtonStyle="ButtonStyle.Primary" />
+                    <RadzenButton Text="Export XLS" Icon="grid_on" Click="@(args => Export("excel"))" ButtonStyle="ButtonStyle.Primary" />
+                </div>
+                <RadzenDataGrid @ref="grid" AllowColumnPicking="false" AllowFiltering="true"
+                                FilterMode="FilterMode.Advanced" AllowPaging="true" AllowSorting="true"
+                                Data="@_list" TItem="SinhvienPhongView" PageSize="40" AllowColumnResize="true">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="SinhvienPhongView" Property="Id" Title="ID" Width="80px" Filterable="false" />
+                        <RadzenDataGridColumn TItem="SinhvienPhongView" Property="PhongId" Title="Tên phòng" />
+                        <RadzenDataGridColumn TItem="SinhvienPhongView" Property="SinhvienMSV" Title="Mã SV" />
+                        <RadzenDataGridColumn TItem="SinhvienPhongView" Property="SinhvienHoDem" Title="Họ đệm" />
+                        <RadzenDataGridColumn TItem="SinhvienPhongView" Property="SinhvienTen" Title="Tên" />
+                        <RadzenDataGridColumn TItem="SinhvienPhongView" Property="SinhvienLop" Title="Lớp" />
+                        <RadzenDataGridColumn TItem="SinhvienPhongView" Property="Trangthai" Title="Trạng thái" Width="170px" />
+
+                        <RadzenDataGridColumn TItem="SinhvienPhongView" Property="" Title="" Filterable="false">
+                            <Template Context="data">
+                                <a href="/SinhvienPhongKTXEdit/@data.Id">Edit</a> 
+                                @*<a href="/SinhvienPhongKTXDelete/@data.Id">Delete</a>*@
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </div>
+
+
+        </Authorized>
+    </AuthorizeView>
+</div>
+
+
+@code {    
+    private List<SinhvienPhongView> _list;
+    string ErrMessage;
+    RadzenDataGrid<SinhvienPhongView> grid;
+
+    bool busy;
+    bool isLoading;
+    int count;
+
+
+
+    void OnClick(string link)
+    {
+        NavigationManager.NavigateTo(link, true);
+    }
+
+    async Task OnBusyClick()
+    {
+        busy = true;
+        await Task.Delay(2000);
+        busy = false;
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var response = await Http.GetAsync("api/SinhvienPhongKTX/SinhvienPhongKTXGetList");
+            response.EnsureSuccessStatusCode();
+            _list = await response.Content.ReadFromJsonAsync<List<SinhvienPhongView>>();
+            ErrMessage = "";
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            string ErrMessage = e.Message;
+        }
+
+    }
+    void Change(object value)
+    {
+        grid.Reload();
+    }
+
+    public void Export(string type)
+    {
+        try
+        {
+            Query q = new Query()
+                {
+                    OrderBy = grid.Query.OrderBy,
+                    Filter = grid.Query.Filter,
+                    Select = string.Join(",", grid.ColumnsCollection.Where(c => c.GetVisible()))//.Select(c => c.Property))
+                };
+            service.Export("Students", type, q);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+    }
+}

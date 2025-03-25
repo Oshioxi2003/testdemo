@@ -1,0 +1,43 @@
+﻿@page "/google-callback"
+@using Microsoft.AspNetCore.WebUtilities
+@using System.Linq
+@using System.Net.Http.Headers
+@using Blazored.LocalStorage
+@inject ILocalStorageService LocalStorage
+@inject AuthenticationStateProvider AuthStateProvider
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+
+<div class="loading-container">
+    <div class="spinner"></div>
+    <p>Đang xử lý đăng nhập...</p>
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("token", out var tokenValues))
+        {
+            var token = tokenValues.First();
+
+            // Store the token
+            await LocalStorage.SetItemAsync("authToken", token);
+
+            // Update the authentication state
+            ((ApiAuthenticationStateProvider)AuthStateProvider).MarkUserAsAuthenticated();
+
+            // Add token to HTTP client headers
+            HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("bearer", token);
+
+            // Redirect to home or dashboard
+            NavigationManager.NavigateTo("/flic");
+        }
+        else
+        {
+            // No token found, redirect to login
+            NavigationManager.NavigateTo("/login?error=AuthenticationFailed");
+        }
+    }
+}

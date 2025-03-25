@@ -1,0 +1,51 @@
+﻿@page "/Tinhoc03Delete/{Id}"
+@using Flic.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+<h2>Xóa Đăng ký</h2>
+@if (ErrorMsg != "")
+{
+    <span class="alert"> @ErrorMsg</span>
+}
+@if (item != null)
+{
+    <p>Bạn chắc chắn xóa đăng ký: <b>@item.HovaDem @item.Ten Số căn cước công dân: @item.CCCD</b></p>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <input type="button" class="btn btn-primary" @onclick="@Delete" value="Delete" />
+                <input type="button" class="btn btn-secondary" @onclick="@Cancel" value="Cancel" />
+            </div>
+        </div>
+    </div>
+}
+@code {
+    [Parameter]
+    public string Id { get; set; }
+        DangkyTH03 item = new DangkyTH03();
+    public string ErrorMsg = "";
+    protected override async Task OnInitializedAsync()
+    {
+            item = await Http.GetFromJsonAsync<DangkyTH03>("api/DangkyTH03/TH03GetByID/" + Id);
+    }
+    protected async Task Delete()
+    {
+        var response = await Http.DeleteAsync("api/DangkyTH03/TH03Delete/" + Id);
+        bool deleteResponse = await response.Content.ReadFromJsonAsync<bool>();
+        if (deleteResponse)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Deleted Successfully!");
+            NavigationManager.NavigateTo("Tinhoc03List");
+            ErrorMsg = "";
+        }
+        else
+        {
+            ErrorMsg = "Có lỗi khi xóa dữ liệu";
+        }
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("Tinhoc03List");
+    }
+}

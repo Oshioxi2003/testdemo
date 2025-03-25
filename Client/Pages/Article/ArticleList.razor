@@ -1,0 +1,100 @@
+﻿@page "/ArticleList"
+@using Flic.Shared
+@using System.Net.Http.Headers
+@inject HttpClient _httpClient
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+@inject NavigationManager NavigationManager
+@inject NorthwindService service
+@inject IJSRuntime JsRuntime
+
+<div>
+    <PageTitle>Danh sách bài viết</PageTitle>
+
+    <AuthorizeView>
+        <NotAuthorized>
+            <span>You're not authorize</span>
+        </NotAuthorized>
+        <Authorized Context="Auth">
+            <div class="row">
+                <h3>Danh sách bài viết</h3>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <RadzenButton Click=@(args => OnClick("/ArticleAdd")) Text="Thêm mới" ButtonStyle="ButtonStyle.Primary" />
+                    <RadzenButton Click=@(args => OnClick("/SectionList")) Text="Quản lý mục tin" ButtonStyle="ButtonStyle.Primary" />
+
+                </div>
+                <RadzenDataGrid @ref="grid" AllowColumnPicking="false" AllowFiltering="true"
+                                FilterMode="FilterMode.Advanced" AllowPaging="true" AllowSorting="true"
+                                Data="@list" TItem="Article" PageSize="40" AllowColumnResize="true">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="Article" Property="Id" Title="ID" Width="140px" Filterable="false" />
+                        <RadzenDataGridColumn TItem="Article" Property="Title" Title="Tiêu đề" />
+                        <RadzenDataGridColumn TItem="Article" Property="ArticleContent" Title="Nội dung" />
+
+                        <RadzenDataGridColumn TItem="Article" Property="" Title="" Filterable="false">
+                            <Template Context="data">
+                                <a href="/ArticleEdit/@data.Id">Edit</a> |
+                                <a href="/ArticleDelete/@data.Id">Delete</a>
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </div>
+
+
+        </Authorized>
+    </AuthorizeView>
+</div>
+
+@code {
+    string ErrMessage = "";
+    List<Article> list = new List<Article>();
+    RadzenDataGrid<Article> grid;
+
+    void OnClick(string link)
+    {
+        NavigationManager.NavigateTo(link, true);
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync("api/Article/ArticleGetList");
+            response.EnsureSuccessStatusCode();
+            if (response.IsSuccessStatusCode)
+            {
+                list = await response.Content.ReadFromJsonAsync<List<Article>>();
+            }
+            else
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "Error: " + response.StatusCode + " " + response.Content.ToString());
+            }
+
+            ErrMessage = "";
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            ErrMessage = e.Message;
+        }
+    }
+    public void Export(string type)
+    {
+        try
+        {
+            Query q = new Query()
+                {
+                    OrderBy = grid.Query.OrderBy,
+                    Filter = grid.Query.Filter,
+                    Select = string.Join(",", grid.ColumnsCollection.Where(c => c.GetVisible()))//.Select(c => c.Property))
+                };
+            service.Export("Articles", type, q);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+    }
+}

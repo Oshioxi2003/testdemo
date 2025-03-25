@@ -1,0 +1,53 @@
+﻿@page "/ArticleDelete/{Id:int}"
+@using Flic.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+<h2>Xóa bài viết</h2>
+@if (ErrMessage != "")
+{
+    <span>
+        @ErrMessage
+    </span>
+}
+@if (item != null)
+{
+    <p>Bạn chắc chắn xóa bài viết : <b>@item.Title</b>?</p>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <input type="button" class="btn btn-primary" @onclick="@Delete" value="Delete" />
+                <input type="button" class="btn btn-secondary" @onclick="@Cancel" value="Cancel" />
+            </div>
+        </div>
+    </div>
+
+    @code {
+    [Parameter]
+    public int Id { get; set; }
+    Article item = new Article();
+    string ErrMessage = "";
+    protected override async Task OnInitializedAsync()
+    {
+        item = await Http.GetFromJsonAsync<Article>("api/Article/ArticleGetByID/" + Id);
+    }
+    protected async Task Delete()
+    {
+        var response = await Http.DeleteAsync("api/Article/ArticleDelete/" + Id);
+        bool deleteResponse = await response.Content.ReadFromJsonAsync<bool>();
+        if (deleteResponse)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Deleted Successfully!");
+            NavigationManager.NavigateTo("ArticleList");
+            ErrMessage = "";
+        }else
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Xóa bài viết thất bại: " + response.RequestMessage);
+        }
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("ArticleList");
+    }
+    }
+}

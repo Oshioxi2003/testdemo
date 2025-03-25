@@ -1,0 +1,168 @@
+﻿@page "/KyThanhtoanAdd/"
+@using Flic.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+<AuthorizeView>
+    <NotAuthorized>
+        <span>You're not authorize</span>
+    </NotAuthorized>
+    <Authorized Context="Auth">
+        <div class="row">
+            <h3>Thêm Kỳ thanh toán</h3>
+            <RadzenTemplateForm TItem="KyThanhtoan" Data=@item Submit=@OnSubmit>
+                
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Id" Text="Chọn loại khoản thu" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenDropDown TValue="string" Data=@LoaiKhoanthuList TextProperty="MoTa" ValueProperty="MaLoaiKhoanThu" @bind-Value=@item.LoaiKhoanthu />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Id" Text="Chưa Chọn loại khoản thu" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Id" Text="Mã Kỳ thanh toán" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenTextBox Name="Id" @bind-Value=@item.Id />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Id" Text="Chưa nhập mã kỳ thanh toán" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Name" Text="Mô tả" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenTextBox Name="Name" @bind-Value=@item.Name />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Name" Text="Chưa nhập mô tả kỳ thanh toán" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Trangthai" Text="Trạng thái" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenNumeric Name="Trangthai" @bind-Value=@item.Trangthai />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Trangthai" Text="Chưa nhập Trạng thái" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                    </div>
+                    <div class="col-6">
+                        <RadzenButton ButtonType="ButtonType.Submit" Text="Lưu" />
+                        <RadzenButton ButtonType="ButtonType.Button" Click=@Cancel Text="Hủy" />
+                    </div>
+                    <div class="col-2">
+                    </div>
+                </div>
+
+            </RadzenTemplateForm>
+        </div>
+    </Authorized>
+</AuthorizeView>
+
+@*
+<h2>Thêm Kỳ Thanh toán</h2>
+<EditForm Model="@item" OnValidSubmit="@Save">
+<div class="row">
+    
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="CountryCode">Mã Kỳ thanh toán</label>
+            <input form="CountryCode" class="form-control" @bind="@item.Id" />
+        </div>
+    </div>    
+</div>
+<div class="row">
+    
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="CountryName">Khoản thu</label>
+            <InputSelect class="form-control" @bind-Value="@item.LoaiKhoanthu">
+                <option value="">---Chọn loại khoản thu---</option>
+                @if (LoaiKhoanthuList != null)
+                {
+                    @foreach (var it in LoaiKhoanthuList)
+                    {
+                        <option value="@it.MaLoaiKhoanThu">@it.MoTa</option>
+                    }
+                }
+
+            </InputSelect>
+        </div>
+    </div>    
+</div>
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="CountryCode">Tên kỳ thanh toán</label>
+            <input form="CountryCode" class="form-control" @bind="@item.Name" />
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="CountryCode">Trạng thái</label>
+            <input form="CountryCode" class="form-control" @bind="@item.Trangthai" />
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="form-group">
+            <input type="button" class="btn btn-primary" @onclick="@Save" value="Save" />
+            <input type="button" class="btn" @onclick="@Cancel" value="Cancel" />
+        </div>
+    </div>
+</div>
+</EditForm>*@
+@code {
+    KyThanhtoan item = new KyThanhtoan();
+    List<LoaiKhoanthu> LoaiKhoanthuList = new List<LoaiKhoanthu>();
+    public string ErrMessage { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {   
+            var response = await Http.GetAsync("api/LoaiKhoanthu/LoaiKhoanthuGetList");
+            LoaiKhoanthuList = await response.Content.ReadFromJsonAsync<List<LoaiKhoanthu>>();
+
+            ErrMessage = "";
+        }
+        catch (Exception e)
+        {
+            ErrMessage = e.Message;
+        }
+
+
+    }
+
+    protected async Task OnSubmit()
+    {
+        try{
+            var response = await Http.PostAsJsonAsync("api/KyThanhtoan/KyThanhtoanAdd", @item);
+            await JsRuntime.InvokeVoidAsync("alert", "Saved Successfully!");
+            NavigationManager.NavigateTo("KyThanhtoanList");
+        }catch (Exception e){
+            await JsRuntime.InvokeVoidAsync("alert", "Error:" + e.Message);
+        }
+        
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("KyThanhtoanList");
+    }
+}

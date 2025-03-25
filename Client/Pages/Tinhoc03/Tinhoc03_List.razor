@@ -1,0 +1,444 @@
+﻿@page "/Tinhoc03List/"
+@page "/Tinhoc03List/{p:int}"
+@using Flic.Shared
+@using System.Net.Http.Headers
+@inject HttpClient _httpClient
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+
+@inject NavigationManager NavigationManager
+@inject NorthwindService service
+@inject IJSRuntime JsRuntime
+<style>
+    .tin03_table, td, th {
+        border: 1px solid #ddd;
+  text-align: left;
+}
+
+    .tin03_table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+    .tin03_table th, td {
+  padding: 15px;
+}
+
+    .tin03_table tr:hover {
+        background-color: coral;
+    }
+
+    /* .tin03_table tr:nth-child(even) {
+        background-color: #f2f2f2;
+    } */
+</style>
+<div>
+    <PageTitle>Danh sách đăng ký thi chứng chỉ ứng dụng công nghệ thông tin</PageTitle>
+
+    <AuthorizeView>
+        <NotAuthorized>
+            <span>You're not authorize</span>
+        </NotAuthorized>
+        <Authorized Context="Auth">
+            <div class="row">
+                <h3>Danh sách đăng ký thi chứng chỉ ứng dụng công nghệ thông tin</h3>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <RadzenDropDown Data=@_dotthiList TextProperty="Name" ValueProperty="Id" @bind-Value=@maDotthi Placeholder="--Chọn Đợt thi--"
+                                    AllowClear="true" Multiple="true" TValue="List<string>" Change=@OnChange />
+
+                    <RadzenButton Text="Export DSĐK" Icon="grid_on" Click="@(args =>ExportDSDK("tinhoc03dsdk"))" ButtonStyle="ButtonStyle.Primary" />
+                    <RadzenButton Text="Export DS đủ ĐK" Icon="grid_on" Click="@(args => ExportDSDK("tinhoc03dsDuDK"))" ButtonStyle="ButtonStyle.Primary" />
+                @* </div>
+                <div class="col-md-4"> *@
+                    
+                    <RadzenButton Click=@(args => OnClick("/Tinhoc03LapDSPT")) Text="Lập DS phòng thi" ButtonStyle="ButtonStyle.Primary" />
+                </div>
+                
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <RadzenButton Click=@(args => OnClick("/Tinhoc03Register")) Text="Thêm mới" ButtonStyle="ButtonStyle.Primary" />
+                    <RadzenTextBox Name="KeyWord" @bind-Value=@KeyWord Placeholder="Từ khóa" />
+                    <RadzenButton Click=@(args => OnSearch()) Text="Tìm" ButtonStyle="ButtonStyle.Primary" />
+                    <RadzenButton Click=@(args => OnClear()) Text="Xóa bộ lọc" ButtonStyle="ButtonStyle.Primary" />
+                </div>
+                
+            </div>
+            <div class="row">
+                
+                @if (list !=null && list.Count() > 0)
+                {
+                    <table class="tin03_table">
+                        <tr>
+                            <th style="vertical-align: middle;">
+                                STT
+                                <div style="display: flex; flex-direction:column; float: right; padding: 0;">
+                                    <div style="">
+                                        <img @onclick='(() => SortBy("STT","DES"))' src="images/arrow-up-01-512.webp" style="width:16px" />
+                                    </div>
+                                    <div>
+                                        <img @onclick='(() => SortBy("STT","ASC"))' src="images/arrow-down-01-512.webp" style="width:16px" />
+                                    </div>
+                                    
+                                </div>
+                               @*  <span @onclick='(() => SortBy("STT","DES"))'>
+                                    <i class="fa-solid fa-angle-up"></i>
+                                    
+                                </span> *@
+                                @* <span @onclick='(() => SortBy("STT","ASC"))'>
+                                    <i class="fa-solid fa-chevron-down"></i>
+                                    
+                                </span> *@
+                                
+                            </th>
+                            <th>Họ đệm
+                                <div style="display: flex; flex-direction:column; float: right; padding: 0;">
+                                    <div style="">
+                                        <img @onclick='(() => SortBy("HO","DES"))' src="images/arrow-up-01-512.webp" style="width:16px" />
+                                    </div>
+                                    <div>
+                                        <img @onclick='(() => SortBy("HO","ASC"))' src="images/arrow-down-01-512.webp" style="width:16px" />
+                                    </div>
+
+                                </div>
+
+                            </th>
+                            <th>Tên
+                                @* <span  @onclick='(() => SortBy("TEN","DES"))'>
+                                    <i class="fa-solid fa-angle-up"></i>
+                                </span>
+                                <span @onclick='(() => SortBy("TEN","ASC"))'>
+                                    <i class="fa-solid fa-chevron-down"></i>
+                                </span> *@
+                                <div style="display: flex; flex-direction:column; float: right; padding: 0;">
+                                    <div style="">
+                                        <img @onclick='(() => SortBy("TEN","DES"))' src="images/arrow-up-01-512.webp" style="width:16px" />
+                                    </div>
+                                    <div>
+                                        <img @onclick='(() => SortBy("TEN","ASC"))' src="images/arrow-down-01-512.webp" style="width:16px" />
+                                    </div>
+
+                                </div>
+
+                            </th>
+                            <th>Ngày sinh</th>
+                            <th>CCCD</th>
+                            <th>Nơi sinh</th>
+                            <th>Đủ ĐK</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    
+                    @foreach (var item in list.Skip(30 * (curPage-1)).Take(30).ToList())
+                    {
+                    <tr>
+                        <td>
+                                @item.stt
+                        </td>
+                        <td>
+                                @item.HovaDem
+                        </td>
+                        <td>
+                                @item.Ten
+                        </td>
+                        <td>
+                                @item.NgaySinh
+                        </td>
+                        <td>
+                                @item.CCCD
+                        </td>
+                        <td>
+                                @item.NoiSinh_Tinh_Ten
+                        </td>
+                                <td>
+                                    <input type="checkbox" name="duDK" id="@item.Id"  checked="@item.DuDKThi" @oninput="@(args=> CheckboxChanged(item.Id.Value, item.DuDKThi))">
+                                </td>
+                                <td>
+                                    <a href="/Tinhoc03Update/@item.Id" target="_blank">Edit</a> |
+                                    <a href="/Tinhoc03Detail/@item.Id" target="_blank">View</a>
+                                </td>
+                    </tr>
+                    }
+                    </table>
+                    <br />
+                    <div class="row">
+                        <table style="border: 0;">
+                            <tr>
+                                <td>
+                                    @{
+                                        int numPage = list.Count() / 30;
+                                        if (list.Count() % 30 > 0) numPage++;
+                                        @for (int i = 1; i <= numPage; i++)
+                                        {
+                                        <span><a href="/Tinhoc03List/@i">@i.ToString()</a> |</span>
+                                        }
+                                    }
+                                </td>                                
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="row">
+                        <p>
+                            Tổng số đăng ký: @list.Count()
+                            Tổng số đăng ký ôn: @{
+                                double a = list.Where(m => m.DKOnThi == 1).Count();
+                                <span>@a.ToString("#,##0")</span>
+                            }
+                        </p>
+                    </div>
+                }                
+                
+            </div>
+            
+
+        </Authorized>
+    </AuthorizeView>
+</div>
+
+@code {
+    [Parameter]
+    public int p { get; set; }
+
+    IEnumerable<DangkyTH03_View> list;
+    IEnumerable<DangkyTH03_View> full_list;
+    string ErrMessage = "";
+    RadzenDataGrid<DangkyTH03_View> grid;
+    List<string> dotthList = new List<string>();
+    IEnumerable<string> selectedDotthi;
+
+    List<bool> DuDKthiList = new List<bool>();
+    IEnumerable<bool> selectedDuDKThi;
+    List<Dotthi> _dotthiList;
+    bool isLoading;
+    int count;
+    List<string> maDotthi;
+    private string KeyWord = null;
+    object selectedValue;
+    public int curPage = 0;
+    // void OnPageChangedDraft()
+    // {
+    //     Console.WriteLine(this.grid.Page);
+    // }
+    private async void OnClear()
+    {
+        KeyWord = null;
+        list = new List<DangkyTH03_View>(full_list);
+        this.StateHasChanged();
+    }
+    private async void OnSearch()
+    {
+        if (KeyWord == null|| KeyWord=="")
+        {
+            list = new List<DangkyTH03_View>(full_list);
+        }else
+        {
+            full_list = new List<DangkyTH03_View>(list);
+            list = list.Where(m => m.Ten.Contains(KeyWord) || m.HovaDem.Contains(KeyWord) || m.CCCD.Contains(KeyWord) || m.Email.Contains(KeyWord)).ToList();
+        }
+        this.StateHasChanged();
+    }
+    private async void SortBy(string col, string method)
+    {
+        if (col == "STT")
+        {
+            if (method == "DES")
+            {
+                list = list.OrderBy(m => m.stt).ToList();
+            }
+            else
+            {
+                list = list.OrderByDescending(m => m.stt).ToList();
+            }
+        }
+        else if (col == "TEN")
+        {
+            if (method == "DES")
+            {
+                list = list.OrderBy(m => m.Ten).ToList();
+            }
+            else
+            {
+                list = list.OrderByDescending(m => m.Ten).ToList();
+            }
+        }
+        else if (col == "HO")
+        {
+            if (method == "DES")
+            {
+                list = list.OrderBy(m => m.HovaDem).ToList();
+            }
+            else
+            {
+                list = list.OrderByDescending(m => m.HovaDem).ToList();
+            }
+        }
+
+        this.StateHasChanged();
+    }
+    private async void CheckboxChanged(int id, bool val)
+    {
+        // get the checkbox state
+        var value = val;
+        //Console.WriteLine($"{id} Checkbox changed {value}");
+        var item = list.Where(m => m.Id == id).FirstOrDefault();
+        if (item != null)
+        {
+            item.DuDKThi = !val;
+            ChangeDuDKState obj = new ChangeDuDKState();
+            obj.id = id;
+            var response = await _httpClient.PostAsJsonAsync("api/DangkyTH03/TH03ChangeDuDKState", @obj);
+            if (!response.IsSuccessStatusCode)
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "Error: " + response.StatusCode + " " + response.Content.ToString());
+            }
+        }
+    }
+
+    private async Task GotoPage(int p)
+    {
+        curPage = p;
+        //this.StateHasChanged();
+        InvokeAsync(StateHasChanged);
+    }
+    protected override async void OnParametersSet()
+    {
+        if (p != null && curPage != p)
+        {
+            curPage = p;
+
+            this.StateHasChanged();
+        }
+
+    }
+    void OnClick(string link)
+    {
+        NavigationManager.NavigateTo(link, true);
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        if (p != null) curPage = p;
+        try
+        {
+            _dotthiList = await _httpClient.GetFromJsonAsync<List<Dotthi>>("api/Dotthi/DotthiGetList");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            string ErrMessage = e.Message;
+        }
+    }
+    async Task OnSelectedDotthiChange(object value)
+    {
+        if (selectedDotthi != null && !selectedDotthi.Any())
+        {
+            selectedDotthi = null;
+        }
+
+        await grid.FirstPage();
+    }
+    async Task OnSelectedDuDKThiChange(object value)
+    {
+        if (selectedDuDKThi != null && !selectedDuDKThi.Any())
+        {
+            selectedDuDKThi = null;
+        }
+
+        await grid.FirstPage();
+    }
+    public void Export(string type)
+    {
+        List<DangkyTH03_View> l1 = new List<DangkyTH03_View>(list);
+
+        try
+        {
+            Query q = new Query()
+                {
+                    OrderBy = grid.Query.OrderBy,
+                    Filter = grid.Query.Filter,
+                    Select = string.Join(",", grid.ColumnsCollection.Where(c => c.GetVisible()))//.Select(c => c.Property))
+                };
+            string combinedString = string.Join(";", maDotthi.ToArray());
+            //service.Export2("tinhoc03list", type, q, combinedString);
+            string url = "/export/tinhoc03dsdk/excel/" + combinedString;
+            NavigationManager.NavigateTo(url, true);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+        list = l1;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void ExportDSDK(string type)
+    {
+        //List<DangkyTH03_View> l1 = new List<DangkyTH03_View>(list);
+
+        try
+        {
+            // Query q = new Query()
+            //     {
+            //         OrderBy = grid.Query.OrderBy,
+            //         Filter = grid.Query.Filter,
+            //         Select = string.Join(",", grid.ColumnsCollection.Where(c => c.GetVisible()))//.Select(c => c.Property))
+            //     };
+            string combinedString = string.Join(";", maDotthi.ToArray());
+            //service.Export2("tinhoc03dsdk", type, q, combinedString);
+
+            string url = "/export/" + type + "/excel/" + combinedString;
+            NavigationManager.NavigateTo(url, true);
+            // var response = await _httpClient.PostAsJsonAsync("api/DangkyTH03/TH03ChangeDuDKState", @obj);
+            // if (!response.IsSuccessStatusCode)
+            // {
+            //     await JsRuntime.InvokeVoidAsync("alert", "Error: " + response.StatusCode + " " + response.Content.ToString());
+            // }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+        //list = l1;
+        //InvokeAsync(StateHasChanged);
+    }
+
+    private async void OnChange(object args)
+    {
+        //Console.WriteLine(args);
+        if (maDotthi != null && maDotthi.Count > 0)
+        {
+            string combinedString = string.Join(";", maDotthi.ToArray());
+            var response = await _httpClient.GetAsync("api/DangkyTH03/TH03GetListView/" + combinedString);
+            //response.EnsureSuccessStatusCode();
+            if (response.IsSuccessStatusCode)
+            {
+                list = await response.Content.ReadFromJsonAsync<List<DangkyTH03_View>>();
+                InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+
+    private async void onChangeState(int id, bool value)
+    {
+        ChangeDuDKState obj = new ChangeDuDKState();
+        obj.id = id;
+        //obj.value = !value;
+        Console.WriteLine(value);
+
+        List<DangkyTH03_View> list1 = new List<DangkyTH03_View>();
+        foreach (var t in list)
+        {
+            if (t.Id == id)
+            {
+                t.DuDKThi = !t.DuDKThi;
+            }
+            list1.Add(t);
+        }
+        //int cur = this.grid.CurrentPage;
+        var response = await _httpClient.PostAsJsonAsync("api/DangkyTH03/TH03ChangeDuDKState", @obj);
+        //Console.WriteLine(this.grid.CurrentPage);
+        list = list1;
+        InvokeAsync(StateHasChanged);
+        //this.grid.CurrentPage = cur;
+    }
+}
+

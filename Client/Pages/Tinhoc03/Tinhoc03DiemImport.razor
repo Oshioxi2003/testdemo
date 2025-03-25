@@ -1,0 +1,182 @@
+﻿@page "/Tinhoc03DiemImport/{madotthi}"
+
+
+@inject HttpClient Http
+@using System.IO
+@using Flic.Shared
+@*@inject IWebHostEnvironment env*@
+
+<style>
+    .tracuu_table {
+        border-collapse: collapse;
+        font-family: Tahoma, Geneva, sans-serif;
+        width: 100%;
+    }
+
+        .tracuu_table td {
+            padding: 15px;
+        }
+
+        .tracuu_table thead td {
+            background-color: #80b3ff;
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 13px;
+            border: 1px solid #80b3ff;
+        }
+
+        .tracuu_table tbody td {
+            color: #636363;
+            border: 1px solid #dddfe1;
+        }
+
+        .tracuu_table tbody tr {
+            background-color: #f9fafb;
+        }
+
+            .tracuu_table tbody tr:nth-child(odd) {
+                background-color: #ffffff;
+            }
+</style>
+
+<h3>Nhập khẩu Điểm thi chứng chỉ Ứng dụng Công nghệ Thông tin cơ bản</h3>
+<p>Tệp danh sách có các cột theo thứ tự như sau: STT, SBD,Số CCCD, Họ đệm, Tên, Ngày sinh, Giới Tính,Quê quán, Lý thuyết, Thực hành, Kết quả </p>
+<p>Dữ liệu bắt đầu từ dòng 10 </p>
+<h3>@Message</h3>
+
+@*<form @onsubmit="OnSubmit">*@
+<EditForm Model="@item" OnValidSubmit="@OnSubmit">
+        
+    <div class="row">
+        <div class="col-md-3">
+            <InputFile OnChange="OnInputFileChange" multiple />
+        </div>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-success">Thực hiện</button>
+        </div>
+    </div>
+
+    @if (result != null)
+    {
+        <div>
+            <p>Danh sách sinh viên Imported thành công!</p>
+            <table class="tracuu_table">
+                <tbody>
+                @if (result.ImportedList != null)
+                {
+                    foreach (var it in result.ImportedList)
+                    {
+                        <tr>
+                            <td>@it.SoBD</td>
+                            <td>@it.HovaDem</td>
+                            <td>@it.Ten</td>
+                            <td>@it.NgaySinh</td>
+                            <td>@it.CCCD</td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+        <div>
+            <p>Danh sách sinh viên đã tồn tại trong hệ thông!</p>
+            <table class="tracuu_table">
+                <tbody>
+                    @if (result.ExistList != null)
+                    {
+                        @foreach (var it in result.ExistList)
+                        {
+                            <tr>
+                                <td>@it.SoBD</td>
+                                <td>@it.HovaDem</td>
+                                <td>@it.Ten</td>
+                                <td>@it.NgaySinh</td>
+                                <td>@it.CCCD</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+                
+            </table>
+        </div>
+        <div>
+            <p>Danh sách Import lỗi!</p>
+            <table class="tracuu_table">
+                <tbody>
+                @if (result.ErrorList != null)
+                {
+                    foreach (var it in result.ErrorList)
+                    {
+                        <tr>
+                            <td>@it.SoBD</td>
+                            <td>@it.HovaDem</td>
+                            <td>@it.Ten</td>
+                            <td>@it.NgaySinh</td>
+                            <td>@it.CCCD</td>
+                            <td>@it.Ghichu</td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+
+</EditForm>
+@*</form>*@
+@code {
+    [Parameter]
+    public string madotthi { get; set; }
+
+    private Tinhoc03ImportView item = new Tinhoc03ImportView();
+    string Message = "Chưa chọn tệp danh sách nào";
+    IReadOnlyList<IBrowserFile> selectedFiles;
+
+    private Tinhoc03ImportResult result = new Tinhoc03ImportResult();
+    private void OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        selectedFiles = e.GetMultipleFiles();
+        Message = $"{selectedFiles.Count} file(s) selected";
+        this.StateHasChanged();
+    }
+
+    private async void OnSubmit()
+    {
+        foreach (var file in selectedFiles)
+        {
+            Stream stream = file.OpenReadStream();
+            MemoryStream ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            stream.Close();
+
+            //UploadedFile uploadedFile = new UploadedFile();
+            //uploadedFile.FileName = file.Name;
+            //uploadedFile.FileContent = ms.ToArray();
+            item.Madotthi = madotthi;
+            item.FileName = file.Name;
+            item.FileContent = ms.ToArray();
+            ms.Close();
+
+            var rs = await Http.PostAsJsonAsync<Tinhoc03ImportView>("/api/DangkyTH03/ImportDiemthi", item);
+            result = await rs.Content.ReadFromJsonAsync<Tinhoc03ImportResult>();
+
+        }
+        Message = $"{selectedFiles.Count} file(s) uploaded on server";
+        this.StateHasChanged();
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Error" + e.Message.ToString());
+        }
+
+    }
+    
+    
+    
+}

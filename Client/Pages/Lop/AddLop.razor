@@ -1,0 +1,165 @@
+﻿@page "/LopAdd/"
+@using Flic.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+<AuthorizeView>
+    <NotAuthorized>
+        <span>You're not authorize</span>
+    </NotAuthorized>
+    <Authorized Context="Auth">
+        <div class="row">
+            <h3>Thêm Lớp học</h3>
+            <RadzenTemplateForm TItem="Lop" Data=@item Submit=@OnSubmit>
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Id" Text="Chọn Khóa học" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenDropDown TValue="string" Data=@KhoahocList TextProperty="Name" ValueProperty="Id" @bind-Value=@item.KhoahocID />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Id" Text="Chưa Chọn Khóa học" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Id" Text="Chọn Khoa" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenDropDown TValue="string" Data=@KhoaList TextProperty="Name" ValueProperty="Id" @bind-Value=@item.KhoaID Change="@OnChange" />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Id" Text="Chưa Chọn Khoa" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Id" Text="Chọn Ngành" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenDropDown TValue="string" Data=@NganhList TextProperty="Name" ValueProperty="Id" @bind-Value=@item.NganhID />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Id" Text="Chưa Chọn Khoa" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Id" Text="Mã Lớp" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenTextBox Name="Id" @bind-Value=@item.Id />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Id" Text="Chưa nhập Mã lớp" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Name" Text="Tên Lớp" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenTextBox Name="Name" @bind-Value=@item.Name />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Name" Text="Chưa nhập Tên lớp" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Trangthai" Text="Trạng thái" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenNumeric Name="Trangthai" @bind-Value=@item.Trangthai />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Trangthai" Text="Chưa nhập Trạng thái" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                    </div>
+                    <div class="col-6">
+                        <RadzenButton ButtonType="ButtonType.Submit" Text="Lưu" />
+                        <RadzenButton ButtonType="ButtonType.Button" Click=@Cancel Text="Hủy" />
+                    </div>
+                    <div class="col-2">
+                    </div>
+                </div>
+
+            </RadzenTemplateForm>
+        </div>
+    </Authorized>
+</AuthorizeView>
+
+
+@code {
+    Lop item = new Lop();
+    List<Khoa> KhoaList = new List<Khoa>();
+    List<Khoahoc> KhoahocList = new List<Khoahoc>();
+    List<Nganh> NganhList = new List<Nganh>();
+    public string SelectedId { get; set; }
+    public string ErrMessage = "";
+    string countryId = "";
+    protected override async Task OnInitializedAsync()
+    {
+        try{
+            var response = await Http.GetAsync("api/Khoa/KhoaGetList");
+            KhoaList = await response.Content.ReadFromJsonAsync<List<Khoa>>();
+
+            response = await Http.GetAsync("api/Khoahoc/KhoahocGetList");
+            KhoahocList = await response.Content.ReadFromJsonAsync<List<Khoahoc>>();
+            item.Trangthai = 1;
+            //response = await Http.GetAsync("api/Nganh/NganhGetList");
+            //NganhList = await response.Content.ReadFromJsonAsync<List<Nganh>>();
+            ErrMessage = "";
+        }
+        catch (Exception e){
+            ErrMessage = e.Message;
+        }
+
+
+    }
+    protected async Task OnSubmit()
+    {
+        try{
+            var response = await Http.PostAsJsonAsync("api/Lop/LopAdd", @item);
+            await JsRuntime.InvokeVoidAsync("alert", "Saved Successfully!");
+            NavigationManager.NavigateTo("Loplist");
+            ErrMessage = "";
+        }catch (Exception e){
+            await JsRuntime.InvokeVoidAsync("alert", "Error:" + e.Message);
+            ErrMessage = e.Message;
+        }
+
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("Loplist");
+    }
+    
+    private async Task OnChange(object value)
+    {
+        if (value != "")
+        {
+            var response = await Http.GetAsync("api/Nganh/NganhGetListByKhoa/" + item.KhoaID);
+            if (response.IsSuccessStatusCode)
+            {
+                NganhList = await response.Content.ReadFromJsonAsync<List<Nganh>>();
+                //this.StateHasChanged();
+            }
+            else
+            {
+                ErrMessage = "Lỗi trong khi lấy danh sách";
+            }
+        }
+        else
+        {
+            NganhList.Clear();
+        }
+    }
+}

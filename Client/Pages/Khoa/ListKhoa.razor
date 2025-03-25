@@ -1,0 +1,89 @@
+﻿@page "/KhoaList"
+@using Flic.Shared
+@using System.Net.Http.Headers
+@inject HttpClient _httpClient
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+@inject NavigationManager NavigationManager
+@inject NorthwindService service
+
+<div>
+    <PageTitle>Danh sách Khoa</PageTitle>
+
+    <AuthorizeView>
+        <NotAuthorized>
+            <span>You're not authorize</span>
+        </NotAuthorized>
+        <Authorized Context="Auth">
+            <div class="row">
+                <h3>Danh sách Khoa</h3>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <RadzenButton Click=@(args => OnClick("/AddKhoa")) Text="Thêm mới" ButtonStyle="ButtonStyle.Primary" />
+                    <RadzenButton Text="Export XLS" Icon="grid_on" Click="@(args => Export("excel"))" ButtonStyle="ButtonStyle.Primary" />
+                </div>
+                <RadzenDataGrid @ref="grid" AllowColumnPicking="false" AllowFiltering="true"
+                                FilterMode="FilterMode.Advanced" AllowPaging="true" AllowSorting="true"
+                                Data="@list" TItem="Khoa" PageSize="40" AllowColumnResize="true">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="Khoa" Property="Id" Title="ID" Width="140px" Filterable="false" />
+                        <RadzenDataGridColumn TItem="Khoa" Property="Name" Title="Tên Khoa" />
+                        
+
+                        <RadzenDataGridColumn TItem="Khoa" Property="" Title="" Filterable="false">
+                            <Template Context="data">
+                                <a href="/KhoaEdit/@data.Id">Edit</a> |
+                                <a href="/Khoadelete/@data.Id">Delete</a>
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </div>
+
+
+        </Authorized>
+    </AuthorizeView>
+</div>
+
+@code {
+    string ErrMessage = "";
+    List<Khoa> list = new List<Khoa>();
+    RadzenDataGrid<Khoa> grid;
+
+    void OnClick(string link)
+    {
+        NavigationManager.NavigateTo(link, true);
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        try{
+            var response = await _httpClient.GetAsync("api/Khoa/KhoaGetList");
+            response.EnsureSuccessStatusCode();
+            list = await response.Content.ReadFromJsonAsync<List<Khoa>>();
+            ErrMessage = "";
+        }catch(Exception e){
+            Console.WriteLine(e.Message);
+            ErrMessage = e.Message;
+        }
+        
+#nullable disable
+    }
+    public void Export(string type)
+    {
+        try
+        {
+            Query q = new Query()
+                {
+                    OrderBy = grid.Query.OrderBy,
+                    Filter = grid.Query.Filter,
+                    Select = string.Join(",", grid.ColumnsCollection.Where(c => c.GetVisible()))//.Select(c => c.Property))
+                };
+            service.Export("Khoas", type, q);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+    }
+}

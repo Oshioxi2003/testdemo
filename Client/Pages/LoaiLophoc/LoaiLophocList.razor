@@ -1,0 +1,94 @@
+﻿@page "/LoaiLophocList"
+@using Flic.Shared
+@using System.Net.Http.Headers
+@inject HttpClient _httpClient
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+
+@inject NavigationManager NavigationManager
+@inject NorthwindService service
+
+<div>
+    <PageTitle>Danh sách Loại Lớp hoc</PageTitle>
+
+    <AuthorizeView>
+        <NotAuthorized>
+            <span>You're not authorize</span>
+        </NotAuthorized>
+        <Authorized Context="Auth">
+            <div class="row">
+                <h3>Danh sách Lớp</h3>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <RadzenButton Click=@(args => OnClick("/LoaiLophocAdd")) Text="Thêm mới" ButtonStyle="ButtonStyle.Primary" />
+                    @* <RadzenButton Text="Export XLS" Icon="grid_on" Click="@(args => Export("excel"))" ButtonStyle="ButtonStyle.Primary" /> *@
+                </div>
+                <RadzenDataGrid @ref="grid" AllowColumnPicking="false" AllowFiltering="true"
+                                FilterMode="FilterMode.Advanced" AllowPaging="true" AllowSorting="true"
+                                Data="@list" TItem="LoaiLophoc" PageSize="40" AllowColumnResize="true">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="LoaiLophoc" Property="Id" Title="ID" Width="140px" Filterable="false" />
+                        <RadzenDataGridColumn TItem="LoaiLophoc" Property="TenLop" Title="Loại lớp" />
+                        <RadzenDataGridColumn TItem="LoaiLophoc" Property="Trangthai" Title="Trạng thái" />
+                        <RadzenDataGridColumn TItem="LoaiLophoc" Property="" Title="" Filterable="false">
+                            <Template Context="data">
+                                <a href="/LoaiLophocEdit/@data.Id">Edit</a> |
+                                <a href="/LoaiLophocDelete/@data.Id">Delete</a>
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </div>
+
+
+        </Authorized>
+    </AuthorizeView>
+</div>
+
+@code {
+    List<LoaiLophoc> list = new List<LoaiLophoc>();   
+    RadzenDataGrid<LoaiLophoc> grid;
+
+    void OnClick(string link)
+    {
+        NavigationManager.NavigateTo(link, true);
+    }
+    protected override async Task OnInitializedAsync()
+    {
+
+        try
+        {
+            var response = await _httpClient.GetAsync("api/LoaiLophoc/LoaiLophocGetListActive");
+            if (response.IsSuccessStatusCode)
+            {
+                list = await response.Content.ReadFromJsonAsync<List<LoaiLophoc>>();
+            }            
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            string ErrMessage = e.Message;
+        }
+
+#nullable disable
+    }
+    public void Export(string type)
+    {
+        try
+        {
+            Query q = new Query()
+                {
+                    OrderBy = grid.Query.OrderBy,
+                    Filter = grid.Query.Filter,
+                    Select = string.Join(",", grid.ColumnsCollection.Where(c => c.GetVisible()))//.Select(c => c.Property))
+                };
+            service.Export("LoaiLophocs", type, q);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+    }
+}
+

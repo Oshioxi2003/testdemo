@@ -1,0 +1,98 @@
+﻿@page "/AccountList"
+@using Flic.Shared
+@using System.Net.Http.Headers
+@inject HttpClient _httpClient
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+@*
+<div>
+    <a href="/AccountAdd"> Thêm mới</a>
+    @if (list != null)
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th width="40%" scope="col" align="center">ID</th>
+                    <th width="15%" scope="col" align="center"> Tên tài khoản</th>
+                    <th width="15%" scope="col" align="center"> Email</th>
+                    <th width="15%" scope="col" align="center"> Điện thoại</th>
+                    <th width="20%" scope="col"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in list)
+                {
+                    <tr>
+                        <th scope="row">@item.Id</th>
+                        <td>@item.UserName</td>
+                        <td>@item.Email</td>
+                        <td>@item.PhoneNumber</td>
+                        <td scope="col">
+                            <a href="/AccountEdit/@item.Id">Edit</a> |
+                            <a href="/Accountdelete/@item.Id">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>*@
+<div>
+    <PageTitle>Danh sách Tài khoản</PageTitle>
+
+    <AuthorizeView>
+        <NotAuthorized>
+            <span>You're not authorize</span>
+        </NotAuthorized>
+        <Authorized Context="Auth">
+            <div class="row">
+                <h3>Danh sách Tài khoản</h3>
+            </div>
+
+            <div class="row">                
+                <RadzenDataGrid @ref="grid" AllowColumnPicking="false" AllowFiltering="true"
+                                FilterMode="FilterMode.Advanced" AllowPaging="true" AllowSorting="true"
+                                Data="@list" TItem="Microsoft.AspNetCore.Identity.IdentityUser" PageSize="40" AllowColumnResize="true">
+                    <Columns>
+                        @*<RadzenDataGridColumn TItem="Microsoft.AspNetCore.Identity.IdentityUser" Property="Id" Title="ID" Filterable="false" />*@
+                        <RadzenDataGridColumn TItem="Microsoft.AspNetCore.Identity.IdentityUser" Property="UserName" Title="UserName" Filterable="true" />
+                        <RadzenDataGridColumn TItem="Microsoft.AspNetCore.Identity.IdentityUser" Property="Email" Title="Email" />
+                        <RadzenDataGridColumn TItem="Microsoft.AspNetCore.Identity.IdentityUser" Property="PhoneNumber" Title="PhoneNumber" />
+                        <RadzenDataGridColumn TItem="Microsoft.AspNetCore.Identity.IdentityUser" Property="" Title="" Filterable="false">
+                            <Template Context="data">
+                                @*<a href="/DiemthiEdit/@data.Id">Edit</a> *@
+                                @*<a href="/AccountView/@data.Id">View</a>| *@                               
+                                <a href="/AccountEdit/@data.Id">Edit</a>|
+                                <a href="/AccountResetPass/@data.Id">Reset</a>|
+                                <a href="/AccountDelete/@data.Id">Delete</a>
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </div>
+
+
+        </Authorized>
+    </AuthorizeView>
+</div>
+
+@code {
+    List<Microsoft.AspNetCore.Identity.IdentityUser> list = new List<Microsoft.AspNetCore.Identity.IdentityUser>();
+    RadzenDataGrid<Microsoft.AspNetCore.Identity.IdentityUser> grid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync("api/Accounts/GetList");
+            response.EnsureSuccessStatusCode();
+            list = await response.Content.ReadFromJsonAsync<List<Microsoft.AspNetCore.Identity.IdentityUser>>();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+
+#nullable disable
+    }
+
+}

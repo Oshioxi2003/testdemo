@@ -1,0 +1,128 @@
+﻿@page "/DKHocDetail/{Id:int}"
+@using Flic.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+<style>
+    .QR_Image {
+        width: 200px;
+        height: 200pxl
+    }
+
+    .QR_Image img {
+        width: 198px;
+        height: 198px;
+    }
+</style>
+<div class="row">
+    @if (item != null)
+    {
+        <p>Mã sinh viên: @item.MaSinhvien</p>
+        <p>Họ tên: @item.HovaDem @item.Ten</p>
+        <p>Khóa: @item.KhoahocID  Lớp: @item.LopID</p>
+        <p>Email: @item.Email</p>
+        <p>Địa chỉ: @item.DiaChi</p>
+        <p>Mã đăng ký: @item.Id</p>
+        <p>Mã khóa học: @item.CourseId - @TenLop</p>
+        <p>Học phí: @item.Hocphi</p>        
+    }
+            
+</div>
+<div class="row">
+    <div class="col-md-4"></div>
+    <div class="col-md-4">
+        @if (item.PaymentSuccess == null || (!item.PaymentSuccess.Value))
+        {
+            @if (@QRActive != null && @QRActive)
+            {
+                <div class="QR_Image">
+                    <img class="QR_Image" src="@imageBytes" />
+                </div>
+            }
+            @if (@VNPayActive != null && @VNPayActive)
+            {
+                <RadzenButton Text="Thanh toán" Icon="grid_on" Click="@(args => Thanhtoan(item.Id))" ButtonStyle="ButtonStyle.Primary" />
+            }
+            
+        }
+    </div>
+    <div class="col-md-4"></div>
+</div>
+
+
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    DKHoc item = new DKHoc();
+    public bool QRActive { get; set; }
+    public bool VNPayActive { get; set; }
+    public string TenLop { get; set; }
+    string imageBytes; 
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            /// Lấy danh sách các tin
+            var response = await Http.GetAsync("api/DKHoc/DKHocGetByID/"+ Id);
+
+            if (response.IsSuccessStatusCode)
+            {
+                item = await response.Content.ReadFromJsonAsync<DKHoc>();
+                response = await Http.GetAsync("api/Lophoc/LophocGetByID/" + item.CourseId);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var lh = await response.Content.ReadFromJsonAsync<Lophoc>();
+                    TenLop = lh.TenLop;
+                    QRActive = lh.QRActive.Value;
+                    VNPayActive = lh.VNPAYActive.Value;
+                }
+                var rs = await Http.GetAsync("api/DKHoc/DKHocGetQRByID/"+ Id);
+                if (rs.IsSuccessStatusCode)
+                {
+                    imageBytes = await rs.Content.ReadAsStringAsync();
+                }
+                this.StateHasChanged();
+            }
+            else
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "Error: " + response.StatusCode + " " + response.Content.ToString());
+            }
+
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+
+    }
+    public async void Thanhtoan(int id)
+    {
+        try
+        {
+            PaymentInformationModel pay = new PaymentInformationModel();
+            pay.Amount = (double) item.Hocphi;
+            pay.Name = item.Id + " " + item.MaSinhvien + " " + item.HovaDem + " " + item.Ten;
+            pay.OrderType = item.CourseId.ToString();
+            pay.OrderDescription = item.DienThoai + " " + item.DiaChi;
+            pay.OrderId = "DKH-"+item.Id;
+
+            var response = await Http.PostAsJsonAsync("api/VNPayQR/CreatePaymentUrl", @pay);
+            if (response.IsSuccessStatusCode)
+            {
+                var url  = await response.Content.ReadAsStringAsync();
+                NavigationManager.NavigateTo(url);
+            }
+            else
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "Error: " + response.StatusCode + " " + response.Content.ToString());
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+    }
+
+}

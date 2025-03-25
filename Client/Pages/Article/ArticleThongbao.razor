@@ -1,0 +1,167 @@
+﻿@page "/Thongbao"
+@using Flic.Shared
+@using System.Net.Http.Headers
+@inject HttpClient _httpClient
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+@inject NavigationManager NavigationManager
+@inject NorthwindService service
+@inject IJSRuntime JsRuntime
+<style>
+    .row_article{
+        width: 100%;
+        padding: 5px;
+        border-bottom: solid 1px #eee;
+        display: flex;
+        flex-wrap: wrap;
+    }
+    .right_section_item_img {
+        float: left;
+        width: 200px;
+        flex-grow: 1;
+    }
+
+    .right_section_item_abs {
+        float: left;
+        width: 100%;
+        flex-grow: 3;
+        display: flex;
+        flex-wrap: wrap;
+        flex-direction:column;
+    }
+    .article_title{
+        
+    }
+    .article_abstract{
+
+    }
+</style>
+<div>
+    <PageTitle>Danh sách bài viết</PageTitle>
+    
+    @if (list!=null && list.Count > 5)
+    {
+        @for (int i= 0; i < 5; i++)
+        {
+            var item = list[i];
+            <div class="row_article">
+                <table width="100%">
+                    <tr>
+                        <td width="200px">
+                            @if (item.ImagePath != null && item.ImagePath != "")
+                            {
+                                <img width="200px" src="@item.ImagePath">
+                            }
+                            else
+                            {
+                                <img width="200px" src="images/vya_no_images.jfif">
+                            }
+                        </td>
+                        <td width="100%">
+                            <div class="article_title">
+                                <a href="/view/@item.SectionId/@item.Id">@item.Title</a>
+                            </div>
+
+                            <div class="article_abstract">
+                                @((MarkupString)@item.ArticleAbstract)
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                @* <div class="right_section_item_img">                    
+                    
+                </div>
+                <div class="right_section_item_abs">
+                    
+                </div> *@
+            </div>
+        }
+        <div class="row_article">
+            <table width="100%">
+                <tr>
+                    <td>Đọc thêm</td>
+                    <td><hr></td>
+                </tr>
+            </table>
+            <hr>
+            
+
+        </div>
+        @for (int i = 5; i< list.Count; i++)
+        {
+            var item = list[i];
+            <div class="article_title">
+                <a href="/view/@item.SectionId/@item.Id">@item.Title</a>
+            </div>
+        }
+    }
+    else @if (list != null)
+    {
+        
+        @foreach (var item in list)
+        {
+            <div class="row_article">
+
+                <table width="100%">
+                    <tr>
+                        <td width="200px">
+                            @if (item.ImagePath != null && item.ImagePath != "")
+                            {
+                                <img width="200px" src="@item.ImagePath">
+                            }
+                            else
+                            {
+                                <img width="200px" src="images/vya_no_images.jfif">
+                            }
+                        </td>
+                        <td width="100%">
+                            <div class="article_title">
+                                <a href="/view/@item.SectionId/@item.Id">@item.Title</a>
+                            </div>
+
+                            <div class="article_abstract">
+                                @((MarkupString)@item.ArticleAbstract)
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+
+            </div>
+        }
+    }    
+
+    
+</div>
+
+@code {
+    string ErrMessage = "";
+    List<Article> list = new List<Article>();
+    RadzenDataGrid<Article> grid;
+
+    void OnClick(string link)
+    {
+        NavigationManager.NavigateTo(link, true);
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync("api/Article/ArticleGetListBySection/1");
+            response.EnsureSuccessStatusCode();
+            if (response.IsSuccessStatusCode)
+            {
+                list = await response.Content.ReadFromJsonAsync<List<Article>>();
+            }
+            else
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "Error: " + response.StatusCode + " " + response.Content.ToString());
+            }
+
+            ErrMessage = "";
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            ErrMessage = e.Message;
+        }
+    }    
+}

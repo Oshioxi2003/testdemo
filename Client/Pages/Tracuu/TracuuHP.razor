@@ -1,0 +1,158 @@
+﻿@page "/tracuuhp"
+
+@using Flic.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+<style>
+    .tracuu_table {
+        border-collapse: collapse;
+        font-family: Tahoma, Geneva, sans-serif;
+        width: 100%;
+    }
+
+        .tracuu_table td {
+            padding: 15px;
+        }
+
+        .tracuu_table thead td {
+            background-color: #80b3ff;
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 13px;
+            border: 1px solid #80b3ff;
+        }
+
+        .tracuu_table tbody td {
+            color: #636363;
+            border: 1px solid #dddfe1;
+        }
+
+        .tracuu_table tbody tr {
+            background-color: #f9fafb;
+        }
+
+            .tracuu_table tbody tr:nth-child(odd) {
+                background-color: #ffffff;
+            }
+</style>
+
+<div class="row">
+    <h3>TRA CỨU THÔNG TIN HỌC PHÍ</h3>
+    <RadzenTemplateForm TItem="TracuuTT" Data=@item Submit=@OnSubmit>
+        <div class="row">
+            <div class="col-2">
+                <RadzenLabel Component="CCCD" Text="Mã sinh viên" />
+            </div>
+            <div class="col-6">
+                <RadzenTextBox Name="CCCD" @bind-Value=@item.CCCD />
+            </div>
+            <div class="col-2">
+                <RadzenRequiredValidator Component="CCCD" Text="Nhập Mã sinh viên" />
+            </div>
+        </div>
+        
+        
+        <div class="row">
+            <div class="col-2">
+            </div>
+            <div class="col-6">
+                <RadzenButton ButtonType="ButtonType.Submit" Text="Tìm" />
+                @* <RadzenButton ButtonType="ButtonType.Button" Click=@Cancel Text="Hủy" /> *@
+            </div>
+            <div class="col-2">
+            </div>
+        </div>
+
+    </RadzenTemplateForm>
+</div>
+<div>
+
+    @if (ThuTienList != null)
+    {
+        <table class="tracuu_table">
+            <thead>
+                <tr>
+                    <td>Mã sinh viên</td>
+                    <td>Họ tên</td>
+                    <td>Khóa</td>
+                    <td>Lớp</td>
+                    <td>Loại khoản thu</td>
+                    <td>Kỳ thanh toán</td>
+                    <td>Trạng thái</td>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var it in ThuTienList)
+                {
+                    <tr>
+                        <td>                            
+                            @it.MaSinhVien
+                        </td>
+                        <td>
+                            @it.HoDem @it.Ten
+                        </td>
+                        <td>
+                            @it.KhoahocID
+                        </td>
+                        <td>
+                            @it.LopID
+                        </td>
+                        <td>
+                            @it.LoaiKhoanthuID
+                        </td>
+                        <td>
+                            @it.KyThanhToan
+                        </td>
+                        <td>
+                            @{
+                                if (it.TrangThai == 1)
+                                {
+                                    <span>Đã thanh toán</span>
+                                }else
+                                {
+                                    <span>Chưa thanh toán</span>
+                                }
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    <p>
+        <br />
+    </p>    
+</div>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+    string ErrMessage = "";
+    TracuuTT item = new TracuuTT();
+    //public List<DangkyTH03> dsTin;
+    //public List<DKHocView> dsDKHoc;
+    List<ThuTienView> ThuTienList = new List<ThuTienView>();
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+    protected async Task OnSubmit()
+    {
+        //var response = await Http.PutAsJsonAsync("api/Khoahoc/KhoahocUpdate", @item);
+        var response = await Http.GetAsync("api/Thutien/ThutienGetByMSV/" + item.CCCD);
+        
+        if (response.IsSuccessStatusCode)
+        {
+            ThuTienList = await response.Content.ReadFromJsonAsync<List<ThuTienView>>();
+
+            this.StateHasChanged();
+        }
+
+    }
+    void Cancel()
+    {
+        //NavigationManager.NavigateTo("KhoahocList");
+    }
+}

@@ -1,0 +1,74 @@
+﻿@page "/DMTinhAdd/"
+@using Flic.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+<AuthorizeView>
+    <NotAuthorized>
+        <span>You're not authorize</span>
+    </NotAuthorized>
+    <Authorized Context="Auth">
+        <div class="row">
+            <h3>Thêm Tỉnh</h3>
+            <RadzenTemplateForm TItem="DMTinh" Data=@item Submit=@OnSubmit>
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Name" Text="Tên tỉnh" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenTextBox Name="Name" @bind-Value=@item.Name />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Name" Text="Nhập Tên tỉnh" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Description" Text="Mô tả" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenTextBox Name="Description" @bind-Value=@item.Description />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Description" Text="Nhập Mô tả" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                    </div>
+                    <div class="col-6">
+                        <RadzenButton ButtonType="ButtonType.Submit" Text="Lưu" />
+                        <RadzenButton ButtonType="ButtonType.Button" Click=@Cancel Text="Hủy" />
+                    </div>
+                    <div class="col-2">
+                    </div>
+                </div>
+
+            </RadzenTemplateForm>
+        </div>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    DMTinh item = new DMTinh();
+
+    protected async Task OnSubmit()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/DMTinh/DMTinhAdd", @item);
+            await JsRuntime.InvokeVoidAsync("alert", "Saved Successfully!");
+            NavigationManager.NavigateTo("DMTinhList");
+        }
+        catch (Exception e)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error:" + e.Message);
+        }
+
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("DMTinhList");
+    }
+}

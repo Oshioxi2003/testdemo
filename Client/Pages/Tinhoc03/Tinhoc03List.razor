@@ -1,0 +1,246 @@
+﻿@page "/Tinhoc03List1"
+@using Flic.Shared
+@using System.Net.Http.Headers
+@inject HttpClient _httpClient
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+
+@inject NavigationManager NavigationManager
+@inject NorthwindService service
+
+<div>
+    <PageTitle>Danh sách đăng ký thi chứng chỉ ứng dụng công nghệ thông tin</PageTitle>
+
+    <AuthorizeView>
+        <NotAuthorized>
+            <span>You're not authorize</span>
+        </NotAuthorized>
+        <Authorized Context="Auth">
+            <div class="row">
+                <h3>Danh sách đăng ký thi chứng chỉ ứng dụng công nghệ thông tin</h3>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <RadzenButton Click=@(args => OnClick("/Tinhoc03Register")) Text="Thêm mới" ButtonStyle="ButtonStyle.Primary" />
+                    <RadzenButton Click=@(args => OnClick("/Tinhoc03LapDSPT")) Text="Lập DS phòng thi" ButtonStyle="ButtonStyle.Primary" />                    
+                </div>
+                <div class="col-md-8">                    
+                    Đợt thi:
+                    <RadzenDropDown Data=@_dotthiList TextProperty="Name" ValueProperty="Id" @bind-Value=@maDotthi Placeholder="--Chọn Đợt thi--"
+                                    AllowClear="true" Multiple="true" TValue="List<string>" Change=@OnChange/>
+                    @*
+                    <RadzenDropDown @bind-Value=@maDotthi Data=@_dotthiList TextProperty="Name" ValueProperty="Id"
+                                    Multiple=true AllowClear=true Placeholder="Select products" Style="width: 100%; max-width: 400px;" Change=@OnChange />*@
+
+                    <RadzenButton Text="Export DSĐK" Icon="grid_on" Click="@(args =>ExportDSDK("excel"))" ButtonStyle="ButtonStyle.Primary" />
+                    <RadzenButton Text="Export DS đủ ĐK" Icon="grid_on" Click="@(args => Export("excel"))" ButtonStyle="ButtonStyle.Primary" />
+                </div>
+            </div>
+            <div class="row">                
+                @* Page="@(OnPageChangedDraft)" *@
+                <RadzenDataGrid @ref="grid" IsLoading="@isLoading" Count="@count" Data="@list" Page=@onpage
+                                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterMode="FilterMode.Advanced" AllowSorting="true" AllowColumnPicking="true"
+                                AllowFiltering="true" AllowPaging="true" PageSize="30" PagerHorizontalAlign="HorizontalAlign.Center" TItem="DangkyTH03_View" AllowColumnResize="true" >
+                    <Columns>
+                        <RadzenDataGridColumn TItem="DangkyTH03_View" Property="stt" Title="STT"  Filterable="false" Width="80px"/>
+
+                            <RadzenDataGridColumn TItem="DangkyTH03_View" Property="HovaDem" Title="Họ đệm" Width="100%" />
+                            <RadzenDataGridColumn TItem="DangkyTH03_View" Property="Ten" Title="Tên" Width="100%" />
+                        @*<RadzenDataGridColumn TItem="DangkyTH03_View" Property="GioiTinh" Title="Giới" Width="100px" />*@
+                            <RadzenDataGridColumn TItem="DangkyTH03_View" Property="NgaySinh" Title="Ngày sinh" Filterable="false" Width="100%" />
+
+                            <RadzenDataGridColumn TItem="DangkyTH03_View" Property="CCCD" Title="CCCD" Width="100%" />
+                            <RadzenDataGridColumn TItem="DangkyTH03_View" Property="DienThoai" Title="Điện thoại" Width="100%" />
+                            @* <RadzenDataGridColumn TItem="DangkyTH03_View" Property="Trangthai" Title="Trạng thái" Width="100%"/> *@
+                            <RadzenDataGridColumn TItem="DangkyTH03_View" Property="DKOnThi" Title="ĐK Ôn" Width="100%"/>
+                        <RadzenDataGridColumn TItem="DangkyTH03_View" Property="DuDKThi" Title="Đủ ĐK" Width="100%" 
+                        Type="typeof(IEnumerable<string>)" FilterValue="@selectedDuDKThi" FilterOperator="FilterOperator.Contains">
+                            <FilterTemplate Context="data">
+                                <RadzenDropDown @bind-Value=@selectedDuDKThi Style="width:100%"
+                                                Change=@OnSelectedDuDKThiChange Data="@(DuDKthiList)" AllowClear="true" Multiple="true" />
+                            </FilterTemplate>
+                            <Template Context="data">
+                                <RadzenCheckBox @bind-value="data.DuDKThi" TValue="bool" TriState="true" Name="DuDKThi" Disabled="false" Change="@(args => onChangeState(@data.Id.Value, @data.DuDKThi))" />
+                            </Template>
+                        </RadzenDataGridColumn>
+                        
+                        <RadzenDataGridColumn TItem="DangkyTH03_View" Property="" Title="Thao tác" Filterable="false"Width="100%">
+                            <Template Context="data">                                
+                                <AuthorizeView Roles="Admin,QUANLY">
+                                    <a href="/Tinhoc03Update/@data.Id">Edit</a> |                                    
+                                    <a href="/Tinhoc03Detail/@data.Id">View</a> |
+                                </AuthorizeView>
+                                <AuthorizeView Roles="Admin">                                
+                                    <a href="/Tinhoc03Delete/@data.Id">Delete</a>                                    
+                                </AuthorizeView>
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </div>
+            <div class="row">
+                
+                    @if (list != null)
+                    {
+                        <p>
+                        Tổng số đăng ký: @list.Count()
+                        Tổng số đăng ký ôn: @{
+                            double a = list.Where(m => m.DKOnThi == 1).Count();
+                            <span>@a.ToString("#,##0")</span>
+                        }
+                        </p>
+                    }
+                
+            </div>
+
+        </Authorized>
+    </AuthorizeView>
+</div>
+
+@code {
+    IEnumerable<DangkyTH03_View> list;
+    string ErrMessage = "";
+    RadzenDataGrid<DangkyTH03_View> grid;
+    List<string> dotthList = new List<string>();
+    IEnumerable<string> selectedDotthi;
+
+    List<bool> DuDKthiList = new List<bool>();
+    IEnumerable<bool> selectedDuDKThi;
+    List<Dotthi> _dotthiList;
+    bool isLoading;
+    int count;
+    List<string> maDotthi;
+    object selectedValue;
+
+    void onpage()
+    {
+        List<DangkyTH03_View> l1 = new List<DangkyTH03_View>(list);
+        Console.WriteLine(this.grid.Page);
+        list = l1;
+    }
+    void OnClick(string link)
+    {
+        NavigationManager.NavigateTo(link, true);
+    }
+    protected override async Task OnInitializedAsync()
+    {
+
+        try
+        {
+            _dotthiList = await _httpClient.GetFromJsonAsync<List<Dotthi>>("api/Dotthi/DotthiGetList");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            string ErrMessage = e.Message;
+        }
+    }
+    async Task OnSelectedDotthiChange(object value)
+    {
+        if (selectedDotthi != null && !selectedDotthi.Any())
+        {
+            selectedDotthi = null;
+        }
+
+        await grid.FirstPage();
+    }
+    async Task OnSelectedDuDKThiChange(object value)
+    {
+        if (selectedDuDKThi != null && !selectedDuDKThi.Any())
+        {
+            selectedDuDKThi = null;
+        }
+
+        //await grid.FirstPage();
+    }
+    public void Export(string type)
+    {
+        List<DangkyTH03_View> l1 = new List<DangkyTH03_View>(list);
+
+        try
+        {
+            Query q = new Query()
+                {
+                    OrderBy = grid.Query.OrderBy,
+                    Filter = grid.Query.Filter,
+                    Select = string.Join(",", grid.ColumnsCollection.Where(c => c.GetVisible()))//.Select(c => c.Property))
+                };
+            string combinedString = string.Join(";", maDotthi.ToArray());
+            service.Export2("tinhoc03list", type, q, combinedString);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+        list = l1;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void ExportDSDK(string type)
+    {
+        List<DangkyTH03_View> l1 = new List<DangkyTH03_View>(list);
+
+        try
+        {
+            Query q = new Query()
+                {
+                    OrderBy = grid.Query.OrderBy,
+                    Filter = grid.Query.Filter,
+                    Select = string.Join(",", grid.ColumnsCollection.Where(c => c.GetVisible()))//.Select(c => c.Property))
+                };
+            string combinedString = string.Join(";", maDotthi.ToArray());
+            service.Export2("tinhoc03dsDuDK", type, q, combinedString);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+        list = l1;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async void OnChange(object args)
+    {
+        //Console.WriteLine(args);
+        if (maDotthi!=null && maDotthi.Count > 0)
+        {
+            string combinedString = string.Join(";", maDotthi.ToArray());
+            var response = await _httpClient.GetAsync("api/DangkyTH03/TH03GetListView/" + combinedString);
+            //response.EnsureSuccessStatusCode();
+            if (response.IsSuccessStatusCode)
+            {
+                list = await response.Content.ReadFromJsonAsync<List<DangkyTH03_View>>();
+                InvokeAsync(StateHasChanged);
+            }
+        }        
+    }
+
+    private async void onChangeState(int id, bool value){
+        ChangeDuDKState obj = new ChangeDuDKState();
+        obj.id = id;
+        //obj.value = !value;
+        Console.WriteLine(value);
+
+        List<DangkyTH03_View> list1 = new List<DangkyTH03_View>(list);
+        //DangkyTH03_View l1 = list1.Where(m => m.Id == id).FirstOrDefault();
+
+        //l1.DuDKThi = !l1.DuDKThi;
+
+        // foreach (var t in list)
+        // {
+        //     if (t.Id == id)
+        //     {
+        //         t.DuDKThi = !t.DuDKThi;
+        //     }
+        //     list1.Add(t);
+        // }
+        //int cur = this.grid.CurrentPage;
+        var response = await _httpClient.PostAsJsonAsync("api/DangkyTH03/TH03ChangeDuDKState", @obj);
+        //Console.WriteLine(this.grid.CurrentPage);
+        list = list1;
+        this.StateHasChanged();
+        //InvokeAsync(StateHasChanged);
+        
+        //this.grid.CurrentPage = cur;
+    }
+}
+

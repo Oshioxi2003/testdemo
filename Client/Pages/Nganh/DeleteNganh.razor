@@ -1,0 +1,42 @@
+﻿@page "/NganhDelete/{Id}"
+@using Flic.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+<h2>Delete Khoa</h2>
+@if (item != null)
+{
+    <p>Bạn chắc chắn xóa ngành: <b>@item.Name</b></p>
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-group">
+            <input type="button" class="btn btn-primary" @onclick="@Delete" value="Delete" />
+                <input type="button" class="btn btn-secondary" @onclick="@Cancel" value="Cancel" />
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+    Khoa item = new Khoa();
+    protected override async Task OnInitializedAsync()
+    {
+        item = await Http.GetFromJsonAsync<Khoa>("api/Nganh/NganhGetByID/" + Id);
+    }
+    protected async Task Delete()
+    {
+        var response = await Http.DeleteAsync("api/Nganh/NganhDelete/" + Id);
+        bool deleteResponse = await response.Content.ReadFromJsonAsync<bool>();
+            if (deleteResponse)
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "Deleted Successfully!");
+                NavigationManager.NavigateTo("NganhList");
+            }
+        }
+        void Cancel()
+        {
+            NavigationManager.NavigateTo("NganhList");
+        }
+    }
+}

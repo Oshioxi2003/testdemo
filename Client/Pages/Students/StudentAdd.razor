@@ -1,0 +1,252 @@
+﻿@page "/StudentAdd/"
+@using Flic.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+<h2>Thêm mới Sinh viên</h2>
+@if (ErrMessage != "")
+{
+    <span>
+        @ErrMessage
+    </span>
+}
+<EditForm Model="@item" OnValidSubmit="@Save">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="CountryName">Khóa học</label>
+                <InputSelect class="form-control" @bind-Value="@item.KhoahocID">
+                    <option value="">---Chọn khóa học---</option>
+                    @foreach (var it in KhoahocList)
+                    {
+                        <option value="@it.Id">@it.Name</option>
+                    }
+                </InputSelect>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="CountryName">Khoa</label>
+                <InputSelect class="form-control" ValueChanged="@((string value ) => KhoaHasChanged(value))" ValueExpression="@(() => item.KhoaID)" Value="@item.KhoaID">
+                    <option value="">---Chọn Khoa---</option>
+                    @foreach (var it in KhoaList)
+                    {
+                        <option value="@it.Id">@it.Name</option>
+                    }
+                </InputSelect>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="CountryName">Ngành</label>
+                @*<InputSelect class="form-control" @bind-Value="@item.NganhID">*@
+                <InputSelect class="form-control" ValueChanged="@((string value ) => NganhHasChanged(value))" ValueExpression="@(() => item.NganhID)" Value="@item.NganhID">
+                    <option value="">---Chọn ngành---</option>
+                    @foreach (var it in NganhList)
+                    {
+                        <option value="@it.Id">@it.Name</option>
+                    }
+                </InputSelect>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="CountryName">Lớp</label>
+                <InputSelect class="form-control" @bind-Value="@item.LopID">
+                    <option value="">---Chọn Lớp---</option>
+                    @foreach (var it in LopList)
+                    {
+                        <option value="@it.Id">@it.Name</option>
+                    }
+                </InputSelect>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="CountryCode">Mã Sinh viên</label>
+                <input form="CountryCode" class="form-control" @bind="@item.MaSV" />
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="CountryCode">Họ và đệm</label>
+                <input form="CountryCode" class="form-control" @bind="@item.HoDem" />
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="CountryCode">Tên</label>
+                <input form="CountryCode" class="form-control" @bind="@item.Ten" />
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="CountryCode">Ngày sinh</label>
+                <input form="CountryCode" class="form-control" @bind="@item.Ngaysinh" />
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="CountryCode">Email</label>
+                <input form="CountryCode" class="form-control" @bind="@item.Email" />
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="CountryCode">Điện thoại</label>
+                <input form="CountryCode" class="form-control" @bind="@item.DienThoai" />
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="CountryCode">CCCD</label>
+                <input form="CountryCode" class="form-control" @bind="@item.CCCD" />
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="CountryCode">Số TK</label>
+                <input form="CountryCode" class="form-control" @bind="@item.SoTK" />
+            </div>
+        </div>
+        <div class="col-md-4">
+            <label for="CountryName">Trạng thái</label>
+            <InputSelect class="form-control" @bind-Value="@item.Trangthai">
+                <option value="">---Chọn Trạng thái---</option>
+                @foreach (var it in TrangthaiList)
+                {
+                    <option value="@it.Id">@it.Name</option>
+                }
+            </InputSelect>
+        </div>
+    </div>
+    
+    
+    <div class="row">
+        <div class="col-md-12">
+            <br />
+            <div class="form-group">
+                <button type="submit" class="btn btn-success">Save </button>
+                <input type="button" class="btn btn-success" @onclick="@Cancel" value="Cancel" />
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+
+@code {
+    Student item = new Student();
+    List<Khoa> KhoaList = new List<Khoa>();
+    List<Khoahoc> KhoahocList = new List<Khoahoc>();
+    List<Nganh> NganhList = new List<Nganh>();
+    List<Lop> LopList = new List<Lop>();
+    List<StudentStatus> TrangthaiList = new List<StudentStatus>();
+    public string SelectedId { get; set; }
+    public string ErrMessage = "";
+    public string khoahocId { get; set; }
+    public string khoaId { get; set; }
+    public string nganhId { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        try{
+            var response = await Http.GetAsync("api/Khoa/KhoaGetList");
+            KhoaList = await response.Content.ReadFromJsonAsync<List<Khoa>>();
+
+            response = await Http.GetAsync("api/Khoahoc/KhoahocGetList");
+            KhoahocList = await response.Content.ReadFromJsonAsync<List<Khoahoc>>();
+
+            response = await Http.GetAsync("api/StudentStatus/StudentStatusGetList");
+            TrangthaiList = await response.Content.ReadFromJsonAsync<List<StudentStatus>>();
+            ErrMessage = "";
+        }
+        catch (Exception e){
+            ErrMessage = e.Message;
+        }
+
+
+    }
+    protected async Task Save()
+    {
+        try{
+            var response = await Http.PostAsJsonAsync("api/Student/StudentAdd", @item);
+            await JsRuntime.InvokeVoidAsync("alert", "Saved Successfully!");
+            NavigationManager.NavigateTo("StudentList");
+            ErrMessage = "";
+        }catch (Exception e){
+            await JsRuntime.InvokeVoidAsync("alert", "Error:" + e.Message);
+            ErrMessage = e.Message;
+        }
+
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("StudentList");
+    }
+    public async void handleChange(ChangeEventArgs args)
+    {
+        try{
+            Console.WriteLine(args.Value);
+            //SelectedId = args.Value.ToString();
+            //NganhList.Clear();
+            //var response = await Http.GetAsync("api/Nganh/NganhGetListByKhoa/" + SelectedId);            
+            //NganhList = await response.Content.ReadFromJsonAsync<List<Nganh>>();        
+            //ErrMessage = "";
+            //KhoaHasChanged(SelectedId);
+        }
+        catch(Exception e){
+            ErrMessage = e.Message;
+        }
+    }
+    private async Task KhoaHasChanged(string value)
+    {
+        item.KhoaID = value;
+        //SelectedId = value;
+        //countryId = value;
+        //NganhList.Clear();
+        if (value == "")
+        {
+            NganhList.Clear();
+        }
+        else
+        {
+            await LoadNganh(value);
+        }
+    }
+
+    private async Task LoadNganh(string khoaId)
+    {
+        var response = await Http.GetAsync("api/Nganh/NganhGetListByKhoa/" + khoaId);
+        NganhList = await response.Content.ReadFromJsonAsync<List<Nganh>>();
+    }
+
+    private async Task NganhHasChanged(string value)
+    {
+        item.NganhID = value;
+        //SelectedId = value;
+        
+        
+        if (value == "")
+        {
+            LopList.Clear();
+        }
+        else
+        {
+            await LoadLop(value);
+        }
+    }
+
+    private async Task LoadLop(string nganhId)
+    {
+        var response = await Http.GetAsync("api/Lop/LopGetListByKhoahocNganh/" + item.KhoahocID + "/" + nganhId);
+        LopList = await response.Content.ReadFromJsonAsync<List<Lop>>();
+    }
+}

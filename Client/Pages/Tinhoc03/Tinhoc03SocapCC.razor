@@ -1,0 +1,206 @@
+﻿@page "/Tinhoc03SoCapCC"
+@using Flic.Shared
+@using System.Net.Http.Headers
+@inject HttpClient _httpClient
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+
+@inject NavigationManager NavigationManager
+@inject NorthwindService service
+@inject IJSRuntime JsRuntime
+<div>
+    <PageTitle>Sổ cấp Chứng chỉ Ứng dụng Công nghệ Thông tin cơ bản</PageTitle>
+
+    <AuthorizeView>
+        <NotAuthorized>
+            <span>You're not authorize</span>
+        </NotAuthorized>
+        <Authorized Context="Auth">
+            <div class="row">
+                <h3>Sổ cấp Chứng chỉ Ứng dụng Công nghệ Thông tin cơ bản</h3>
+            </div>
+            <RadzenTemplateForm TItem="DangkyTH03">
+                <div class="row">
+                    <div class="col-12">
+                        Đợt thi:
+                        <RadzenDropDown Data=@_dotthiList TextProperty="Name" ValueProperty="Id" @bind-Value=@maDotthi Placeholder="--Chọn Đợt thi--"
+                                        AllowClear="true" Multiple="false" TValue="string" Change=@OnChange />
+                        <RadzenButton Click=@(args => SocapCCThem("/Tinhoc03SCCCThem")) Text="Thêm mới" ButtonStyle="ButtonStyle.Primary" />
+
+                        <RadzenButton Text="Xuất ds in chứng chỉ" Icon="grid_on" Click="@(args => Export("Tinhoc03DScapCC"))" ButtonStyle="ButtonStyle.Primary" />
+                        <RadzenButton Text="Nhập Sổ cấp chứng chỉ" Icon="grid_on" Click="@(args => ImportSoCC())" ButtonStyle="ButtonStyle.Primary" />
+                        <RadzenButton Text="Xuất sổ cấp chứng chỉ" Icon="grid_on" Click="@(args => Export("Tinhoc03SocapCC"))" ButtonStyle="ButtonStyle.Primary" />
+                            
+                    </div>
+                </div>
+            </RadzenTemplateForm>
+
+            <div class="row">
+                <span>@msg </span><a href="@link_file" target="_blank"> @a_msg </a>
+                <RadzenDataGrid @ref="grid" IsLoading="@isLoading" Count="@count" Data="@list"
+                                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterMode="FilterMode.Advanced" AllowSorting="true" AllowColumnPicking="false"
+                                AllowFiltering="true" AllowPaging="true" PageSize="30" PagerHorizontalAlign="HorizontalAlign.Center" TItem="DangkyTH03_View" AllowColumnalseResize="true">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="DangkyTH03_View" Property="stt" Title="STT" Filterable="false" Width="70px" />
+                        
+                        <RadzenDataGridColumn TItem="DangkyTH03_View" Property="CCCD" Title="CCCD" Width="100%" />
+                        <RadzenDataGridColumn TItem="DangkyTH03_View" Property="HovaDem" Title="Họ đệm" Width="100%" />
+                        <RadzenDataGridColumn TItem="DangkyTH03_View" Property="Ten" Title="Tên" Width="100%" />
+                        <RadzenDataGridColumn TItem="DangkyTH03_View" Property="NgaySinh" Title="Ngày sinh" Filterable="false" Width="100%" />
+                        <RadzenDataGridColumn TItem="DangkyTH03_View" Property="NoiSinh_Tinh_Ten" Title="Nơi sinh" Width="100%" />
+                        <RadzenDataGridColumn TItem="DangkyTH03_View" Property="GioiTinh" Title="Giới" Width="80px">
+                            <Template Context="data">
+                                @gt[@data.GioiTinh.Value]
+                            </Template>
+                        </RadzenDataGridColumn>
+                        
+                        <RadzenDataGridColumn TItem="DangkyTH03_View" Property="DanToc_Ten" Title="Dân tộc" Filterable="false" Width="100%" />
+
+                        
+                        <RadzenDataGridColumn TItem="DangkyTH03_View" Property="DiemLT" Title="Lý thuyết" FormatString="{0:N2}" Filterable="false" Width="100%" />
+                        <RadzenDataGridColumn TItem="DangkyTH03_View" Property="DiemTH" Title="Thực hành" FormatString="{0:N2}"  Filterable="false" Width="100%" />
+                        
+                        <RadzenDataGridColumn TItem="DangkyTH03_View" Property="SoChungChi" Title="Số hiệu CC" Filterable="false" Width="100%" />
+                        <RadzenDataGridColumn TItem="DangkyTH03_View" Property="SoVaoSo" Title="Số vào sổ" Filterable="true" Width="100%" />
+                        <RadzenDataGridColumn TItem="DangkyTH03_View" Property="" Title="Thao tác" Filterable="false" Width="100%">
+                            <Template Context="data">
+                                <AuthorizeView Roles="Admin,QUANLY">
+                                    <a href="/Tinhoc03SocapUpdate/@data.Id">Edit</a> |                                    
+                                </AuthorizeView>
+                                <AuthorizeView Roles="Admin">
+                                    <a href="/Tinhoc03SocapDelete/@data.Id">Delete</a>
+                                </AuthorizeView>
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </div>
+
+        </Authorized>
+    </AuthorizeView>
+</div>
+
+@code {
+    IEnumerable<DangkyTH03_View> list;
+    LapDSTinhoc para = new LapDSTinhoc();
+    //string maDotthi = "";
+    RadzenDataGrid<DangkyTH03_View> grid;
+    List<string> dotthList = new List<string>();
+    IEnumerable<string> selectedDotthi;
+
+    List<bool> DuDKthiList = new List<bool>();
+    IEnumerable<bool> selectedDuDKThi;
+    List<Dotthi> _dotthiList;
+    string maDotthi;
+    List<string> gt = new List<string>() { "Nữ", "Nam" };
+    bool isLoading;
+    bool dieukien;
+    int count;
+    string link_file = "#";
+    string a_msg, msg;
+
+    // async void OnClick(string link)
+    // {        
+    //     if (maDotthi != null )
+    //     {
+    //         string combinedString = string.Join(";", maDotthi.ToArray());
+    //         link = link + "/" + combinedString;
+    //         NavigationManager.NavigateTo(link, true);
+    //     }else
+    //     {
+    //         await JsRuntime.InvokeVoidAsync("alert", "Chưa chọn đợt thi");
+    //     }
+
+    // }
+    async void SocapCCThem(string link)
+    {
+            NavigationManager.NavigateTo(link, true);
+    }
+    async void Filter()
+    {
+        var response = await _httpClient.PostAsJsonAsync("api/DangkyTH03/TH03GetDSSCCC", @maDotthi);
+        if (response.IsSuccessStatusCode)
+        {
+            list = await response.Content.ReadFromJsonAsync<List<DangkyTH03_View>>();
+            //await grid.Reload();
+            InvokeAsync(StateHasChanged);
+        }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+
+        try
+        {
+            _dotthiList = await _httpClient.GetFromJsonAsync<List<Dotthi>>("api/Dotthi/DotthiGetList");
+            if (_dotthiList != null)
+            {
+                foreach (var it in _dotthiList)
+                {
+                    dotthList.Add(it.Id);
+                }
+            }
+            DuDKthiList.Clear();
+            DuDKthiList.Add(true);
+            DuDKthiList.Add(false);
+
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            string ErrMessage = e.Message;
+        }
+    }
+    async Task OnSelectedDotthiChange(object value)
+    {
+        if (selectedDotthi != null && !selectedDotthi.Any())
+        {
+            selectedDotthi = null;
+        }
+
+        await grid.FirstPage();
+    }
+
+    async Task ImportSoCC()
+    {
+        string link = "/Tinhoc03ImportSoCC/" + @maDotthi;
+        NavigationManager.NavigateTo(link, true);
+    }
+
+    private async void OnChange(object args)
+    {
+        if (maDotthi != null && maDotthi != "")
+        {          
+            var response = await _httpClient.PostAsJsonAsync("api/DangkyTH03/TH03GetDSSCCC", @maDotthi);
+     
+            if (response.IsSuccessStatusCode)
+            {
+                list = await response.Content.ReadFromJsonAsync<List<DangkyTH03_View>>();
+                InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+    public void Export(string type)
+    {
+        List<DangkyTH03_View> l1 = new List<DangkyTH03_View>(list);
+
+        try
+        {
+            Query q = new Query()
+                {
+                    OrderBy = grid.Query.OrderBy,
+                    Filter = grid.Query.Filter,
+                    Select = string.Join(",", grid.ColumnsCollection.Where(c => c.GetVisible()))//.Select(c => c.Property))
+                };
+            //string combinedString = string.Join(";", maDotthi.ToArray());
+            
+            string url = "/export/"+ type + "/excel/" + maDotthi;
+            NavigationManager.NavigateTo(url, true);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+        list = l1;
+        InvokeAsync(StateHasChanged);
+    }
+}
+

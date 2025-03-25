@@ -1,0 +1,131 @@
+﻿@* 
+<div class="my_topnav" id="myTopnav">
+    <a href="#home" class="active">Home</a>
+    <a href="#news">News</a>
+    <a href="#contact">Contact</a>
+    <div class="my_dropdown">
+        <button class="my_dropbtn">
+            Dropdown
+            <i class="fa fa-caret-down"></i>
+        </button>
+        <div class="my_dropdown-content">
+            <a href="#">Link 1</a>
+            <a href="#">Link 2</a>
+            <a href="#">Link 3</a>
+        </div>
+    </div>
+    <a href="#about">About</a>
+    <a href="javascript:void(0);" class="icon" onclick="myFunction()">&#9776;</a>
+</div>
+<script>
+    function myFunction() {
+        var x = document.getElementById("myTopnav");
+        if (x.className === "my_topnav") {
+            x.className += " responsive";
+        } else {
+            x.className = "my_topnav";
+        }
+    }
+</script>
+
+<div style="width: 80%">
+
+   
+
+
+
+
+     <ul class="main_menu">
+        <li>
+            <a href="/">Trang chủ</a>
+        </li>
+        <li>
+            <a href="/Gioithieu">Giới thiệu</a>
+        </li>
+        <li>
+            <a href="/Thongbao">Thông báo</a>
+        </li>
+        
+        <li>
+            <a href="/Tintuc">Tin tức</a>
+        </li>
+        <li>
+            <a href="/Ketqua">Kết quả</a>
+        </li>
+        <li>
+            <a href="#">Liên hệ</a>
+        </li>
+        <li>
+            <a href="#">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </a>
+        </li>
+    </ul> 
+</div> *@
+
+@* 
+<div style="width: 20%">
+ <ul class="main_menu">
+    <AuthorizeView>
+        <Authorized>            
+            <li>
+                <a href="LogOut">Đăng xuất</a>
+            </li>
+    </Authorized>
+        <NotAuthorized>
+            <li>
+                <a href="Tinhoc03Register">Đăng ký</a>
+            </li>
+            <li>
+                <a href="Login">Đăng nhập</a>
+            </li>                               
+                                
+        </NotAuthorized>
+    </AuthorizeView>
+</ul>
+</div> *@
+
+<style>
+    
+</style>
+
+<!--Hamburger menu start-->
+<input type="checkbox" id="navcheck">
+<div class="nav-btn">
+    <label htmlfor="navcheck">
+        <span></span>
+        <span></span>
+        <span></span>
+    </label>
+</div>
+<!--Hamburger menu end-->
+<!--Header start-->
+<header class="header">
+    <nav class="navbar">
+        <!--Logo-->
+        <h1>
+            <a href="#" class="nav-logo">Responsive Navbar</a>
+        </h1>
+        <!--Logo-->
+        <!--Navigation-->
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="#" class="nav-link">Home</a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link">About ssss Us</a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link">Services</a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link">Contact</a>
+            </li>
+        </ul>
+        <!--Navigation-->
+    </nav>
+</header>
+<!--Header start-->
+<!--Backdrop start (for mobile menu only)-->
+<div class="backdrop"></div>
+<!--Backdrop end (for mobile menu only)-->

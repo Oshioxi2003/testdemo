@@ -1,0 +1,54 @@
+﻿@page "/LoaiLophocDelete/{Id}"
+@using Flic.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+<h2>Xóa Loại lớp học</h2>
+
+@if (item != null)
+{
+    <p>Bạn chắc chắn xóa mục tin : <b>@item.TenLop</b>?</p>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <input type="button" class="btn btn-primary" @onclick="@Delete" value="Delete" />
+                <input type="button" class="btn btn-secondary" @onclick="@Cancel" value="Cancel" />
+            </div>
+        </div>
+    </div>
+}
+@code {
+    [Parameter]
+    public string Id { get; set; }
+    LoaiLophoc item = new LoaiLophoc();    
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await Http.GetAsync("api/LoaiLophoc/LoaiLophocGetByID/" + Id);
+
+        if (response.IsSuccessStatusCode)
+        {
+            item = await response.Content.ReadFromJsonAsync<LoaiLophoc>();
+        }
+        else
+        {
+            await JsRuntime.InvokeVoidAsync("alert", response.StatusCode);
+        }
+    }
+
+    protected async Task Delete()
+    {
+        var response = await Http.DeleteAsync("api/LoaiLophoc/LoaiLophocDelete/" + Id);
+        if (response.IsSuccessStatusCode)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Xóa loại lớp học thành công!");
+            NavigationManager.NavigateTo("LoaiLophocList");
+        }        
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("LoaiLophocList");
+    }
+    
+}

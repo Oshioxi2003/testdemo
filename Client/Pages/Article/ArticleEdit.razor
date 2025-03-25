@@ -1,0 +1,284 @@
+﻿@page "/ArticleEdit/{Id:int}"
+@using Flic.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+@using Newtonsoft.Json
+<AuthorizeView>
+    <NotAuthorized>
+        <span>You're not authorize</span>
+    </NotAuthorized>
+    <Authorized Context="Auth">
+        <div class="row">
+            <h3>Sửa bài viết</h3>
+            <RadzenTemplateForm TItem="Article" Data=@item Submit=@OnSubmit>
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Title" Text="Tiêu đề" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenTextBox Name="Title" @bind-Value=@item.Title />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Title" Text="Nhập Tên" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-2">
+                        @*<RadzenLabel Component="SectionId" Text="Mục tin" />*@
+                    </div>
+                    <div class="col-6">
+                        <RadzenDropDown TValue="int" Data=@SectionList TextProperty="Name" ValueProperty="Id" @bind-Value=@item.SectionId />
+                    </div>
+                    <div class="col-2">
+                        @*<RadzenRequiredValidator Component="SectionId" Text="Nhập Tên" />*@
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="@item.ArticleAbstract" Text="Mô tả" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenHtmlEditor @bind-Value=@item.ArticleAbstract style="height: 300px;" Input=@OnInput Change=@OnChange Paste=@OnPaste Execute=@OnExecute UploadUrl="api/upload/image" />
+                    </div>
+                    <div class="col-2">
+                        @* <RadzenRequiredValidator Component="@item.ArticleAbstract" Text="Mô tả" /> *@
+                    </div>
+                </div>
+
+
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="@item.ImagePath" Text="Ảnh đại diện" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenUpload Multiple="false" Accept="image/*" Url="api/upload/single"
+                                      Progress=@(args => OnProgress(args, "Images only upload")) class="w-100"
+                                      Complete=@(args => OnComplete(args))
+                        @bind-Value=@item.ImagePath />
+                    </div>
+                    <div class="col-2">
+                        @* <RadzenRequiredValidator Component="@item.ArticleAbstract" Text="Mô tả" /> *@
+                        <RadzenImage Path="@item.ImagePath" Style="width: 15rem;" />
+                    </div>
+                </div>
+
+
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="@item.ArticleContent" Text="Nội dung" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenHtmlEditor @bind-Value=@item.ArticleContent style="height: 300px;" Input=@OnInput Change=@OnChange Paste=@OnPaste Execute=@OnExecute UploadUrl="api/upload/image" />
+                    </div>
+                    <div class="col-2">
+                        @* <RadzenRequiredValidator Component="@item.ArticleContent" Text="Nhập nội dung" /> *@
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Title" Text="Trạng thái" placehoder="(0: disable, 1: enable)" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenNumeric Name="Title" @bind-Value=@item.Status />
+                    </div>
+                    <div class="col-2">
+                        @* <RadzenRequiredValidator Component="Status" Text="Nhập trạng thái (0: disable, 1: enable)" /> *@
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-2">
+                    </div>
+                    <div class="col-6">
+                        <RadzenButton ButtonType="ButtonType.Submit" Text="Lưu" />
+                        <RadzenButton ButtonType="ButtonType.Button" Click=@Cancel Text="Hủy" />
+                    </div>
+                    <div class="col-2">
+                    </div>
+                </div>
+
+
+
+            </RadzenTemplateForm>
+        </div>
+    </Authorized>
+</AuthorizeView>
+
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    Article item = new Article();
+    string title;
+    string htmlValue = "";
+    string console;
+    List<Section> SectionList = new List<Section>();
+    int progress;
+    bool showProgress;
+    bool showComplete;
+    string completionMessage;
+    bool cancelUpload = false;
+    class UploadResponse
+    {
+        public string url { get; set; }
+    }    
+    //
+
+    void CompleteUpload(UploadCompleteEventArgs args)
+    {
+        if (!args.Cancelled)
+            completionMessage = "Upload Complete!";
+        else
+            completionMessage = "Upload Cancelled!";
+
+        showProgress = false;
+        showComplete = true;
+    }
+
+    void TrackProgress(UploadProgressArgs args)
+    {
+        showProgress = true;
+        showComplete = false;
+        progress = args.Progress;
+
+        // cancel upload
+        args.Cancel = cancelUpload;
+
+        // reset cancel flag
+        cancelUpload = false;
+    }
+
+    void CancelUpload()
+    {
+        cancelUpload = true;
+    }
+    int customParameter = 1;
+
+    void OnChange(UploadChangeEventArgs args, string name)
+    {
+        // foreach (var file in args.Files)
+        // {
+        //     console.Log($"File: {file.Name} / {file.Size} bytes");
+        // }
+
+        // console.Log($"{name} changed");
+    }
+    void OnProgress(UploadProgressArgs args, string name)
+    {
+        // console.Log($"{args.Progress}% '{name}' / {args.Loaded} of {args.Total} bytes.");
+
+        // if (args.Progress == 100)
+        // {
+        //     foreach (var file in args.Files)
+        //     {
+        //         //console.Log($"Uploaded: {file.Name} / {file.Size} bytes");
+        //     }
+        // }
+    }
+
+    void OnComplete(UploadCompleteEventArgs args)
+    {
+        //var yourObject = System.Text.Json.JsonDocument.Parse(args.JsonResponse);
+        //retrieve the value
+        //var url = yourObject.RootElement.GetProperty("url");
+        UploadResponse rs = JsonConvert.DeserializeObject<UploadResponse>(args.RawResponse);
+
+        Console.Write($"Server response: {args.JsonResponse}");
+        Console.Write($"Server response: {args.RawResponse}");
+        item.ImagePath = rs.url;
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var response = await Http.GetAsync("api/Section/SectionGetList");
+            response.EnsureSuccessStatusCode();
+            if (response.IsSuccessStatusCode)
+            {
+                SectionList = await response.Content.ReadFromJsonAsync<List<Section>>();
+            }
+            else
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "Error: " + response.StatusCode + " " + response.Content.ToString());
+            }
+            response = await Http.GetAsync("api/Article/ArticleGetByID/" + Id);
+            if (response.IsSuccessStatusCode)
+            {
+                item = await response.Content.ReadFromJsonAsync<Article>();
+            }
+            else
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "Error: " + response.StatusCode + " " + response.Content.ToString());
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+
+    }
+
+    void OnPaste(HtmlEditorPasteEventArgs args)
+    {
+        //console.Log($"Paste: {args.Html}");
+        console = args.Html;
+    }
+
+    void OnChange(string html)
+    {
+        //console.Log($"Change: {html}");
+        console = html;
+    }
+
+    void OnInput(string html)
+    {
+        //console.Log($"Input: {html}");
+        console = html;
+    }
+
+    void OnExecute(HtmlEditorExecuteEventArgs args)
+    {
+        //console.Log($"Execute: {args.CommandName}");
+        console = args.CommandName;
+    }
+    void OnClick(string text)
+    {
+        console = htmlValue;
+    }
+
+
+    protected async Task OnSubmit()
+    {
+        try
+        {
+            //item.CreateDate = DateTime.Now;
+            item.UpdateDate = DateTime.Now;
+            item.Status = 1;
+
+            var response = await Http.PutAsJsonAsync("api/Article/ArticleUpdate", @item);
+            if (response.IsSuccessStatusCode)
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "Saved Successfully!");
+                NavigationManager.NavigateTo("ArticleList");
+            }
+            else
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "Error: " + response.StatusCode + " " + response.Content.ToString());
+            }
+
+        }
+        catch (Exception e)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error:" + e.Message);
+        }
+
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("ArticleList");
+    }
+}

@@ -1,0 +1,175 @@
+﻿@page "/DKHocList"
+@using Flic.Shared
+@using System.Net.Http.Headers
+@inject HttpClient _httpClient
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+
+@inject NavigationManager NavigationManager
+@inject NorthwindService service
+
+<div>
+    <PageTitle>Danh sách đăng ký học</PageTitle>
+
+    <AuthorizeView>
+        <NotAuthorized>
+            <span>You're not authorize</span>
+        </NotAuthorized>
+        <Authorized Context="Auth">
+            <div class="row">
+                <h3>Danh sách đăng ký học</h3>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <RadzenButton Click=@(args => OnClick("/DKHocAddAdmin")) Text="Thêm mới" ButtonStyle="ButtonStyle.Primary" />
+                    Loại khóa học:
+                    <RadzenDropDown Data=@LoaiLophoclist TextProperty="TenLop" ValueProperty="Id" @bind-Value=@maLoaiLophoc
+                                    Placeholder="--Chọn Loại lớp--"  AllowClear="true" Multiple="true" TValue="List<string>" Change=@OnChange />
+                    <RadzenDropDown Data=@Lophoclist TextProperty="TenLop" ValueProperty="Id" @bind-Value=@maLophoc
+                                    Placeholder="--Chọn Loại lớp--"  AllowClear="true" Multiple="true" TValue="List<int>" Change=@OnChangeLophoc />
+                    <RadzenButton Text="Export DS" Icon="grid_on" Click="@(args => Export("excel"))" ButtonStyle="ButtonStyle.Primary" />
+                </div>
+            </div>
+            <div class="row">
+
+                <RadzenDataGrid @ref="grid" IsLoading="@isLoading" Count="@count" Data="@list"
+                                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterMode="FilterMode.Advanced" AllowSorting="true" AllowColumnPicking="true"
+                                AllowFiltering="true" AllowPaging="true" PageSize="30" PagerHorizontalAlign="HorizontalAlign.Center" TItem="DKHoc" AllowColumnResize="true">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="DKHoc" Property="Id" Title="ID" Filterable="false" Width="80px" />
+
+                        <RadzenDataGridColumn TItem="DKHoc" Property="HovaDem" Title="Họ đệm" Width="100%" />
+                        <RadzenDataGridColumn TItem="DKHoc" Property="Ten" Title="Tên" Width="100%" />
+                        
+                        @* <RadzenDataGridColumn TItem="DKHoc" Property="NgaySinh" Title="Ngày sinh" Filterable="false" Width="100%" /> *@
+
+                        @* <RadzenDataGridColumn TItem="DKHoc" Property="CCCD" Title="CCCD" Width="100%" /> *@
+                        <RadzenDataGridColumn TItem="DKHoc" Property="DienThoai" Title="Điện thoại" Width="100%" />
+                        <RadzenDataGridColumn TItem="DKHoc" Property="Email" Title="Email" Width="100%" />
+                        <RadzenDataGridColumn TItem="DKHoc" Property="CourseId" Title="Khóa học" Width="100%" />
+                        <RadzenDataGridColumn TItem="DKHoc" Property="Hocphi" Title="Học phí" Width="100%" />
+                        <RadzenDataGridColumn TItem="DKHoc" Property="PaymentSuccess" Title="Thanh toán" Width="100%" />
+                        @* <RadzenDataGridColumn TItem="DKHoc" Property="Trangthai" Title="Trạng thái" Width="100%" /> *@
+                        
+
+                        <RadzenDataGridColumn TItem="DKHoc" Property="" Title="Thao tác" Filterable="false" Width="100%">
+                            <Template Context="data">
+                                <AuthorizeView Roles="Admin,QUANLY">
+                                    <a href="/DKHocEditAdmin/@data.Id">Edit</a> |
+                                    <a href="/DKHocDetail/@data.Id">View</a> |
+                                </AuthorizeView>
+                                <AuthorizeView Roles="Admin">
+                                    <a href="/DKHocDelete/@data.Id">Delete</a>
+                                </AuthorizeView>
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </div>
+            
+                @if (list != null)
+                {
+                    <div class="row">
+                        Tổng số: @list.Count()
+                </div>
+                }
+                
+            
+
+        </Authorized>
+    </AuthorizeView>
+</div>
+
+@code {
+    IEnumerable<DKHoc> list;
+    string ErrMessage = "";
+    RadzenDataGrid<DKHoc> grid;
+
+    List<LoaiLophoc> LoaiLophoclist = new List<LoaiLophoc>();
+    List<Lophoc> Lophoclist = new List<Lophoc>();
+    bool isLoading;
+    int count;
+
+    List<string> maLoaiLophoc;
+    List<int> maLophoc;
+
+    //object selectedValue;
+
+    void OnClick(string link)
+    {
+        NavigationManager.NavigateTo(link, true);
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            //_dotthiList = await _httpClient.GetFromJsonAsync<List<Dotthi>>("api/Dotthi/DotthiGetList");
+            var response = await _httpClient.GetAsync("api/LoaiLophoc/LoaiLophocGetListActive");
+            if (response.IsSuccessStatusCode)
+            {
+                LoaiLophoclist = await response.Content.ReadFromJsonAsync<List<LoaiLophoc>>();
+            }
+            //list = await _httpClient.GetFromJsonAsync<List<DKHoc>>("api/DKHoc/DKHocGetList");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            string ErrMessage = e.Message;
+        }
+    }
+
+    public void Export(string type)
+    {
+        List<DKHoc> l1 = new List<DKHoc>(list);
+
+        try
+        {
+            Query q = new Query()
+                {
+                    OrderBy = grid.Query.OrderBy,
+                    Filter = grid.Query.Filter,
+                    Select = string.Join(",", grid.ColumnsCollection.Where(c => c.GetVisible()))//.Select(c => c.Property))
+                };
+            string combinedString = string.Join(";", maLophoc.ToArray());
+            service.Export2("DangkyhocToExcel", type, q, combinedString);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+        list = l1;
+        InvokeAsync(StateHasChanged);
+    }
+
+
+
+    private async void OnChange(object args)
+    {
+        //Console.WriteLine(args);
+        if (maLoaiLophoc != null && maLoaiLophoc.Count > 0)
+        {
+            string combinedString = string.Join(";", maLoaiLophoc.ToArray());
+            var response = await _httpClient.GetAsync("api/Lophoc/LopHocGetListByLoaiLop/" + combinedString);
+            if (response.IsSuccessStatusCode)
+            {
+                Lophoclist = await response.Content.ReadFromJsonAsync<List<Lophoc>>();
+                InvokeAsync(StateHasChanged);
+            }
+             
+        }
+    }
+    private async void OnChangeLophoc(object args)
+    {
+        if (maLophoc!=null && maLophoc.Count > 0)
+        {
+            string combinedString = string.Join(";", maLophoc.ToArray());
+            var response = await _httpClient.GetAsync("api/DKHoc/DKHocGetListByLoai/" + combinedString);
+            if (response.IsSuccessStatusCode)
+            {
+                list = await response.Content.ReadFromJsonAsync<List<DKHoc>>();
+                InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+
+}
+

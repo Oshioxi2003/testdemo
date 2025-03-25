@@ -1,0 +1,255 @@
+﻿@page "/tracuu"
+
+@using Flic.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+<style>
+    .tracuu_table {
+        border-collapse: collapse;
+        font-family: Tahoma, Geneva, sans-serif;
+        width: 100%;
+    }
+
+        .tracuu_table td {
+            padding: 15px;
+        }
+
+        .tracuu_table thead td {
+            background-color: #80b3ff;
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 13px;
+            border: 1px solid #80b3ff;
+        }
+
+        .tracuu_table tbody td {
+            color: #636363;
+            border: 1px solid #dddfe1;
+        }
+
+        .tracuu_table tbody tr {
+            background-color: #f9fafb;
+        }
+
+            .tracuu_table tbody tr:nth-child(odd) {
+                background-color: #ffffff;
+            }
+</style>
+
+        <div class="row">
+            <h3>TÌM KIẾM THÔNG TIN</h3>
+            <RadzenTemplateForm TItem="TracuuTT" Data=@item Submit=@OnSubmit>
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="CCCD" Text="CCCD" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenTextBox Name="CCCD" @bind-Value=@item.CCCD />
+                     </div>
+                     <div class="col-2">
+                        <RadzenRequiredValidator Component="CCCD" Text="Nhập CCCD" />
+                     </div>
+                 </div>
+                 <div class="row">
+                     <div class="col-2">
+                        <RadzenLabel Component="Mobile" Text="Điện thoại" />
+                     </div>
+                     <div class="col-6">
+                        <RadzenTextBox Name="Mobile" @bind-Value=@item.Mobile />
+                     </div>
+                     <div class="col-2">
+                        <RadzenRequiredValidator Component="Mobile" Text="Nhập số điện thoại" />
+                     </div>
+                 </div>
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Email" Text="Email" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenTextBox Name="Email" @bind-Value=@item.Email />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Email" Text="Email" />
+                    </div>
+                </div>
+                 <div class="row">
+                     <div class="col-2">
+                     </div>
+                     <div class="col-6">
+                         <RadzenButton ButtonType="ButtonType.Submit" Text="Tìm" />
+                         @* <RadzenButton ButtonType="ButtonType.Button" Click=@Cancel Text="Hủy" /> *@
+                     </div>
+                     <div class="col-2">
+                     </div>
+                 </div>
+
+             </RadzenTemplateForm>
+         </div>
+         <div>
+             
+    @if (dsTin != null)
+    {
+        <table class="tracuu_table">
+        <thead>
+            <tr>
+                <td>Thông tin thí sinh</td>
+                <td>Thông tin đợt thi</td>
+                <td>Thông tin thanh toán</td>
+            </tr>
+        </thead>
+            <tbody>
+        @foreach(var it in dsTin)
+        {
+         <tr>
+             <td>
+                 <div>
+                            CCCD: @it.CCCD <br>
+                 </div>
+                 <div>
+                            Họ tên: @it.HovaDem @it.Ten
+                 </div>
+            </td>
+            <td>
+                 <div>
+                            Đợt thi: @it.DotThi, phòng thi: @it.PhongThi SBD:@it.SoBD
+                 </div>
+                 <div>
+                            Điểm Lý thuyết: @it.DiemLT, điểm thực hành: @it.DiemTH
+                 </div>
+             </td>
+                                
+            <td>
+                <div>
+                            Lệ phí thi: @it.LePhiThi Lệ phí ôn:@it.LePhiOn
+                </div>
+                <div>
+                            @if (it.PaymentSuccess!=null && it.PaymentSuccess.Value)
+                            {
+                                <span>Đã TT</span>
+                            }
+                            else
+                            {
+                                <span>Chưa TT</span>
+                            }
+                </div>           
+                <div>
+                        @* <a href="/Tinhoc03Update/@it.Id">Sửa</a> | *@
+                        <a href="/Tinhoc03Detail/@it.Id">Xem</a>
+                </div>
+            </td>
+         </tr>   
+        }
+        </tbody>
+        </table>
+    }
+    <p>
+        <br />
+    </p>
+    @if (dsDKHoc != null)
+    {
+        <table class="tracuu_table">
+            <thead>
+                <tr>
+                    <td>
+                        TT
+                    </td>
+                    <td>
+                        Họ tên
+                    </td>
+                    <td>
+                        Địa chỉ
+                    </td>
+                    <td>
+                        Điện thoại
+                    </td>
+                    <td>
+                        Email
+                    </td>
+                    <td>
+                        Lớp học
+                    </td>
+                    <td>
+                        Thanh toán
+                    </td>
+                    <td>
+                        &nbsp;
+                    </td>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int i = 1;
+                    foreach (var it in dsDKHoc)
+                    {
+                        <tr>
+                            <td>
+                                @i
+                            </td>
+                            
+                            <td>
+                                @it.HovaDem    @it.Ten
+                            </td>
+                            <td>
+                                @it.DiaChi
+                            </td>
+                            <td>
+                                @it.DienThoai
+                            </td>
+                            <td>
+                                @it.Email
+                            </td>
+                            <td>
+                                @it.CourseName
+                            </td>
+                            <td>
+                                @if (it.DaThanhtoan != null && it.DaThanhtoan == 1)
+                                {
+                                    <span>Đã thanh toán</span>
+                                }
+                                else
+                                {
+                                    <span>Chưa thanh toán</span>
+                                }
+                            </td>
+                            <td>
+                                <a href="/DKHocDetail/@it.Id">Xem</a> |
+                            </td>
+                        </tr>
+                        i = i + 1;
+                    }
+                    
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+    string ErrMessage = "";    
+    TracuuTT item = new TracuuTT();
+    public List<DangkyTH03> dsTin;
+    public List<DKHocView> dsDKHoc;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+    protected async Task OnSubmit()
+    {
+        //var response = await Http.PutAsJsonAsync("api/Khoahoc/KhoahocUpdate", @item);
+        dsTin = await Http.GetFromJsonAsync<List<DangkyTH03>>("api/DangkyTH03/TH03GetByCCCD/" + item.CCCD);
+        dsDKHoc = await Http.GetFromJsonAsync<List<DKHocView>>("api/DKHoc/DKHocGetByMobile/" + item.Mobile);
+        if (dsDKHoc == null)
+        {
+            dsDKHoc = await Http.GetFromJsonAsync<List<DKHocView>>("api/DKHoc/DKHocGetByEmail/" + item.Email);
+        }
+
+    }
+    void Cancel()
+    {
+        //NavigationManager.NavigateTo("KhoahocList");
+    }
+}

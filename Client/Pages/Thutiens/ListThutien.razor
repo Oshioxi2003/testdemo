@@ -1,0 +1,202 @@
+﻿@page "/ThutienList2"
+@inject NavigationManager NavigationManager
+
+@*@attribute [Authorize(Roles = "Admin")]*@
+
+@using Flic.Shared
+@using Flic.Shared.Models
+@using Newtonsoft.Json
+@inject HttpClient Http
+@inject IJSRuntime js
+@inject NorthwindService service
+
+
+<RadzenText TextStyle="TextStyle.H3" TagName="TagName.H1" Class="my-4">
+    Danh sách thu tiền
+</RadzenText>
+
+<div class="col-md-6">
+    <RadzenButton Click=@(args => OnClick("/ThutienAdd")) Text="Thêm mới" ButtonStyle="ButtonStyle.Primary" />
+    <RadzenButton Click=@(args => OnClick("/ThutienLapDS")) Text="Lập DS thu tiền" ButtonStyle="ButtonStyle.Primary" />
+    <RadzenButton Text="Export XLS" Icon="grid_on" Click="@(args => Export("excel"))" ButtonStyle="ButtonStyle.Primary" />
+</div>
+<RadzenDataGrid @ref="grid" IsLoading="@isLoading" Count="@count" Data="@thutiens" LoadData="@LoadData" 
+    FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"    FilterMode="FilterMode.Advanced" AllowSorting="true"
+                AllowFiltering="true" AllowPaging="true" PageSize="40" PagerHorizontalAlign="HorizontalAlign.Center" TItem="ThuTienView" AllowColumnResize="true">
+    <Columns>
+        <RadzenDataGridColumn TItem="ThuTienView" Property="id" Filterable="false" Title="ID" Frozen="true" Width="50px" TextAlign="TextAlign.Center" />        
+        @*<RadzenDataGridColumn TItem="ThuTienView" Property="SinhVienID" Title="First Name" />*@
+        <RadzenDataGridColumn TItem="ThuTienView" Property="MaSinhVien" Title="Mã SV" Width="150px" />        
+        <RadzenDataGridColumn TItem="ThuTienView" Property="HoDem" Title="Họ đệm" Width="120px"/>
+        <RadzenDataGridColumn TItem="ThuTienView" Property="Ten" Title="Tên"  />
+        <RadzenDataGridColumn TItem="ThuTienView" Property="Ngaysinh" Title="Ngày sinh" FormatString="{0:d}" />
+        @*<RadzenDataGridColumn TItem="ThuTienView" Property="SoCCCD" Title="Số CCCD" />*@
+        <RadzenDataGridColumn TItem="ThuTienView" Property="KhoahocID" Title="Khóa" Width="60px"
+                              Type="typeof(IEnumerable<string>)" FilterValue="@selectedKhoahoc" FilterOperator="FilterOperator.Contains">
+            <FilterTemplate Context="data">
+                <RadzenDropDown @bind-Value=@selectedKhoahoc Style="width:100%"
+                                Change=@OnSelectedKhoahocChange Data="@(khoahocList)" AllowClear="true" Multiple="true" />
+            </FilterTemplate>
+        </RadzenDataGridColumn>
+
+        @*<RadzenDataGridColumn TItem="ThuTienView" Property="KhoaTen" Title="Khoa" />*@
+        <RadzenDataGridColumn TItem="ThuTienView" Property="NganhID" Title="Ngành" Type="typeof(IEnumerable<string>)" FilterValue="@selectedNganh" FilterOperator="FilterOperator.Contains">
+            <FilterTemplate Context="data">
+                <RadzenDropDown @bind-Value=@selectedNganh Style="width:100%"
+                                Change=@OnSelectedNganhChange Data="@(nganhList)" AllowClear="true" Multiple="true" />
+            </FilterTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ThuTienView" Property="LopID" Title="Lớp"
+                                                  Type="typeof(IEnumerable<string>)" FilterValue="@selectedLop" FilterOperator="FilterOperator.Contains">
+                                                  <FilterTemplate Context="data">
+                                    <RadzenDropDown @bind-Value=@selectedLop Style="width:100%"
+                                                    Change=@OnSelectedLopChange Data="@(lopList)" AllowClear="true" Multiple="true" />
+                                </FilterTemplate>
+                            </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ThuTienView" Property="LoaiKhoanthuID" Title="Khoản thu"
+            Type="typeof(IEnumerable<string>)" FilterValue="@selectedKhoanthus" FilterOperator="FilterOperator.Contains">
+            <FilterTemplate>
+                <RadzenDropDown @bind-Value=@selectedKhoanthus Style="width:100%"
+                                Change=@OnSelectedKhoanthuChange Data="@(khoanthus)" AllowClear="true" Multiple="true" />
+            </FilterTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ThuTienView" Property="KyThanhToan" Title="Kỳ thanh toán" />
+        <RadzenDataGridColumn TItem="ThuTienView" Property="SoTien" Title="Số tiền" />
+        @*<RadzenDataGridColumn TItem="ThuTienView" Property="NgayTao" Title="Ngày tạo" />*@
+        @*<RadzenDataGridColumn TItem="ThuTienView" Property="NgayThanhToan" Title="Ngày thanh toán" />*@
+        <RadzenDataGridColumn TItem="ThuTienView" Property="TrangThai" Title="Trạng thái" />
+    </Columns>
+</RadzenDataGrid>
+
+
+@code {
+    bool isLoading;
+    int count;
+    IEnumerable<ThuTienView> thutiens;
+    RadzenDataGrid<ThuTienView> grid;
+
+    List<string> khoanthus = new List<string> ();
+    IEnumerable<string> selectedKhoanthus;
+    List<string> khoahocList = new List<string>();
+    IEnumerable<string> selectedKhoahoc;
+
+    List<string> nganhList = new List<string>();
+    IEnumerable<string> selectedNganh;
+
+    List<string> lopList = new List<string>();
+    IEnumerable<string> selectedLop;
+
+    List<string> trangthaiFilterList = new List<string>();
+    IEnumerable<string> selectedTrangthai;
+
+    protected override async Task OnInitializedAsync()
+    {
+        List<LoaiKhoanthu> _khoanthus = await Http.GetFromJsonAsync<List<LoaiKhoanthu>>("api/LoaiKhoanthu/LoaiKhoanthuGetList");
+        if (_khoanthus != null)
+        {
+            foreach (var it in _khoanthus)
+            {
+                khoanthus.Add(it.MaLoaiKhoanThu);
+            }
+        }
+
+        List<Khoahoc> _KhoahocList = await Http.GetFromJsonAsync<List<Khoahoc>>("api/Khoahoc/KhoahocGetList");
+        if (_KhoahocList != null)
+        {
+            foreach (var it in _KhoahocList)
+            {
+                khoahocList.Add(it.Id);
+            }
+        }
+        List<Nganh> _NganhList = await Http.GetFromJsonAsync<List<Nganh>>("api/Nganh/NganhGetList");
+        if (_NganhList != null)
+        {
+            foreach (var it in _NganhList)
+            {
+                nganhList.Add(it.Id);
+            }
+        }
+
+        List<Lop> _LopList = await Http.GetFromJsonAsync<List<Lop>>("api/Lop/LopGetList");
+        if (_LopList != null)
+        {
+            foreach (var it in _LopList)
+            {
+                lopList.Add(it.Id);
+            }
+        }
+        thutiens = await Http.GetFromJsonAsync<List<ThuTienView>>("api/Thutien/ThutienGetList");
+    }
+    void OnClick(string link)
+    {
+        NavigationManager.NavigateTo(link, true);
+    }
+
+    async Task OnSelectedKhoanthuChange(object value)
+    {
+        if (selectedKhoanthus != null && !selectedKhoanthus.Any())
+        {
+            selectedKhoanthus = null;
+        }
+
+        await grid.FirstPage();
+    }
+    async Task OnSelectedKhoahocChange(object value)
+    {
+        if (selectedKhoahoc != null && !selectedKhoahoc.Any())
+        {
+            selectedKhoahoc = null;
+        }
+
+        await grid.FirstPage();
+    }
+    async Task OnSelectedNganhChange(object value)
+    {
+        if (selectedNganh != null && !selectedNganh.Any())
+        {
+            selectedNganh = null;
+        }
+
+        await grid.FirstPage();
+    }
+    async Task OnSelectedLopChange(object value)
+    {
+        if (selectedLop != null && !selectedLop.Any())
+        {
+            selectedLop = null;
+        }
+
+        await grid.FirstPage();
+    }
+    async Task LoadData(LoadDataArgs args)
+    {
+        isLoading = true;
+        var filters = args.Filters;
+
+        thutiens = await Http.GetFromJsonAsync<List<ThuTienView>>("api/Thutien/ThutienGetList");
+        
+
+        // Update the count
+        count = thutiens.Count();
+
+        isLoading = false;
+    }
+
+    public void Export(string type)
+    {
+        try
+        {
+            Query q = new Query()
+                {
+                    OrderBy = grid.Query.OrderBy,
+                    Filter = grid.Query.Filter,
+                    Select = string.Join(",", grid.ColumnsCollection.Where(c => c.GetVisible()))//.Select(c => c.Property))
+                };
+            service.Export("Thutiens", type, q);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+    }
+}

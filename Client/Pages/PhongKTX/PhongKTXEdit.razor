@@ -1,0 +1,80 @@
+﻿@page "/PhongKTXEdit/{Id}"
+
+@using Flic.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+<h2>Sửa phòng KTX</h2>
+<style>
+    form .row {
+        margin-bottom: 16px;
+    }
+</style>
+
+@if (item == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <RadzenTemplateForm TItem="PhongKTX" Data=@item Submit=@OnSubmit>
+        <p>
+            <RadzenLabel Component="Id" Text="Tên" />
+            <RadzenTextBox Name="Id" @bind-Value=@item.Id />
+            <RadzenRequiredValidator Component="Name" Text="Nhập mã phòng!" />
+        </p>
+        <p>
+            <RadzenLabel Component="Name" Text="Tên" />
+            <RadzenTextBox Name="Name" @bind-Value=@item.Name />
+            <RadzenRequiredValidator Component="Name" Text="Tên chưa nhập!" />
+        </p>
+        <p>
+            <RadzenLabel Component="Trangthai" Text="Trạng thái" />
+            <RadzenNumeric Name="Trangthai" @bind-Value=@item.Trangthai />
+            <RadzenRequiredValidator Component="Trangthai" Text="Trạng thái chưa nhập!" />
+        </p>
+        <RadzenButton ButtonType="ButtonType.Submit" Text="Save" />
+        <RadzenButton Click=@Cancel Text="Hủy" />
+    </RadzenTemplateForm>
+
+}
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+    PhongKTX item = new PhongKTX();
+    string ErrMessage;
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var response = await Http.GetAsync("api/PhongKTX/PhongKTXGetByID/"+Id);
+            response.EnsureSuccessStatusCode();
+            item = await response.Content.ReadFromJsonAsync<PhongKTX>();
+            ErrMessage = "";
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            string ErrMessage = e.Message;
+        }
+    }
+    protected async Task OnSubmit(PhongKTX it)
+    {
+        try
+        {
+            var response = await Http.PutAsJsonAsync("api/PhongKTX/PhongKTXUpdate", @item);
+            await JsRuntime.InvokeVoidAsync("alert", "Saved Successfully!");
+            NavigationManager.NavigateTo("PhongKTXList");
+        }
+        catch (Exception e)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error:" + e.Message);
+        }
+    }
+    
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("PhongKTXList");
+    }
+}

@@ -1,0 +1,172 @@
+﻿@page "/ThutienKTXLapDS/"
+
+@inject HttpClient Http
+@using System.IO
+@using Flic.Shared
+@using Newtonsoft.Json
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+<h3>Lập danh sách thu tiền</h3>
+
+<h4>@Message</h4>
+
+<RadzenTemplateForm TItem="ThuTienView" Data=@item Submit=@OnSubmit>
+    <p>
+        @*<RadzenDropDown TValue="string" Data=@LoaiKhoanthuList TextProperty="MoTa" ValueProperty="MaLoaiKhoanThu" Change="@OnChange" @bind-Value=@item.LoaiKhoanthuID/>*@
+        <RadzenDropDown TValue="string" Data=@KyThanhtoanList TextProperty="Name" ValueProperty="Id" Change="@OnChange" @bind-Value=@item.KyThanhToan />
+    </p>
+    <RadzenButton ButtonType="ButtonType.Submit" Text="Lập danh sách" />
+</RadzenTemplateForm>
+
+@code {
+    private ThuTienView item = new ThuTienView();
+    string Message = "";
+    IReadOnlyList<IBrowserFile> selectedFiles;
+    private List<Khoahoc> KhoahocList;
+    List<LoaiKhoanthu> LoaiKhoanthuList = new List<LoaiKhoanthu>();
+    List<KyThanhtoan> KyThanhtoanList = new List<KyThanhtoan>();
+    private List<Khoa> KhoaList;
+    private List<Nganh> NganhList;
+    private List<Lop> LopList;
+    private string KhoahocID;
+    private string KhoaID;
+    private string NganhID;
+    private string LopID;
+
+    private void OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        selectedFiles = e.GetMultipleFiles();
+        Message = $"{selectedFiles.Count} file(s) selected";
+        this.StateHasChanged();
+    }
+
+    private async void OnSubmit()
+    {
+        //
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/Thutien/ThutienKTXLapDS", @item);
+            await JsRuntime.InvokeVoidAsync("alert", "Saved Successfully!");
+            NavigationManager.NavigateTo("ThutienList");
+            Message = "";
+        }
+        catch (Exception e)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error:" + e.Message);
+            Message = e.Message;
+        }        
+        this.StateHasChanged();
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {            
+            item.LoaiKhoanthuID = "KTX";
+            var response = await Http.GetAsync("api/KyThanhtoan/KyThanhtoanGetByKhoanthu/" + item.LoaiKhoanthuID);
+            if (response.IsSuccessStatusCode)
+            {
+                KyThanhtoanList = await response.Content.ReadFromJsonAsync<List<KyThanhtoan>>();
+                this.StateHasChanged();
+            }
+            else
+            {
+                Message = "Lỗi trong khi lấy danh sách";
+            }
+            //LoaiKhoanthuList = await Http.GetFromJsonAsync<List<LoaiKhoanthu>>("api/LoaiKhoanthu/LoaiKhoanthuGetList");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Error" + e.Message.ToString());
+        }
+    }
+   
+    private async Task LoaiKhoanthuHasChanged(string value)
+    {
+        item.LoaiKhoanthuID = value;
+        if (value != "")
+        {
+
+            var response = await Http.GetAsync("api/KyThanhtoan/KyThanhtoanGetByKhoanthu/" + item.LoaiKhoanthuID);
+            if (response.IsSuccessStatusCode)
+            {
+                KyThanhtoanList = await response.Content.ReadFromJsonAsync<List<KyThanhtoan>>();
+                this.StateHasChanged();
+            }
+            else
+            {
+                Message = "Lỗi trong khi lấy danh sách";
+            }
+
+        }
+        else
+        {
+            KyThanhtoanList.Clear();
+        }
+        UpdateSotien();
+        this.StateHasChanged();
+    }
+    private async Task OnChange(object value)
+    {
+        var str = value is IEnumerable<object> ? string.Join(", ", (IEnumerable<object>)value) : value;
+
+        Console.WriteLine($"Value changed to {str}");
+        if (value != "")
+        {
+
+            var response = await Http.GetAsync("api/KyThanhtoan/KyThanhtoanGetByKhoanthu/" + item.LoaiKhoanthuID);
+            if (response.IsSuccessStatusCode)
+            {
+                KyThanhtoanList = await response.Content.ReadFromJsonAsync<List<KyThanhtoan>>();
+                this.StateHasChanged();
+            }
+            else
+            {
+                Message = "Lỗi trong khi lấy danh sách";
+            }
+        }
+        else
+        {
+            KyThanhtoanList.Clear();
+        }
+    }
+    private async Task KyThanhtoanHasChanged(string value)
+    {
+        item.KyThanhToan = value;
+        UpdateSotien();
+        this.StateHasChanged();
+    }
+    protected async void UpdateSotien()
+    {
+        Khoanthu kt = new Khoanthu();
+        kt.MaLoaiKhoanThu = item.LoaiKhoanthuID;
+        kt.NganhID = item.NganhID;
+        kt.KhoahocID = item.KhoahocID;
+        kt.KyThanhToan = item.KyThanhToan;
+
+        var response = await Http.PostAsJsonAsync<Khoanthu>("/api/Khoanthu/PostFindKhoanthu", kt);
+        if (response.IsSuccessStatusCode)
+        {
+            var strinResp = await response.Content.ReadAsStringAsync();
+            if (strinResp != "")
+            {
+                kt = JsonConvert.DeserializeObject<Khoanthu>(strinResp);
+                item.SoTien = kt.SoTien;
+            }
+            else
+            {
+                item.SoTien = 0;
+            }
+
+            //student_litst = res.student_litst;
+            this.StateHasChanged();
+        }
+        else
+        {
+            if ((int)response.StatusCode == 401)
+            {
+                NavigationManager.NavigateTo("/Login", true);
+            }
+        }
+    }
+}

@@ -1,0 +1,90 @@
+﻿@page "/NganhAdd/"
+@using Flic.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+<AuthorizeView>
+    <NotAuthorized>
+        <span>You're not authorize</span>
+    </NotAuthorized>
+    <Authorized Context="Auth">
+        <div class="row">
+            <h3>Thêm Ngành</h3>
+            <RadzenTemplateForm TItem="Nganh" Data=@item Submit=@OnSubmit>
+                
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Id" Text="Chọn Khoa" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenDropDown TValue="string" Data=@KhoaList TextProperty="Name" ValueProperty="Id" @bind-Value=@item.KhoaId />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Id" Text="Chưa Chọn Khoa" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Id" Text="Mã Ngành" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenTextBox Name="Id" @bind-Value=@item.Id />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Id" Text="Chưa nhập mã ngành" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Name" Text="Tên ngành" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenTextBox Name="Name" @bind-Value=@item.Name />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Name" Text="Chưa nhập Tên ngành" />
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-2">
+                    </div>
+                    <div class="col-6">
+                        <RadzenButton ButtonType="ButtonType.Submit" Text="Lưu" />
+                        <RadzenButton ButtonType="ButtonType.Button" Click=@Cancel Text="Hủy" />
+                    </div>
+                    <div class="col-2">
+                    </div>
+                </div>
+
+            </RadzenTemplateForm>
+        </div>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    Nganh item = new Nganh();
+    List<Khoa> KhoaList = new List<Khoa>();
+    protected override async Task OnInitializedAsync()
+    {        
+        var response = await Http.GetAsync("api/Khoa/KhoaGetList");
+        KhoaList = await response.Content.ReadFromJsonAsync<List<Khoa>>();
+
+    }
+    protected async Task OnSubmit()
+    {
+        try{
+            var response = await Http.PostAsJsonAsync("api/Nganh/NganhAdd", @item);
+            await JsRuntime.InvokeVoidAsync("alert", "Saved Successfully!");
+            NavigationManager.NavigateTo("NganhList");
+        }catch (Exception e){
+            await JsRuntime.InvokeVoidAsync("alert", "Error:" + e.Message);
+        }
+        
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("NganhList");
+    }
+}

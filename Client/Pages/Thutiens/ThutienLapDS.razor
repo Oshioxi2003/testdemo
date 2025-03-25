@@ -1,0 +1,240 @@
+﻿@page "/ThutienLapDS/"
+
+@inject HttpClient Http
+@using System.IO
+@using Flic.Shared
+@using Newtonsoft.Json
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+<h3>Lập danh sách thu tiền</h3>
+
+<h4>@Message</h4>
+
+@*<form @onsubmit="OnSubmit">*@
+<EditForm Model="@item" OnValidSubmit="@OnSubmit">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="CountryName">Khoản thu</label>
+                <InputSelect class="form-control" ValueChanged="@((string value ) => LoaiKhoanthuHasChanged(value))" ValueExpression="@(() => item.LoaiKhoanthuID)" Value="@item.LoaiKhoanthuID">                                     
+                    <option value="">---Chọn khoản thu---</option>
+                    @foreach (var it in LoaiKhoanthuList)
+                    {
+                        <option value="@it.MaLoaiKhoanThu">@it.MoTa</option>
+                    }
+                </InputSelect>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="CountryName">Kỳ thanh toán</label>                
+                <InputSelect class="form-control" ValueChanged="@((string value ) => KyThanhtoanHasChanged(value))" ValueExpression="@(() => item.KyThanhToan)" Value="@item.KyThanhToan">
+                    <option value="">---Chọn Kỳ thanh toán---</option>
+                    @if (KyThanhtoanList != null)
+                    {
+                        @foreach (var it in KyThanhtoanList)
+                        {
+                            @if (it.Id == item.KyThanhToan)
+                            {
+                                <option value="@it.Id" selected>@it.Name</option>
+                            }
+                            else
+                            {
+                                <option value="@it.Id">@it.Name</option>
+                            }
+                        }
+                    }
+                </InputSelect>
+            </div>
+        </div>
+        
+        
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="CountryName">Khóa</label>
+                
+                <InputSelect class="form-control" ValueChanged="@((string value ) => KhoahocHasChanged(value))" ValueExpression="@(() => item.KhoahocID)" Value="@item.KhoahocID">
+                    <option value="">---Chọn khóa học---</option>
+                    @if (KhoahocList != null)
+                    {
+                        @foreach (var it in KhoahocList)
+                        {
+                            <option value="@it.Id">@it.Name</option>
+                        }
+                    }
+
+                </InputSelect>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="CountryName">Ngành</label>
+                <InputSelect class="form-control" ValueChanged="@((string value ) => NganhHasChanged(value))" ValueExpression="@(() => item.NganhID)" Value="@item.NganhID">
+                    <option value="">---Chọn ngành---</option>
+
+                    @if (NganhList != null)
+                    {
+                        @foreach (var it in NganhList)
+                        {
+                            <option value="@it.Id">@it.Name</option>
+                        }
+                    }
+                </InputSelect>
+            </div>
+        </div>
+        
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="CountryCode">Số tiền</label>
+                <input form="CountryCode" class="form-control" @bind="@item.SoTien" />
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="form-group">
+                <button type="submit" class="btn btn-success">Thực hiện </button>
+                <button class="btn btn-secondary" type="reset">Hủy</button>
+            </div>
+        </div>
+    </div>
+    
+</EditForm>
+@*</form>*@
+@code {
+    private ThuTienView item = new ThuTienView();
+    string Message = "";
+    IReadOnlyList<IBrowserFile> selectedFiles;
+    private List<Khoahoc> KhoahocList;
+    List<LoaiKhoanthu> LoaiKhoanthuList = new List<LoaiKhoanthu>();
+    List<KyThanhtoan> KyThanhtoanList = new List<KyThanhtoan>();
+    private List<Khoa> KhoaList;
+    private List<Nganh> NganhList;
+    private List<Lop> LopList;
+    private string KhoahocID;
+    private string KhoaID;
+    private string NganhID;
+    private string LopID;
+
+    private void OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        selectedFiles = e.GetMultipleFiles();
+        Message = $"{selectedFiles.Count} file(s) selected";
+        this.StateHasChanged();
+    }
+
+    private async void OnSubmit()
+    {
+        //
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/Thutien/ThutienLapDS", @item);
+            await JsRuntime.InvokeVoidAsync("alert", "Saved Successfully!");
+            NavigationManager.NavigateTo("ThutienList");
+            Message = "";
+        }
+        catch (Exception e)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error:" + e.Message);
+            Message = e.Message;
+        }
+        
+        this.StateHasChanged();
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            KhoahocList = await Http.GetFromJsonAsync<List<Khoahoc>>("api/Khoahoc/KhoahocGetList");
+            KhoaList = await Http.GetFromJsonAsync<List<Khoa>>("api/Khoa/KhoaGetList");            
+            NganhList = await Http.GetFromJsonAsync<List<Nganh>>("api/Nganh/NganhGetList");
+            LoaiKhoanthuList = await Http.GetFromJsonAsync <List < LoaiKhoanthu >> ("api/LoaiKhoanthu/LoaiKhoanthuGetList");
+
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Error" + e.Message.ToString());
+        }
+
+    }
+    
+    private async Task NganhHasChanged(string value)
+    {
+        item.NganhID = value;
+        UpdateSotien();
+        this.StateHasChanged();
+    }
+    protected async void KhoahocHasChanged(string value)
+    {
+        item.KhoahocID = value;
+        UpdateSotien();
+        this.StateHasChanged();
+    }        
+
+    private async Task LoaiKhoanthuHasChanged(string value)
+    {
+        item.LoaiKhoanthuID = value;
+        if (value != "")
+        {            
+
+            var response = await Http.GetAsync("api/KyThanhtoan/KyThanhtoanGetByKhoanthu/" + item.LoaiKhoanthuID);
+            if (response.IsSuccessStatusCode)
+            {
+                KyThanhtoanList = await response.Content.ReadFromJsonAsync<List<KyThanhtoan>>();
+                this.StateHasChanged();
+            }
+            else
+            {
+                Message = "Lỗi trong khi lấy danh sách";
+            }            
+
+        }else {
+            KyThanhtoanList.Clear();
+        }
+        UpdateSotien();
+        this.StateHasChanged();
+    }
+    private async Task KyThanhtoanHasChanged(string value)
+    {
+        item.KyThanhToan = value;
+        UpdateSotien();
+        this.StateHasChanged();
+    }
+    protected async void UpdateSotien()
+    {
+        Khoanthu kt = new Khoanthu();
+        kt.MaLoaiKhoanThu = item.LoaiKhoanthuID;
+        kt.NganhID = item.NganhID;
+        kt.KhoahocID = item.KhoahocID;
+        kt.KyThanhToan = item.KyThanhToan;
+
+        var response = await Http.PostAsJsonAsync<Khoanthu>("/api/Khoanthu/PostFindKhoanthu", kt);
+        if (response.IsSuccessStatusCode)
+        {
+            var strinResp = await response.Content.ReadAsStringAsync();
+            if (strinResp !=""){
+                kt = JsonConvert.DeserializeObject<Khoanthu>(strinResp);
+                item.SoTien = kt.SoTien;
+            }else {
+                item.SoTien = 0;
+            }
+            
+            //student_litst = res.student_litst;
+            this.StateHasChanged();
+        }
+        else
+        {
+            if ((int)response.StatusCode == 401)
+            {
+                NavigationManager.NavigateTo("/Login", true);
+            }
+        }
+    }
+}

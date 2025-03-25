@@ -1,0 +1,93 @@
+﻿@page "/Tinhoc03LapDSPT/"
+@using Flic.Client.Services;
+@using Flic.Shared
+@using System.Net.Mail;
+
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+@inject IAuthService AuthService
+
+
+<div class="row">
+    <h3>LẬP DANH SÁCH PHÒNG THI CHỨNG CHỈ TIN HỌC</h3>
+    <RadzenTemplateForm TItem="LapDSTinhoc" Data=@item Submit=@OnSubmit>
+        <div class="row">                    
+            <div class="col-2">Đợt thi:</div>
+            <div class="col-10">                
+                <RadzenDropDown TValue="string" Data=@DotthiList TextProperty="Name" ValueProperty="Id" @bind-Value=@item.MaDotthi Placeholder="--Chọn Đợt thi--" />
+            </div>                    
+        </div>
+        <div class="row">
+            <div class="col-2">Mã tài khoản:</div>
+            <div class="col-10">
+                <RadzenTextBox Name="MaTaikhoan" @bind-Value=@item.MaTaikhoan Placeholder="T0123" />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-2">Số thí sinh/phòng:</div>
+            <div class="col-10">
+                <RadzenNumeric Name="Soluong" @bind-Value=@item.Soluong Placeholder="20" />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-2">Tên phòng thi (Ngăn cách bằng dấu ;):</div>
+            <div class="col-10">
+                <RadzenTextBox Name="PhongThi" @bind-Value=@item.PhongThi Placeholder="P704; P706" />
+            </div>
+        </div>
+        <div class="row">                    
+            <div class="col-12">
+                <RadzenButton ButtonType="ButtonType.Submit" Text="Lưu" />
+                <RadzenButton ButtonType="ButtonType.Button" Click=@Cancel Text="Hủy" />
+            </div>
+            <div class="col-2">
+            </div>
+        </div>
+
+    </RadzenTemplateForm>
+</div>
+
+
+@code {
+    List<Dotthi> DotthiList = new List<Dotthi>();
+    LapDSTinhoc item = new LapDSTinhoc(); 
+    
+    string errStr = "";
+    
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {   
+            var response = await Http.GetAsync("api/Dotthi/DotthiGetList");
+            DotthiList = await response.Content.ReadFromJsonAsync<List<Dotthi>>();
+           
+        }
+        catch (Exception e)
+        {
+
+        }
+    }
+
+    
+    protected async Task OnSubmit()
+    {
+        try
+        {            
+            var response = await Http.PostAsJsonAsync("api/DangkyTH03/TH03LapDSThiTin", @item);
+            if (response.IsSuccessStatusCode)
+            {
+                NavigationManager.NavigateTo("/Tinhoc03DSPT");
+            }           
+        }
+        catch (Exception e)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error:" + e.Message);
+        }
+
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+}

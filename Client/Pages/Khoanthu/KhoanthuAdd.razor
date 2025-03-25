@@ -1,0 +1,192 @@
+﻿@page "/KhoanthuAdd/"
+@using Flic.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+<h2>Thêm Loại khoản thu</h2>
+<EditForm Model="@item" OnValidSubmit="@Save">
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="CountryName">Khoản thu</label>
+                
+            <InputSelect class="form-control" ValueChanged="@((string value ) => KhoanthuHasChanged(value))" ValueExpression="@(() => item.MaLoaiKhoanThu)" Value="@item.MaLoaiKhoanThu">
+                <option value="">---Chọn loại khoản thu---</option>
+                @if (LoaiKhoanthuList != null)
+                {
+                    @foreach (var it in LoaiKhoanthuList)
+                    {
+                        <option value="@it.MaLoaiKhoanThu">@it.MoTa</option>
+                    }
+                }
+                
+            </InputSelect>
+        </div>
+
+    </div> 
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="CountryName">Khóa học</label>
+            <InputSelect class="form-control" @bind-Value="@item.KhoahocID">
+                <option value="">---Chọn khóa học---</option>
+                @if (KhoahocList!=null){
+                    @foreach (var it in KhoahocList)
+                    {
+                        <option value="@it.Id">@it.Name</option>
+                    }
+                }
+                
+            </InputSelect>
+        </div>
+
+    </div> 
+</div>
+
+<div class="row">
+
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="CountryName">Ngành</label>
+            <InputSelect class="form-control" @bind-Value="@item.NganhID">
+                <option value="">---Chọn ngành---</option>
+                @if (NganhList !=null)
+                {
+                    @foreach (var it in NganhList)
+                    {
+                        <option value="@it.Id">@it.Name</option>
+                    }
+                }
+                
+            </InputSelect>
+        </div>
+
+    </div>
+</div>
+
+<div class="row">
+
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="CountryName">Kỳ</label>
+            <InputSelect class="form-control" @bind-Value="@item.KyThanhToan">
+                <option value="">---Chọn học kỳ---</option>
+                    @if (KyThanhtoanList != null)
+                    {
+                        @foreach (var it in KyThanhtoanList)
+                        {
+                            @if (it.Id == item.KyThanhToan)
+                            {
+                                <option value="@it.Id" selected>@it.Name</option>
+                            }
+                            else
+                            {
+                                <option value="@it.Id">@it.Name</option>
+                            }
+                        }
+                    }
+            </InputSelect>
+        </div>
+
+    </div>
+</div>
+<div class="row">
+    
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="CountryCode">Số tiền</label>
+            <InputNumber class="form-control" @bind-Value="@item.SoTien" />
+        </div>
+    </div>    
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="form-group">           
+            <button type="submit" class="btn btn-success">Save </button>
+            <button class="btn btn-secondary" type="reset">Hủy</button>
+        </div>
+    </div>
+</div>
+</EditForm>
+@code {
+    Khoanthu item = new Khoanthu();
+    List<LoaiKhoanthu> LoaiKhoanthuList = new List<LoaiKhoanthu>();
+    List<Khoahoc> KhoahocList = new List<Khoahoc>();
+    List<Nganh> NganhList = new List<Nganh>();
+    List<KyThanhtoan> KyThanhtoanList = new List<KyThanhtoan>();
+
+    public string SelectedId { get; set; }
+    public string ErrMessage = "";
+    string countryId = "";
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {            
+            var response = await Http.GetAsync("api/Khoahoc/KhoahocGetList");
+            KhoahocList = await response.Content.ReadFromJsonAsync<List<Khoahoc>>();
+
+            response = await Http.GetAsync("api/Nganh/NganhGetList");
+            NganhList = await response.Content.ReadFromJsonAsync<List<Nganh>>();
+
+            response = await Http.GetAsync("api/LoaiKhoanthu/LoaiKhoanthuGetList");
+            LoaiKhoanthuList = await response.Content.ReadFromJsonAsync<List<LoaiKhoanthu>>();
+
+            response = await Http.GetAsync("api/KyThanhtoan/KyThanhtoanGetList");            
+            if (response.IsSuccessStatusCode)
+            {
+                KyThanhtoanList = await response.Content.ReadFromJsonAsync<List<KyThanhtoan>>();
+            }
+            else
+            {
+                ErrMessage = "Lỗi trong khi lấy danh sách";
+            }
+
+
+            ErrMessage = "";
+        }
+        catch (Exception e)
+        {
+            ErrMessage = e.Message;
+        }
+
+
+    }
+    protected async Task Save()
+    {
+        try{
+            var response = await Http.PostAsJsonAsync("api/Khoanthu/KhoanthuAdd", @item);
+            await JsRuntime.InvokeVoidAsync("alert", "Saved Successfully!");
+            NavigationManager.NavigateTo("KhoanthuList");
+        }catch (Exception e){
+            await JsRuntime.InvokeVoidAsync("alert", "Error:" + e.Message);
+        }
+        
+    }    
+    protected async Task KhoanthuHasChanged(string value)
+    {
+        item.MaLoaiKhoanThu = value;
+        
+        if (value == "")
+        {
+            KyThanhtoanList.Clear();
+        }
+        else
+        {
+            var response = await Http.GetAsync("api/KyThanhtoan/KyThanhtoanGetByKhoanthu/" + item.MaLoaiKhoanThu);
+            if (response.IsSuccessStatusCode)
+            {
+                KyThanhtoanList = await response.Content.ReadFromJsonAsync<List<KyThanhtoan>>();
+            }
+            else
+            {
+                ErrMessage = "Lỗi trong khi lấy danh sách";
+            }
+        }
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("KhoanthuList");
+    }
+}

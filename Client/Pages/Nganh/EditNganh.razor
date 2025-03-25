@@ -1,0 +1,136 @@
+﻿@page "/NganhEdit/{Id}"
+@using Flic.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+<AuthorizeView>
+    <NotAuthorized>
+        <span>You're not authorize</span>
+    </NotAuthorized>
+    <Authorized Context="Auth">
+        <div class="row">
+            <h3>Sửa ngành</h3>
+            <RadzenTemplateForm TItem="Nganh" Data=@item Submit=@OnSubmit>
+
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Id" Text="Chọn Khoa" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenDropDown TValue="string" Data=@KhoaList TextProperty="Name" ValueProperty="Id" @bind-Value=@item.KhoaId />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Id" Text="Chưa Chọn Khoa" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Id" Text="Mã Ngành" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenTextBox Name="Id" @bind-Value=@item.Id Disabled/>
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Id" Text="Chưa nhập mã ngành" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Name" Text="Tên ngành" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenTextBox Name="Name" @bind-Value=@item.Name />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Name" Text="Chưa nhập Tên ngành" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-2">
+                    </div>
+                    <div class="col-6">
+                        <RadzenButton ButtonType="ButtonType.Submit" Text="Lưu" />
+                        <RadzenButton ButtonType="ButtonType.Button" Click=@Cancel Text="Hủy" />
+                    </div>
+                    <div class="col-2">
+                    </div>
+                </div>
+
+            </RadzenTemplateForm>
+        </div>
+    </Authorized>
+</AuthorizeView>
+@*
+<h2>Sửa danh mục ngành đào tạo</h2>
+<EditForm Model="@item" OnValidSubmit="@Save">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="form-group">
+                <label for="CountryName">Mã Ngành</label>
+                <input form="CountryName" class="form-control" disabled @bind="@item.Id" />
+            </div>
+        </div>
+    </div>
+<div class="row">    
+    <div class="col-md-8">
+        <div class="form-group">
+            <label for="CountryName">Tên Ngành</label>
+            <input form="CountryName" class="form-control" @bind="@item.Name" />
+        </div>
+    </div>    
+</div>
+<div class="row">    
+    <div class="col-md-8">
+        <div class="form-group">
+            <label for="CountryName">Khoa</label>
+            <InputSelect class="form-control" @bind-Value="@item.KhoaId">
+                
+                @foreach (var it in KhoaList)
+                {
+                    <option value="@it.Id">@it.Name</option>
+                }
+            </InputSelect>
+        </div>
+    </div>    
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="form-group">            
+            <button type="submit" class="btn btn-success">Save </button>            
+            <button class="btn btn-secondary" type="reset">Hủy</button>
+        </div>
+    </div>
+</div>
+</EditForm>*@
+@code {
+    [Parameter]
+    public string Id { get; set; } = "0";
+    Nganh item = new Nganh();
+
+    List<Khoa> KhoaList = new List<Khoa>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        item = await Http.GetFromJsonAsync<Nganh>("api/Nganh/NganhGetByID/" + Id);
+        var response = await Http.GetAsync("api/Khoa/KhoaGetList");        
+        KhoaList = await response.Content.ReadFromJsonAsync<List<Khoa>>();
+
+    }
+    protected async Task OnSubmit()
+    {
+        var response = await Http.PutAsJsonAsync("api/Nganh/NganhUpdate", @item);
+        bool obj = await response.Content.ReadFromJsonAsync<bool>();
+        if (obj)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Updated Successfully!");
+            NavigationManager.NavigateTo("NganhList");
+        }
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("NganhList");
+    }
+}

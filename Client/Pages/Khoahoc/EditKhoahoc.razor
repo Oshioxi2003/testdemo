@@ -1,0 +1,116 @@
+﻿@page "/KhoahocEdit/{Id}"
+@using Flic.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+
+<AuthorizeView>
+    <NotAuthorized>
+        <span>You're not authorize</span>
+    </NotAuthorized>
+    <Authorized Context="Auth">
+        <div class="row">
+            <h3>Sửa Khóa học</h3>
+            <RadzenTemplateForm TItem="Khoahoc" Data=@item Submit=@OnSubmit>
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Id" Text="Mã Khoa" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenTextBox Name="Id" @bind-Value=@item.Id Disabled/>
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Id" Text="Nhập mã khoa" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Name" Text="Tên Khoa" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenTextBox Name="Name" @bind-Value=@item.Name />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Name" Text="Nhập Tên" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                    </div>
+                    <div class="col-6">
+                        <RadzenButton ButtonType="ButtonType.Submit" Text="Lưu" />
+                        <RadzenButton ButtonType="ButtonType.Button" Click=@Cancel Text="Hủy" />
+                    </div>
+                    <div class="col-2">
+                    </div>
+                </div>
+
+            </RadzenTemplateForm>
+        </div>
+    </Authorized>
+</AuthorizeView>
+
+@*
+<h2>Sửa danh mục Khóa học</h2>
+@if (ErrMessage !=""){
+    <span>@ErrMessage</span>
+}
+<div class="row">    
+    <div class="col-md-8">
+        <div class="form-group">
+            <label for="CountryName">Mã Khóa học</label>
+            <input form="CountryName" class="form-control" disabled @bind="@item.Id" />
+        </div>
+    </div>    
+</div>
+<div class="row">    
+    <div class="col-md-8">
+        <div class="form-group">
+            <label for="CountryName">Tên Khóa học</label>
+            <input form="CountryName" class="form-control" @bind="@item.Name" />
+        </div>
+    </div>    
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="form-group">
+            <input type="button" class="btn btn-primary" @onclick="@Save" value="Save" />
+            <input type="button" class="btn" @onclick="@Cancel" value="Cancel" />
+        </div>
+    </div>
+</div>*@
+@code {
+    [Parameter]    
+    public string Id { get; set; }
+    string ErrMessage = "";
+    Khoahoc item = new Khoahoc();
+    protected override async Task OnInitializedAsync()
+    {
+        try{
+            string url = "api/Khoahoc/KhoahocGetByID/" + Id;            
+            var response = await Http.GetAsync(url);
+            item = await response.Content.ReadFromJsonAsync<Khoahoc>();
+
+            //item = await Http.GetFromJsonAsync<Khoahoc>("api/Khoahoc/KhoahocGetByID/" + Id);
+            ErrMessage = "";
+        }catch (Exception e){
+            ErrMessage = e.Message;
+        }
+        
+    }
+    protected async Task OnSubmit()
+    {
+        var response = await Http.PutAsJsonAsync("api/Khoahoc/KhoahocUpdate", @item);
+        bool obj = await response.Content.ReadFromJsonAsync<bool>();
+        if (obj)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Updated Successfully!");
+            NavigationManager.NavigateTo("KhoahocList");
+        }
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("KhoahocList");
+    }
+}

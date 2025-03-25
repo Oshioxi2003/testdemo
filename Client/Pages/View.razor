@@ -1,0 +1,91 @@
+﻿@* @page "/view/{cat:int}" *@
+@page "/view/{cat:int}/{id:int?}"
+
+@using Flic.Shared
+@using Flic.Shared.Models
+@using Newtonsoft.Json
+@inject HttpClient Http
+@inject IJSRuntime JsRuntime
+
+@if (@id != null && list!=null)
+{
+    @((MarkupString)@news.ArticleContent)
+    <hr />
+    @foreach (var item in list)
+    {
+        <div class="right_section_item">            
+            <div class="right_section_item_abs">
+                <a href="/view/@item.SectionId/@item.Id">@item.Title</a>
+            </div>
+        </div>
+    }
+}else if (list!=null)
+{
+    @foreach (var item in list)
+    {
+        <div class="right_section_item">
+            <div class="right_section_item_img">
+                <img src=" @item.ImagePath" width="100px" />
+            </div>
+            <div class="right_section_item_abs">
+                <a href="/view/@item.SectionId/@item.Id">@item.Title</a>
+            </div>
+        </div>
+    }
+}
+@code {
+    [Parameter]
+    public Int32? cat { get; set; }
+    [Parameter]
+    public Int32? id { get; set; }
+
+    private Int32 _id, _cat;
+
+    List<Flic.Shared.Models.Article> list = new List<Flic.Shared.Models.Article>();
+    Flic.Shared.Models.Article news = new Flic.Shared.Models.Article();
+
+    protected override async Task OnInitializedAsync()
+    {
+        //ArticleGetByID
+        if (id != null)
+        {
+            var response = await Http.GetAsync("api/Article/ArticleGetByID/" + id);
+            if (response.IsSuccessStatusCode)
+            {
+                news = await response.Content.ReadFromJsonAsync<Flic.Shared.Models.Article>();
+            }
+        }
+
+        if (cat != null)
+        {
+            var response = await Http.GetAsync("api/Article/ArticleGetListBySection/" + cat + "/10");
+
+            if (response.IsSuccessStatusCode)
+            {
+                list = await response.Content.ReadFromJsonAsync<List<Flic.Shared.Models.Article>>();
+            }
+        }        
+    }
+    protected override async void OnParametersSet()
+    {
+        if (id!=null && _id != id.Value)
+        {
+            _id = id.Value;
+            var response = await Http.GetAsync("api/Article/ArticleGetByID/" + id);
+            if (response.IsSuccessStatusCode)
+            {
+                news = await response.Content.ReadFromJsonAsync<Flic.Shared.Models.Article>();
+            }
+        }
+        if(cat!=null && _cat != cat.Value)
+        {
+            _cat = cat.Value;
+            var response = await Http.GetAsync("api/Article/ArticleGetListBySection/" + cat + "/10");
+
+            if (response.IsSuccessStatusCode)
+            {
+                list = await response.Content.ReadFromJsonAsync<List<Flic.Shared.Models.Article>>();
+            }
+        }
+    }
+}

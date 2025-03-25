@@ -1,0 +1,318 @@
+﻿@page "/dangkykhoahocadd"
+@page "/dangkykhoahocadd/{lopid:int}"
+@using Flic.Client.Services;
+@using Flic.Shared
+@using System.Net.Mail;
+
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+@inject IAuthService AuthService
+
+
+<div class="registration-container">
+    <h3 class="section-title">📚 ĐĂNG KÝ HỌC</h3>
+
+    <RadzenTemplateForm TItem="DKHoc" Data=@item Submit=@OnSubmit>
+        <!-- Họ và Tên -->
+        <div class="row">
+            <div class="col-md-6 form-group">
+                <label>Họ và Đệm</label>
+                <RadzenTextBox Name="HovaDem" @bind-Value=@item.HovaDem Placeholder="Nhập họ và đệm" class="form-control" />
+                <RadzenRequiredValidator Component="HovaDem" Text="Họ và đệm không được để trống" />
+            </div>
+            <div class="col-md-6 form-group">
+                <label>Tên</label>
+                <RadzenTextBox Name="Ten" @bind-Value=@item.Ten Placeholder="Nhập tên" class="form-control" />
+                <RadzenRequiredValidator Component="Ten" Text="Tên không được để trống" />
+            </div>
+        </div>
+
+        <!-- Điện thoại & Email -->
+        <div class="row">
+            <div class="col-md-6 form-group">
+                <label>Điện thoại</label>
+                <RadzenTextBox Name="DienThoai" @bind-Value=@item.DienThoai Placeholder="Nhập số điện thoại" class="form-control" />
+            </div>
+            <div class="col-md-6 form-group">
+                <label>Email</label>
+                <RadzenTextBox Name="Email" @bind-Value=@item.Email Placeholder="Nhập email" class="form-control" />
+            </div>
+        </div>
+
+        <!-- Địa chỉ -->
+        <div class="row">
+            <div class="col-12 form-group">
+                <label>Địa chỉ thường trú</label>
+                <RadzenTextBox Name="DiaChi" @bind-Value=@item.DiaChi Placeholder="Nhập địa chỉ" class="form-control" />
+                <RadzenRequiredValidator Component="DiaChi" Text="Địa chỉ không được để trống" />
+            </div>
+        </div>
+
+        <!-- Mã sinh viên, Khóa học & Khoa -->
+        <div class="row">
+            <div class="col-md-4 form-group">
+                <label>Mã sinh viên</label>
+                <RadzenTextBox Name="MaSinhvien" @bind-Value=@item.MaSinhvien Placeholder="Nhập mã sinh viên" class="form-control" />
+            </div>
+            <div class="col-md-4 form-group">
+                <label>Khóa học</label>
+                <RadzenDropDown TValue="string" @bind-Value=@item.KhoahocID Placeholder="Chọn khóa học" AllowFiltering="true" Data="@(KhoahocList)" TextProperty="Name" ValueProperty="Id" class="form-control" />
+            </div>
+            <div class="col-md-4 form-group">
+                <label>Khoa</label>
+                <RadzenDropDown TValue="string" @bind-Value=@item.KhoaID Placeholder="Chọn khoa" AllowFiltering="true" Data="@(KhoaList)" TextProperty="Name" ValueProperty="Id" class="form-control" />
+            </div>
+        </div>
+
+        <!-- Ngành & Lớp -->
+        <div class="row">
+            <div class="col-md-6 form-group">
+                <label>Ngành</label>
+                <RadzenDropDown TValue="string" @bind-Value=@item.NganhID Placeholder="Chọn ngành" AllowFiltering="true" Data="@(NganhList)" TextProperty="Name" ValueProperty="Id" class="form-control" />
+            </div>
+            <div class="col-md-6 form-group">
+                <label>Lớp</label>
+                <RadzenDropDown TValue="string" @bind-Value=@item.LopID Placeholder="Chọn lớp" Data="@(LopList.Where(o => o.KhoahocID == item.KhoahocID && o.KhoaID == item.KhoaID && o.NganhID == item.NganhID))" ValueProperty="Id" TextProperty="Name" class="form-control" />
+            </div>
+        </div>
+
+        <!-- Lớp bồi dưỡng -->
+        <div class="row">
+            <div class="col-12 form-group">
+                <label>Lớp bồi dưỡng</label>
+                <RadzenDropDown TValue="int" @bind-Value=@item.CourseId Placeholder="Chọn lớp bồi dưỡng" AllowFiltering="true" Data="@(LophocList)" TextProperty="TenLop" ValueProperty="Id" class="form-control" />
+            </div>
+        </div>
+
+        <!-- Nút Lưu & Hủy -->
+        <div class="row mt-4 justify-content-end">
+            <div class="col-auto">
+                <RadzenButton ButtonType="ButtonType.Button" Click=@Cancel Text="Hủy" class="btn-cancel" />
+                <RadzenButton ButtonType="ButtonType.Submit" Text="Lưu" class="btn-save" />
+            </div>
+        </div>
+    </RadzenTemplateForm>
+</div>
+
+<style>
+ /* Định dạng tổng thể */
+.registration-container {
+    background: #fff;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-width: 800px;
+    margin: auto;
+}
+
+/* Tiêu đề */
+.section-title {
+    text-align: center;
+    font-size: 1.8em;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #007bff;
+}
+
+/* Căn chỉnh các trường nhập */
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: block;
+}
+
+/* Ô nhập liệu */
+.form-control {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+/* Tổng thể */
+    .registration-container {
+        background: #fff;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        max-width: 650px;
+        margin: auto;
+    }
+
+    /* Tiêu đề */
+    .section-title {
+        text-align: center;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: #007bff;
+    }
+
+    /* Các nhóm nhập liệu */
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    label {
+        font-weight: normal; /* Loại bỏ chữ đậm */
+        font-size: 1rem;
+        color: #333;
+    }
+
+    /* Ô nhập liệu */
+    .form-control {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+.form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    outline: none;
+}
+
+/* Nút Lưu */
+.btn-save {
+    background: #28a745;
+    color: white;
+    padding: 12px 20px;
+    font-size: 1.1em;
+    border-radius: 5px;
+    margin-left: 10px;
+    transition: background 0.3s;
+}
+
+.btn-save:hover {
+    background: #218838;
+}
+
+/* Nút Hủy */
+.btn-cancel {
+    background: brown;
+    color: white;
+    padding: 12px 20px;
+    font-size: 1.1em;
+    border-radius: 5px;
+    transition: background 0.3s;
+}
+
+.btn-cancel:hover {
+        background: brown;
+}
+
+/* Căn chỉnh lại combobox */
+.radzen-dropdown {
+    width: 100%;
+}
+
+/* Định dạng tiêu đề combobox */
+.radzen-dropdown label {
+    font-weight: bold;
+    font-size: 1rem;
+    color: #333;
+}
+
+
+ 
+</style>
+
+@code {
+    [Parameter]
+    public int? lopid { get; set; }
+
+    DKHoc item = new DKHoc();
+
+    List<Khoa> KhoaList = new List<Khoa>();
+    List<Khoahoc> KhoahocList = new List<Khoahoc>();
+    List<Nganh> NganhList = new List<Nganh>();
+    List<Lop> LopList = new List<Lop>();
+
+    List<Lophoc> LophocList = new List<Lophoc>();
+
+    string errStr = "";
+    private bool dkOnthi;
+    private class GioiTinh
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+    }
+    IEnumerable<GioiTinh> GioiTinhList = new List<GioiTinh>() { new GioiTinh() { Id = 1, Name = "Nam" }, new GioiTinh() { Id = 0, Name = "Nữ" } };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+
+            var response = await Http.GetAsync("api/Khoa/KhoaGetList");
+            KhoaList = await response.Content.ReadFromJsonAsync<List<Khoa>>();
+            //KhoaList.Insert(0, new Khoa() { Id = "", Name = "---Chọn Khoa----" });
+
+            response = await Http.GetAsync("api/Khoahoc/KhoahocGetList");
+            KhoahocList = await response.Content.ReadFromJsonAsync<List<Khoahoc>>();
+            //KhoahocList.Insert(0, new Khoahoc() { Id = "", Name = "---Chọn Khóa học----" });
+
+            NganhList = await Http.GetFromJsonAsync<List<Nganh>>("api/Nganh/NganhGetList");
+            LopList = await Http.GetFromJsonAsync<List<Lop>>("api/Lop/LopGetList");
+
+
+            LophocList = await Http.GetFromJsonAsync<List<Lophoc>>("api/Lophoc/LophocGetListActive");
+
+            item.GioiTinh = 1;
+            item.KhoaID = "";
+            item.KhoahocID = "";
+            item.LopID = "";
+            item.NganhID = "";
+            if (lopid != null)
+            {
+                item.CourseId = lopid.Value;
+            }
+        }
+        catch (Exception e)
+        {
+
+        }
+    }
+
+
+    protected async Task OnSubmit()
+    {
+        try
+        {
+            //
+            item.Trangthai = 1;
+            if (item.KhoahocID == null) item.KhoahocID = " ";
+
+            var response = await Http.PostAsJsonAsync("api/DKHoc/DKHocAdd", @item);
+            if (response.IsSuccessStatusCode)
+            {
+                DKHoc rs = await response.Content.ReadFromJsonAsync<DKHoc>();
+                await JsRuntime.InvokeVoidAsync("alert", "Đăng ký thành công!");
+                NavigationManager.NavigateTo("DKHocDetail/" + rs.Id);
+            }else
+            {
+                NavigationManager.NavigateTo("/");    
+            }            
+            
+        }
+        catch (Exception e)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error:" + e.Message);
+        }
+
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+}

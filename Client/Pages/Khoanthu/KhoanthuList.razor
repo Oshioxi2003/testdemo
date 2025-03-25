@@ -1,0 +1,67 @@
+﻿@page "/KhoanthuList"
+@using Flic.Shared
+@using System.Net.Http.Headers
+@inject HttpClient _httpClient
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+
+<div>
+    <a href="/KhoanthuAdd"> Thêm mới</a>
+    @if (ErrMessage != "")
+    {
+        <span>@ErrMessage</span>
+    }
+    @if (list != null)
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th width="15%" scope="col" align="center"> ID</th>
+                    <th width="15%" scope="col" align="center"> Mã loại khoản thu</th>
+                    <th width="15%" scope="col" align="center"> Khóa học</th>
+                    <th width="15%" scope="col" align="center"> Ngành</th>
+                    <th width="15%" scope="col" align="center"> Kỳ</th>
+                    <th width="15%" scope="col" align="center"> Số tiền</th>
+                    <th width ="20%" scope="col"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in list)
+                {
+                    <tr>
+                        <th scope="row">@item.id</th>
+                        <td>@item.MaLoaiKhoanThu</td>
+                        <th scope="row">@item.KhoahocID</th>
+                        <td>@item.NganhID</td>
+                        <td>@item.KyThanhToan</td>
+                        <td align="right">@item.SoTien.ToString("#,##0")</td>
+                        <td scope="col">
+                            <a href="/KhoanthuEdit/@item.id">Edit</a> |
+                            <a href="/KhoanthuDelete/@item.id">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+@code {
+    List<Khoanthu> list = new List<Khoanthu>();
+    string ErrMessage = "";
+    protected override async Task OnInitializedAsync()
+    {                
+
+        try{
+            var response = await _httpClient.GetAsync("api/Khoanthu/KhoanthuGetList");
+            response.EnsureSuccessStatusCode();
+            list = await response.Content.ReadFromJsonAsync<List<Khoanthu>>();
+            ErrMessage = "";
+        }catch(Exception e){
+            Console.WriteLine(e.Message);
+            string ErrMessage = e.Message;
+        }
+        
+#nullable disable
+    }
+
+}
+

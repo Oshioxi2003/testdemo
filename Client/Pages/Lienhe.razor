@@ -1,0 +1,93 @@
+﻿@page "/Lienhe"
+
+<div class="contact-container">
+    <div class="contact-card">
+        <h3 class="contact-title">Trung tâm Ngoại ngữ - Tin học</h3>
+        <h4 class="contact-subtitle">Học viện Thanh thiếu niên Việt Nam</h4>
+
+        <div class="contact-info">
+            <p><i class="fas fa-map-marker-alt"></i> Địa chỉ: Phòng 206, Nhà D, Học viện Thanh thiếu niên Việt Nam</p>
+            <p><i class="fas fa-map"></i> Số 3, Phố Chùa Láng, Phường Láng Thượng, Quận Đống Đa, Hà Nội</p>
+            <p><i class="fas fa-phone"></i> Điện thoại: <span class="contact-placeholder">(Chưa cập nhật)</span></p>
+            <p><i class="fas fa-envelope"></i> Email: <a href="mailto:eic@vya.edu.vn">eic@vya.edu.vn</a></p>
+        </div>
+
+        <div class="contact-map">
+            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3724.813040181326!2d105.80000907596666!3d21.00161178855081!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3135ab39f434c6e7%3A0x123456789abcdef!2zSOG7jWMgdmnDqm4gVGhhbmggdGhpw6puIFZp4buHdCBOYW0!5e0!3m2!1sen!2s!4v1694000000000!5m2!1sen!2s"
+                    width="100%" height="300" style="border:0;" allowfullscreen="" loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
+        </div>
+    </div>
+</div>
+
+<style>
+    .contact-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #6e45e2, #88d3ce);
+        padding: 2rem;
+    }
+
+    .contact-card {
+        background: #fff;
+        border-radius: 15px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        padding: 2rem;
+        width: 100%;
+        max-width: 600px;
+        text-align: center;
+    }
+
+    .contact-title {
+        color: #333;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .contact-subtitle {
+        color: #555;
+        font-size: 1.3rem;
+        margin-bottom: 2rem;
+    }
+
+    .contact-info p {
+        margin: 1rem 0;
+        font-size: 1.1rem;
+        color: #444;
+        text-align: left;
+    }
+
+    .contact-info i {
+        color: #6e45e2;
+        margin-right: 0.5rem;
+    }
+
+    .contact-placeholder {
+        color: #999;
+        font-style: italic;
+    }
+
+    .contact-map {
+        margin-top: 2rem;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .contact-info a {
+        color: #6e45e2;
+        text-decoration: none;
+    }
+
+        .contact-info a:hover {
+            text-decoration: underline;
+        }
+</style>
+
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
+@code {
+
+}

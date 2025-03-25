@@ -1,0 +1,149 @@
+﻿@page "/Tinhoc03PhieuDK"
+@using Flic.Shared
+@using System.Net.Http.Headers
+@inject HttpClient _httpClient
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+
+@inject NavigationManager NavigationManager
+@inject NorthwindService service
+@inject AuthenticationStateProvider GetAuthenticationStateAsync
+<style>
+    .card-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.card {
+    flex: 1 1 calc(33.33% - 20px);
+    padding: 20px;
+    box-sizing: border-box;
+    /*background: lightgreen;*/
+    border-radius: 5px;
+}
+
+@@media (max-width: 768px) {
+    .card {
+        flex: 1 1 calc(50% - 20px);
+    }
+}
+
+@@media (max-width: 480px) {
+    .card {
+        flex: 1 1 calc(100% - 20px);
+    }
+}
+</style>
+<div>
+    <PageTitle>Danh sách phiếu đăng ký thi chứng chỉ tin học</PageTitle>
+
+    <AuthorizeView>
+        <NotAuthorized>
+            <span>You're not authorize</span>
+        </NotAuthorized>
+        <Authorized Context="Auth">
+            <div class="row">
+                <h3>Danh sách Phiếu đăng ký</h3>
+
+            </div>
+
+            <div class="row">                
+                <div class="col-md-6">
+                    <RadzenButton Click=@(args => OnClick("/Tinhoc03Register")) Text="Thêm mới" ButtonStyle="ButtonStyle.Primary" />
+                </div>
+                <div class="card-container">
+                    @foreach(var item in list)
+                    {
+                        <div class="card">
+                            <h4>Đợt thi: @item.DotThi</h4>
+                            <p>
+                                Ca thi: @item.CaThi <br>
+                                Phòng thi: @item.PhongThi<br>
+                                Số báo danh: @item.SoBD<br>
+                                Điểm lý thuyết: @item.DiemLT<br>
+                                Điểm thực hành: @item.DiemTH
+                            </p>
+                            <p>
+                                <a href="/Tinhoc03Edit/@item.Id">Sửa thông tin</a> |
+                                <a href="/Tinhoc03Detail/@item.Id">Xem chi tiết</a>
+                            </p>
+                        </div>
+                    }
+                </div>
+                @* <RadzenDataGrid @ref="grid" AllowColumnPicking="false" AllowFiltering="false"
+                                FilterMode="FilterMode.Advanced" AllowPaging="true" AllowSorting="false"
+                                Data="@list" TItem="DangkyTH03" PageSize="40" AllowColumnResize="true">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="DangkyTH03" Property="Id" Title="ID" Width="40px" Filterable="false" />
+                        <RadzenDataGridColumn TItem="DangkyTH03" Property="HovaDem" Title="Họ đệm" />
+                        <RadzenDataGridColumn TItem="DangkyTH03" Property="Ten" Title="Tên" />                        
+                        <RadzenDataGridColumn TItem="DangkyTH03" Property="NgaySinh" Title="Ngày sinh" />
+                        <RadzenDataGridColumn TItem="DangkyTH03" Property="CCCD" Title="CCCD" />
+
+                        <RadzenDataGridColumn TItem="DangkyTH03" Property="DienThoai" Title="Điện thoại" />                        
+                        <RadzenDataGridColumn TItem="DangkyTH03" Property="Email" Title="Email" />
+                        
+                        <RadzenDataGridColumn TItem="DangkyTH03" Property="" Title="" Filterable="false">
+                            <Template Context="data">
+                                <a href="/Tinhoc03Edit/@data.Id">Edit</a> |
+                                <a href="/Tinhoc03Detail/@data.Id">Chi tiết</a>
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid> *@
+            </div>
+
+
+        </Authorized>
+    </AuthorizeView>
+</div>
+
+@code {
+    List<DangkyTH03> list = new List<DangkyTH03>();
+    string ErrMessage = "";
+    RadzenDataGrid<DangkyTH03> grid;
+
+    void OnClick(string link)
+    {
+        NavigationManager.NavigateTo(link, true);
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var authstate = await GetAuthenticationStateAsync.GetAuthenticationStateAsync();
+            var user = authstate.User;
+           var  user_name = user.Identity.Name;
+
+            var response = await _httpClient.GetAsync("api/DangkyTH03/TH03GetPhieuDK/" + user_name);
+            response.EnsureSuccessStatusCode();
+            list = await response.Content.ReadFromJsonAsync<List<DangkyTH03>>();
+            ErrMessage = "";
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            string ErrMessage = e.Message;
+        }
+
+#nullable disable
+    }
+    public void Export(string type)
+    {
+        try
+        {
+            Query q = new Query()
+                {
+                    OrderBy = grid.Query.OrderBy,
+                    Filter = grid.Query.Filter,
+                    Select = string.Join(",", grid.ColumnsCollection.Where(c => c.GetVisible()))//.Select(c => c.Property))
+                };
+            service.Export("Lops", type, q);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+    }
+}
+

@@ -1,0 +1,124 @@
+*{
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', sans-serif;
+    font-size: 15px;
+}
+
+/* HEADER */
+.pka-header .social-header{
+    border-bottom: 1px solid #dfdfdf;
+}
+
+.pka-header .social-header ul{
+    list-style-type: none;
+    text-align: right;
+}
+
+.pka-header .social-header ul li{
+    display: inline;
+}
+
+.pka-header .main-header-content{
+    display: flex;
+    padding: 10px 0;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pka-header .main-header-right ul{
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+.pka-header .main-header-right ul li{
+    display: inline;
+    margin-left: 35px;
+}
+
+.pka-header .main-header-right a{
+    text-decoration: none;
+    color: #6e6e6e;
+    padding-top: 5px;
+}
+
+.pka-header .main-header-right a:hover{
+    /* border-top: 1px solid #0F74BC; */
+    color: #0F74BC;
+}
+
+/* BANNER */
+.pka-banner{
+    width: 100%;
+    height: 500px;
+    background-image: url('../img/banner-2.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: flex;
+    align-items: center;
+}
+
+.pka-banner .content-banner .text{
+    display: inline-block;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 8px 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    font-size: 35px;
+    font-weight: 400;
+}
+
+.pka-banner .content-banner .big-text{
+    font-size: 55px;
+}
+
+.pka-banner .content-banner .white-bg{
+    background: rgba(255, 255, 255, 0.7);
+    color: #000;
+}
+
+/* SERVICES */
+.pka-services{
+    background-color: #0F74BC;
+    padding: 30px 0;
+}
+
+.pka-services .content-services{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pka-services .left-services{
+    color: #fff;
+    font-weight: 300;
+}
+
+.pka-services .left-services h3{
+    font-size: 27px;
+    font-weight: 300;
+    margin-bottom: 20px;
+}
+
+.pka-services .right-services{
+    display: flex;
+    justify-content: end;
+}
+
+.pka-services .right-services a{
+    text-decoration: none;
+    color: #fff;
+    text-align: right;
+}
+
+.pka-services .right-services a p{
+    display: inline-block;
+    font-weight: 300;
+    margin: 0;
+    padding: 12px 70px;
+    border: 2px solid #fff;
+    border-radius: 5px;
+}

@@ -1,0 +1,178 @@
+﻿@page "/SinhvienPhongKTXAdd/"
+
+@using Flic.Shared
+@using System.Net;
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+<h2>Thêm Sinh viên ở Ký túc xá</h2>
+<style>
+    form .row {
+        margin-bottom: 16px;
+    }
+</style>
+
+@if (item == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <RadzenTemplateForm TItem="SinhvienPhongView" Data=@item Submit=@OnSubmit>
+        <div class="row">
+            <div class="col-2">
+                <RadzenLabel Component="SinhvienMSV" Text="Mã SV" />
+            </div>
+            <div class="col-3">
+                <RadzenTextBox Name="SinhvienMSV" @bind-Value=@item.SinhvienMSV Change=@OnChange />
+            </div>
+            <div class="col-6">
+                <RadzenRequiredValidator Component="SinhvienMSV" Text="Nhập mã SV!" />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-2">
+                <RadzenLabel Component="SinhvienHoTen" Text="Họ Tên" />
+            </div>
+            <div class="col-3">
+                <RadzenTextBox Disabled Name="SinhvienHoTen" @bind-Value=@item.SinhvienHoTen />
+            </div>
+            <div class="col-6">
+                <RadzenRequiredValidator Component="SinhvienHoTen" Text="Họ Tên" />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-2">
+                <RadzenLabel Component="SinhvienLop" Text="Lớp" />
+            </div>
+            <div class="col-3">
+                <RadzenTextBox Disabled Name="SinhvienLop" @bind-Value=@item.SinhvienLop />
+            </div>
+            <div class="col-6">
+                <RadzenRequiredValidator Component="SinhvienLop" Text="Lớp" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-2">
+                <RadzenLabel Component="Name" Text="Phòng" />
+            </div>
+            <div class="col-3">
+                <RadzenTextBox Name="PhongId" @bind-Value=@item.PhongId Change=@OnFindPhong />
+            </div>
+            <div class="col-6">
+                <RadzenRequiredValidator Component="PhongId" Text="Mã Phòng!" />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-2">
+                <RadzenLabel Component="Trangthai" Text="Trạng thái" />
+            </div>
+            <div class="col-3">
+                <RadzenNumeric Name="Trangthai" @bind-Value=@item.Trangthai />
+            </div>
+            <div class="col-6">
+                <RadzenRequiredValidator Component="Trangthai" Text="Trạng thái chưa nhập!" />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-2">
+            </div>
+            <div class="col-3">
+                <RadzenButton ButtonType="ButtonType.Submit" Text="Save" />
+                <RadzenButton Click=@Cancel Text="Hủy" />
+            </div>
+            <div class="col-6">
+            </div>
+        </div>
+
+    </RadzenTemplateForm>
+
+}
+
+@code {
+    SinhvienPhongView item = new SinhvienPhongView();
+    string Name;
+    protected override async Task OnInitializedAsync()
+    {
+        item.Trangthai = 1;
+        //Name = "Demo name";
+    }
+    //protected async Task OnSubmit(SinhvienPhongView it)
+    protected async Task OnSubmit()
+    {
+        try
+        {
+            SinhvienPhong it = new SinhvienPhong();
+            it.Trangthai = 1;
+            it.SinhvienId = item.SinhvienId;
+            it.PhongId = item.PhongId;
+
+            var response = await Http.PostAsJsonAsync("api/SinhvienPhongKTX/SinhvienPhongKTXAdd", @it);
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                var t = await response.Content.ReadFromJsonAsync<SinhvienPhongView>();
+                if (t != null)
+                {
+                    await JsRuntime.InvokeVoidAsync("alert", "Cập nhật thành công!");
+                }else
+                {
+                    await JsRuntime.InvokeVoidAsync("alert", "Không thành công, có thể sinh viên đã tồn tại");
+                }
+            }else
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "Không thành công, có thể sinh viên đã tồn tại");
+            }
+
+            NavigationManager.NavigateTo("SinhvienPhongKTXList");
+        }
+        catch (Exception e)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error:" + e.Message);
+        }
+    }
+    protected async Task OnChange(string value)
+    {
+        Console.WriteLine($"Value changed to {value}");
+
+        try
+        {
+            var sv = await Http.GetFromJsonAsync<Student>("api/Student/StudentGetByMSV/" + value);
+            item.SinhvienId = sv.id;
+            item.SinhvienHoDem = sv.HoDem;
+            item.SinhvienTen = sv.Ten;
+            item.SinhvienHoTen = sv.HoDem + " " + sv.Ten;
+            //item.Ngaysinh = sv.Ngaysinh;
+            //item.SoCCCD = sv.CCCD;
+            //item.KhoahocID = sv.KhoahocID;
+            //item.NganhID = sv.NganhID;
+            item.SinhvienLop = sv.LopID;
+
+            this.StateHasChanged();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+    }
+    protected async Task OnFindPhong(string value)
+    {
+        var response = await Http.GetAsync("api/PhongKTX/PhongKTXGetByID/" + value);
+        var a= response.EnsureSuccessStatusCode();
+        if (response.StatusCode == HttpStatusCode.OK)
+        {
+            var p = await response.Content.ReadFromJsonAsync<PhongKTX>();
+            if (p == null)
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "Không tìm thấy mã phòng!");
+            }
+        }else {
+            await JsRuntime.InvokeVoidAsync("alert", "Không tìm thấy mã phòng!");
+        }
+        
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("SinhvienPhongKTXList");
+    }
+}

@@ -1,0 +1,71 @@
+﻿@page "/Tin03TrangthaiAdd/"
+@using Flic.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+<AuthorizeView>
+    <NotAuthorized>
+        <span>You're not authorize</span>
+    </NotAuthorized>
+    <Authorized Context="Auth">
+        <div class="row">
+            <h3>Thêm Trạng thái đăng ký thi</h3>
+            <RadzenTemplateForm TItem="Tin03_Trangthai" Data=@item Submit=@OnSubmit>                
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Name" Text="Tên Trạng thái" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenTextBox Name="Name" @bind-Value=@item.Name />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Name" Text="Nhập Tên Trạng thái" />
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-2">
+                    </div>
+                    <div class="col-6">
+                        <RadzenButton ButtonType="ButtonType.Submit" Text="Lưu" />
+                        <RadzenButton ButtonType="ButtonType.Button" Click=@Cancel Text="Hủy" />
+                    </div>
+                    <div class="col-2">
+                    </div>
+                </div>
+
+            </RadzenTemplateForm>
+        </div>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    Tin03_Trangthai item = new Tin03_Trangthai();
+
+    protected async Task OnSubmit()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/Tin03Trangthai/Tin03TrangthaiAdd", @item);
+            if (response.IsSuccessStatusCode)
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "Thêm mới thành công!");
+                NavigationManager.NavigateTo("Tin03TrangthaiList");
+            }else
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "Có lỗi không thêm được dữ liệu!");
+            }
+
+        }
+        catch (Exception e)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error:" + e.Message);
+        }
+
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("Tin03TrangthaiList");
+    }
+}

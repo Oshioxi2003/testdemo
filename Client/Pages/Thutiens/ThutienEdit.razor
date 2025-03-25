@@ -1,0 +1,279 @@
+﻿@page "/ThutienEdit/{id:int}"
+@using Flic.Shared
+@using Newtonsoft.Json
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+<h2>Sửa khoản thu</h2>
+@if (ErrMessage != "")
+{
+    <span>
+        @ErrMessage
+    </span>
+}
+<EditForm Model="@item" OnValidSubmit="@Save">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="CountryCode">Mã Sinh viên</label>
+                <InputText class="form-control" @bind-Value="@item.MaSinhVien" @onfocusout="findStudent" disabled/>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="CountryCode">Họ đệm</label>
+                <input form="CountryCode" class="form-control" @bind="@item.HoDem" disabled />
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="CountryCode">Tên</label>
+                <input form="CountryCode" class="form-control" @bind="@item.Ten" disabled />
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="CountryCode">Ngày sinh</label>
+                <input form="CountryCode" class="form-control" @bind="@item.Ngaysinh" disabled />
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="CountryCode">Số CCCD</label>
+                <input form="CountryCode" class="form-control" @bind="@item.SoCCCD" disabled />
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="CountryName">Khóa học</label>
+                <InputText class="form-control" @bind-Value="@item.KhoahocID" disabled />
+            </div>
+        </div>
+    </div>
+    <div class="row">        
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="CountryName">Ngành</label>
+                <InputText class="form-control" @bind-Value="@item.NganhTen" disabled />
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="CountryName">Lớp</label>
+                <InputText class="form-control" @bind-Value="@item.LopID" disabled />
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="CountryName">Khoản thu</label>                
+            </div>
+            <div class="form-group">                
+                <RadzenDropDown Data=@LoaiKhoanthuList TextProperty="MoTa" ValueProperty="MaLoaiKhoanThu"
+                @bind-Value=@item.LoaiKhoanthuID Placeholder="--Chọn Khoản thu--"
+                                AllowClear="true" Multiple="false" TValue="string"
+                                Change=@LoaiKhoanthuHasChanged />
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="CountryName">Kỳ thanh toán</label>                
+            </div>
+            <div class="form-group">             
+                <RadzenDropDown Data=@KyThanhtoanList TextProperty="Name" ValueProperty="Id"
+                @bind-Value=@item.KyThanhToan Placeholder="--Chọn Kỳ thanh toán--"
+                                AllowClear="true" Multiple="false" TValue="string" />
+
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="CountryCode">Số tiền</label>
+                <input form="CountryCode" class="form-control" @bind="@item.SoTien" />
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="CountryCode">Trạng thái</label>
+                @* <input form="CountryCode" class="form-control" @bind="@item.TrangThai" /> *@
+                <InputSelect class="form-control" Value="@item.TrangThai" ValueExpression="@(() => item.TrangThai)">
+                    <option value=0>---Trạng thái---</option>
+                    @if (item.TrangThai!=null && item.TrangThai == 1)
+                    {
+                        <option value=0>Chưa thanh toán</option>
+                        <option value=1 selected>Đã thanh toán</option>
+                    }
+                    else
+                    {
+                        <option value=0 selected>Chưa thanh toán</option>
+                        <option value=1>Đã thanh toán</option>
+
+                        
+                    }                    
+                </InputSelect>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="form-group">
+                <button type="submit" class="btn btn-success">Save </button>
+                <input type="button" class="btn btn-success" @onclick="@Cancel" value="Cancel" />
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+
+@code {
+    [Parameter]
+    public int id { get; set; }
+    ThuTienView item = new ThuTienView();
+    List<Khoa> KhoaList = new List<Khoa>();
+    List<Khoahoc> KhoahocList = new List<Khoahoc>();
+    List<Nganh> NganhList = new List<Nganh>();
+    List<Lop> LopList = new List<Lop>();
+    List<LoaiKhoanthu> LoaiKhoanthuList = new List<LoaiKhoanthu>();
+    List<KyThanhtoan> KyThanhtoanList = new List<KyThanhtoan>();
+    public string SelectedId { get; set; }
+    public string ErrMessage = "";
+    public string khoahocId { get; set; }
+    public string khoaId { get; set; }
+    public string nganhId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {            
+            var response = await Http.GetAsync("api/LoaiKhoanthu/LoaiKhoanthuGetList");
+            response.EnsureSuccessStatusCode();
+            LoaiKhoanthuList = await response.Content.ReadFromJsonAsync<List<LoaiKhoanthu>>();
+            
+            
+            response = await Http.GetAsync("api/Thutien/ThutienGetByID/" + id.ToString());
+            item = await response.Content.ReadFromJsonAsync<ThuTienView>();
+
+            response = await Http.GetAsync("api/KyThanhtoan/KyThanhtoanGetList/");
+            if (response.IsSuccessStatusCode)
+            {
+                KyThanhtoanList = await response.Content.ReadFromJsonAsync<List<KyThanhtoan>>();                
+
+            }
+            ErrMessage = "";
+        }
+        catch (Exception e)
+        {
+            ErrMessage = e.Message;
+        }
+
+
+    }
+    protected async Task Save()
+    {
+        try
+        {
+            var response = await Http.PutAsJsonAsync("api/Thutien/ThutienUpdate", @item);
+            await JsRuntime.InvokeVoidAsync("alert", "Saved Successfully!");
+            NavigationManager.NavigateTo("ThutienList");
+            ErrMessage = "";
+        }
+        catch (Exception e)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error:" + e.Message);
+            ErrMessage = e.Message;
+        }
+
+    }
+    protected async Task findStudent()
+    {
+        var sv = await Http.GetFromJsonAsync<Student>("api/Student/StudentGetByMSV/" + item.MaSinhVien);
+        item.SinhVienID = sv.id;
+        item.HoDem = sv.HoDem;
+        item.Ten = sv.Ten;
+        item.Ngaysinh = sv.Ngaysinh;
+        item.SoCCCD = sv.CCCD;
+        item.KhoahocID = sv.KhoahocID;
+        item.NganhID = sv.NganhID;
+        item.LopID = sv.LopID;
+
+        this.StateHasChanged();
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("ThutienList");
+    }
+    
+    private async Task LoaiKhoanthuHasChanged(object value)
+    {
+        //item.LoaiKhoanthuID = value;
+        
+        if (item.LoaiKhoanthuID!=null && item.LoaiKhoanthuID != "")
+        {
+
+            var response = await Http.GetAsync("api/KyThanhtoan/KyThanhtoanGetByKhoanthu/" + item.LoaiKhoanthuID);
+            if (response.IsSuccessStatusCode)
+            {
+                KyThanhtoanList = await response.Content.ReadFromJsonAsync<List<KyThanhtoan>>();
+                this.StateHasChanged();
+            }
+            else
+            {
+                ErrMessage = "Lỗi trong khi lấy danh sách";
+            }
+
+        }
+        else
+        {
+            KyThanhtoanList.Clear();
+        }
+        //UpdateSotien();
+        this.StateHasChanged();
+    }
+    private async Task KyThanhtoanHasChanged(string value)
+    {
+        item.KyThanhToan = value;
+        UpdateSotien();
+        this.StateHasChanged();
+    }
+    protected async void UpdateSotien()
+    {
+        Khoanthu kt = new Khoanthu();
+        kt.MaLoaiKhoanThu = item.LoaiKhoanthuID;
+        kt.NganhID = item.NganhID;
+        kt.KhoahocID = item.KhoahocID;
+        kt.KyThanhToan = item.KyThanhToan;
+
+        var response = await Http.PostAsJsonAsync<Khoanthu>("/api/Khoanthu/PostFindKhoanthu", kt);
+        if (response.IsSuccessStatusCode)
+        {
+            var strinResp = await response.Content.ReadAsStringAsync();
+            if (strinResp != "")
+            {
+                kt = JsonConvert.DeserializeObject<Khoanthu>(strinResp);
+                item.SoTien = kt.SoTien;
+            }
+            else
+            {
+                item.SoTien = 0;
+            }
+
+            //student_litst = res.student_litst;
+            this.StateHasChanged();
+        }
+        else
+        {
+            if ((int)response.StatusCode == 401)
+            {
+                NavigationManager.NavigateTo("/Login", true);
+            }
+        }
+    }
+  
+}

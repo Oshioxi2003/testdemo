@@ -1,0 +1,406 @@
+﻿@page "/ThutienList1"
+@inject NavigationManager NavigationManager
+
+@*@attribute [Authorize(Roles = "Admin")]*@
+
+@using Flic.Shared
+@using Flic.Shared.Models
+@using Newtonsoft.Json
+@inject HttpClient Http
+@inject IJSRuntime js
+@using ClosedXML.Excel
+<div>
+    <PageTitle>Danh sách thu tiền</PageTitle>        
+    
+    <AuthorizeView>
+        <NotAuthorized>
+            <span>You're not authorize</span>
+        </NotAuthorized>
+        <Authorized Context="Auth">
+            <EditForm Model="@item">
+                <div class="row">
+                    
+                    <h3>Danh sách thu tiền</h3>
+                    
+                       
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-2">                        
+                        <InputSelect class="form-control" @bind-Value="@item.LoaiKhoanthuID">
+                            <option value="">---Chọn khoản thu---</option>
+                            @foreach (var it in LoaiKhoanthuList)
+                            {
+                                <option value="@it.MaLoaiKhoanThu">@it.MoTa</option>
+                            }
+                        </InputSelect>
+                    </div>
+                        <div class="col-md-2">
+                            <InputSelect class="form-control" @bind-Value="@item.KhoahocID">
+                                <option value="">---Chọn khóa học---</option>
+                                @if (KhoahocList != null)
+                                {
+                                    @foreach (var it in KhoahocList)
+                                    {
+                                        <option value="@it.Id">@it.Name</option>
+                                    }
+                                }
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-2">
+                            <InputSelect class="form-control" ValueChanged="@((string value ) => KhoaHasChanged(value))" ValueExpression="@(() => item.KhoaID)" Value="@item.KhoaID">
+                                <option value="">---Chọn khoa---</option>
+                                @if (KhoaList != null)
+                                {
+                                    @foreach (var it in KhoaList)
+                                    {
+                                        <option value="@it.Id">@it.Name</option>
+                                    }
+                                }
+
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-2">
+                            <InputSelect class="form-control" ValueChanged="@((string value ) => NganhHasChanged(value))" ValueExpression="@(() => item.NganhID)" Value="@item.NganhID">
+                                <option value="">---Chọn ngành---</option>
+
+                                @if (NganhList != null)
+                                {
+                                    @foreach (var it in NganhList)
+                                    {
+                                        <option value="@it.Id">@it.Name</option>
+                                    }
+                                }
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-2">
+                            <InputSelect class="form-control" @bind-Value="@item.LopID">
+                                <option value="">---Chọn Lớp---</option>
+                                @if (LopList != null)
+                                {
+                                    @foreach (var it in LopList)
+                                    {
+                                        <option value="@it.Id">@it.Name</option>
+                                    }
+                                }
+
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-2">
+                            @*<input type="text" class="form-control" placeholder="Tìm kiếm theo tên" @bind="SearchString" @bind:event="oninput" @onkeyup="Filter" />*@
+                        <InputText type="text" class="form-control" placeholder="Tìm kiếm theo tên" @bind-Value="@item.KeyWord"  />
+                        </div>                        
+
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <button type="button" class="btn btn-success" @onclick="Filter">Filter</button>
+                    
+                        <button type="button" class="btn btn-success" @onclick="Export">Xuất danh sách</button>
+                    
+                        <button type="button" class="btn btn-success" @onclick="AddNew">Thêm mới</button>                        
+                    
+                        <button type="button" class="btn btn-success" @onclick="MakeList">Lập danh sách</button>                        
+                    </div>
+                </div>
+                <div class="row">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Mã SV</th>
+                                <th>Họ đệm</th>
+                                <th>Tên</th>
+                                <th>Ngày sinh</th>
+                                <th>Khóa</th>
+                                
+                                <th>Ngành</th>
+                                <th>Lớp</th>
+                                <th>Khoản thu</th>
+                                <th>Kỳ thanh toán</th>
+                                <th>Số tiền</th>
+                                <th>Ngày thanh toán</th>
+                                <th>Trạng thái</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (item.Thutien_list != null)
+                            {
+                                foreach (ThuTienView item in item.Thutien_list)
+                                {
+                                    <tr>
+                                        <td>@item.id</td>
+                                        <td>@item.MaSinhVien</td>
+                                        <td>@item.HoDem</td>
+                                        <td>@item.Ten</td>
+                                        <td>@item.Ngaysinh</td>
+                                        <td>@item.KhoahocID</td>
+                                        
+                                        <td>@item.NganhTen</td>
+                                        <td>@item.LopID</td>
+                                        <td>@item.LoaiKhoanthuID</td>
+                                        <td>@item.KyThanhToan</td>
+                                        <td>@item.SoTien.Value.ToString("#,##0")</td>
+                                        <td>@item.NgayThanhToan</td>
+                                        <td>@item.TrangThai</td>
+                                        <td>
+                                            <a href="/ThutienEdit/@item.id">Edit</a> |
+                                            <a href="/ThutienDelete/@item.id">Delete</a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+
+                        </tbody>
+                    </table>
+                    @if (item.NumPage > 1){
+                        int numPag = 10;                       
+
+                        if (item.NumPage < numPag) numPag = item.NumPage.Value;
+                        
+                        <nav aria-label="Page navigation example">
+                            <ul class="pagination justify-content-center">                                
+                                <li onclick=@(() => OnSelectedPage(1)) style="cursor: pointer;" class="page-item">
+                                    <span class="page-link" href="#"> &#60;&#60; </span>
+                                </li>
+                                @for (int i = 0; i < numPag; i++){
+                                    var local_index = i +1;
+                                    var active = item.Page.Value == (i+1) ? "disabled active" : null;
+
+                                    <li onclick=@(() => OnSelectedPage(local_index))   style="cursor: pointer;" class="page-item @active">
+                                        <span class="page-link" href="#">@local_index</span>
+                                    </li>
+                                }
+                                <li onclick=@(() => OnSelectedPage(item.NumPage.Value)) style="cursor: pointer;" class="page-item">
+                                    <span class="page-link" href="#"> &#62;&#62; </span>
+                                </li>
+                            </ul>
+                        </nav>
+                        
+                    }
+                    
+                </div>
+                
+        </EditForm>
+        </Authorized>
+    </AuthorizeView>
+</div>
+
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; }
+    private ThutienSearchOption item = new ThutienSearchOption();
+    List<LoaiKhoanthu> LoaiKhoanthuList = new List<LoaiKhoanthu>();
+
+    private List<Khoahoc> KhoahocList;
+    private List<Khoa> KhoaList;
+    private List<Nganh> NganhList;
+    private List<Lop> LopList;
+    private string KhoahocID;
+    private string KhoaID;
+    private string NganhID;
+    private string LopID;
+    protected string SearchString { get; set; } = string.Empty;
+    [Inject]
+    public IJSRuntime JSRuntime { get; set; }
+    private IJSObjectReference _jsModule;
+
+    protected override async Task OnInitializedAsync()
+    {       
+
+        try{
+            var response = await Http.PostAsJsonAsync<ThutienSearchOption>("/api/Thutien/PostThutienList", item);
+            if (response.IsSuccessStatusCode)
+            {
+                var strinResp = await response.Content.ReadAsStringAsync();
+                item = JsonConvert.DeserializeObject<ThutienSearchOption>(strinResp);                
+            }else {
+                if ((int)response.StatusCode == 401){
+                    NavigationManager.NavigateTo("/Login", true);
+                }
+            }            
+            KhoahocList = await Http.GetFromJsonAsync<List<Khoahoc>>("api/Khoahoc/KhoahocGetList");
+            KhoaList = await Http.GetFromJsonAsync<List<Khoa>>("api/Khoa/KhoaGetList"); 
+            LoaiKhoanthuList = await Http.GetFromJsonAsync<List<LoaiKhoanthu>>("api/LoaiKhoanthu/LoaiKhoanthuGetList");
+            _jsModule = await js.InvokeAsync<IJSObjectReference>("import", "./openfile.js");
+           
+        }
+        catch (Exception e){
+            Console.WriteLine("Error" + e.Message.ToString());
+        }
+
+    }
+    private async Task OnSelectedPage(int p)
+    {
+        item.Page = p;
+        var response = await Http.PostAsJsonAsync<ThutienSearchOption>("/api/Thutien/PostThutienList", item);
+        if (response.IsSuccessStatusCode)
+        {
+            var strinResp = await response.Content.ReadAsStringAsync();
+            item.Thutien_list = null;
+            item = JsonConvert.DeserializeObject<ThutienSearchOption>(strinResp);            
+            this.StateHasChanged();
+        }
+    }
+
+    private async Task KhoaHasChanged(string value)
+    {
+        item.KhoaID = value;
+        //SelectedId = value;
+
+        if (value == "")
+        {
+            NganhList.Clear();
+        }
+        else
+        {
+            var response = await Http.GetAsync("api/Nganh/NganhGetListByKhoa/" + value);
+            NganhList = await response.Content.ReadFromJsonAsync<List<Nganh>>();
+        }
+    }
+    private async Task NganhHasChanged(string value)
+    {
+        item.NganhID = value;
+
+        if (value == "")
+        {
+            LopList.Clear();
+        }
+        else
+        {
+            var response = await Http.GetAsync("api/Lop/LopGetListByKhoahocNganh/" + item.KhoahocID + "/" + value);
+            LopList = await response.Content.ReadFromJsonAsync<List<Lop>>();
+            this.StateHasChanged();
+        }
+    }
+
+    protected async void KhoaChange(ChangeEventArgs _khoaId)
+    {
+        KhoaID = _khoaId.Value.ToString();
+        var response = await Http.GetAsync("api/Nganh/NganhGetListByKhoa/" + _khoaId.Value.ToString());
+        NganhList = await response.Content.ReadFromJsonAsync<List<Nganh>>();        
+        this.StateHasChanged();
+    }
+
+    protected async void NganhChange(ChangeEventArgs nganhId)
+    {
+        var response = await Http.GetAsync("api/Lop/LopGetListByKhoahocNganh/" + KhoahocID + "/" + nganhId.Value);
+        LopList = await response.Content.ReadFromJsonAsync<List<Lop>>();        
+        this.StateHasChanged();
+    }
+
+    protected async void Filter()
+    {
+        item.Thutien_list = null;
+        item.Page = null;
+        item.NumPage = null;
+        var response = await Http.PostAsJsonAsync<ThutienSearchOption>("/api/Thutien/PostThutienList", item);
+        if (response.IsSuccessStatusCode)
+        {
+            var strinResp = await response.Content.ReadAsStringAsync();
+
+            item = JsonConvert.DeserializeObject<ThutienSearchOption>(strinResp);
+            this.StateHasChanged();
+        }
+    }
+
+    protected void ResetSearch()
+    {
+        SearchString = string.Empty;
+        //staffList = searchData;
+    }
+    protected async void Export()
+    {
+        //item.Thutien_list = null;
+        //item.Page = null;
+        //item.NumPage = null;
+        var response = await Http.PostAsJsonAsync<ThutienSearchOption>("/api/Thutien/PostThutienExport", item);
+        if (response.IsSuccessStatusCode)
+        {
+            var strinResp = await response.Content.ReadAsStringAsync();
+            List<ThuTienView> thutiens = JsonConvert.DeserializeObject<List<ThuTienView>>(strinResp);
+
+
+            var wb = new XLWorkbook();
+            wb.Properties.Author = "TTCNTT@HNUE";
+            wb.Properties.Title = "Danh sách nộp tiền";
+            wb.Properties.Subject = "Danh sách nộp tiền của sinh viên";
+
+            var ws = wb.Worksheets.Add("Thutien");
+
+            ws.Cell(1, 1).Value = "ID";
+            ws.Cell(1, 2).Value = "Mã SV";
+            ws.Cell(1, 3).Value = "Họ đệm";
+            ws.Cell(1, 4).Value = "Tên";
+            ws.Cell(1, 5).Value = "Ngày sinh";
+            ws.Cell(1, 6).Value = "Khóa học";
+            ws.Cell(1, 7).Value = "Mã Khoa";
+            ws.Cell(1, 8).Value = "Tên khoa";
+            ws.Cell(1, 9).Value = "Mã Ngành";
+            ws.Cell(1, 10).Value = "Tên Ngành";
+            ws.Cell(1, 11).Value = "Lớp";
+            ws.Cell(1, 12).Value = "Loại khoản thu";
+            ws.Cell(1, 13).Value = "Kỳ thanh toán";
+            ws.Cell(1, 14).Value = "Số tiền";
+            ws.Cell(1, 15).Value = "Ngày tạo";
+            ws.Cell(1, 16).Value = "Ngày thanh toán";
+            ws.Cell(1, 17).Value = "Trạng thái";
+
+            int row = 1;
+            foreach (var item in thutiens)
+            {
+                ws.Cell(row + 1, 1).Value = row;
+                ws.Cell(row + 1, 2).Value = item.MaSinhVien;
+                ws.Cell(row + 1, 3).Value = item.HoDem;
+                ws.Cell(row + 1, 4).Value = item.Ten;
+                ws.Cell(row + 1, 5).Value = item.Ngaysinh;
+
+                ws.Cell(row + 1, 6).Value = item.KhoahocID;
+                ws.Cell(row + 1, 7).Value = item.KhoaID;
+                ws.Cell(row + 1, 8).Value = item.KhoaTen;
+                ws.Cell(row + 1, 9).Value = item.NganhID;
+                ws.Cell(row + 1, 10).Value = item.NganhTen;                
+                ws.Cell(row + 1, 11).Value = item.LopID;
+
+                ws.Cell(row + 1, 12).Value = item.LoaiKhoanthuID;
+                ws.Cell(row + 1, 13).Value = item.KyThanhToan;
+                ws.Cell(row + 1, 14).Value = item.SoTien;
+
+                ws.Cell(row + 1, 15).Value = item.NgayTao;
+                ws.Cell(row + 1, 16).Value = item.NgayThanhToan;
+                ws.Cell(row + 1, 17).Value = item.TrangThai;
+                row++;
+            }
+
+            MemoryStream XLSStream = new();
+            wb.SaveAs(XLSStream);
+
+            if (XLSStream!=null){
+                var content = XLSStream.ToArray();
+
+                var fileName = "DSThutien.xlsx";
+                try
+                {   
+                    await _jsModule.InvokeVoidAsync("DownloadFile", fileName, content);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+                
+            }
+            
+        }
+        
+    }
+    protected void AddNew()
+    {
+        NavigationManager.NavigateTo("ThutienAdd");
+    }
+    protected void MakeList()
+    {
+        NavigationManager.NavigateTo("ThutienLapDS");
+    }
+}

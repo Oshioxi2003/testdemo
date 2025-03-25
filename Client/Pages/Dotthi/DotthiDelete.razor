@@ -1,0 +1,58 @@
+﻿@page "/DotthiDelete/{Id}"
+
+@using Flic.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+<h2>Xóa Đợt thi</h2>
+
+@if (item != null)
+{
+    <p>Bạn chắc chắn xóa mục tin?</p>
+    <p>Họ tên: @item.Name</p>
+    <p>Email: @item.Description</p>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <input type="button" class="btn btn-primary" @onclick="@Delete" value="Delete" />
+                <input type="button" class="btn btn-secondary" @onclick="@Cancel" value="Cancel" />
+            </div>
+        </div>
+    </div>
+}
+@code {
+    [Parameter]
+    public string Id { get; set; }
+    Dotthi item = new Dotthi();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await Http.GetAsync("api/Dotthi/DotthiGetByID/" + Id);
+
+        if (response.IsSuccessStatusCode)
+        {
+            item = await response.Content.ReadFromJsonAsync<Dotthi>();
+        }
+        else
+        {
+            await JsRuntime.InvokeVoidAsync("alert", response.StatusCode);
+        }
+    }
+
+    protected async Task Delete()
+    {
+        var response = await Http.DeleteAsync("api/Dotthi/DotthiDelete/" + Id);
+        if (response.IsSuccessStatusCode)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Xóa Đợt thi thành công!");
+            NavigationManager.NavigateTo("DotthiList");
+        }
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("DotthiList");
+    }
+
+}

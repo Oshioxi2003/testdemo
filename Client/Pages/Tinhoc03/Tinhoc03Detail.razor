@@ -1,0 +1,237 @@
+﻿@page "/Tinhoc03Detail/{id}"
+@using Flic.Client.Services;
+@using Flic.Shared
+@using System.Net.Mail;
+
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+@inject IAuthService AuthService
+@* <AuthorizeView>
+    <Authorized> *@
+        <style>
+        p {
+            font-size: 20px;
+        }
+
+        td {
+            font-size: 20px;
+        }
+
+        .text_center_col {
+            text-align: center;
+        }
+    </style>
+
+    <body style="font-size: 16px; font-family: 'Times New Roman', Times, serif;">
+        <div style="width: 850px; margin: 0 auto;">
+            <table width="100%">
+                <tr>
+                    <td class="text_center_col">HỌC VIỆN THANH THIẾU NIÊN VIỆT NAM</td>
+                    <td class="text_center_col"><b>CÔNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</b></td>
+                </tr>
+                <tr>
+                    <td class="text_center_col">
+                        <div style="width: fit-content; margin: 0 auto;">
+                            <b><span style="border-bottom:1px solid #000; margin:0 auto;">TRUNG TÂM NGOẠI NGỮ-TIN HỌC</span></b>
+                            <!--<hr style="width: 30%;">-->
+                        </div>
+
+                    </td>
+                    <td class="text_center_col">
+                        <div style="width: fit-content; margin: 0 auto; ">
+                            <b><span style="border-bottom:1px solid #000; margin:0 auto;">Độc lập - Tự do - Hạnh phúc</span></b>
+                            <!--<hr style="width: 100%;"-->
+                        </div>
+
+                    </td>
+                </tr>
+            </table>
+            <br />
+            <table width="100%">
+                <tr>
+                    <td style="text-align: center;" class="text_center_col">
+                        <b>ĐƠN ĐĂNG KÝ DỰ THI CẤP CHỨNG CHỈ ỨNG DỤNG CNTT CƠ BẢN</b>
+                    </td>
+                </tr>
+            </table>
+            <div style="width: 100%">
+                <p>
+                    <i>Kính gửi:</i> Trung tâm Ngoại ngữ - Tin học, Học viên Thanh thiếu niên Việt Nam
+                </p>
+                <p style="width:95%; text-align: justify; padding: 5px;">
+                    Căn cứ Quy định về tổ chức thi và cấp chứng chỉ ứng dụng Công nghệ thông tin ban hành theo Thông tư liên tịch số 17/2016/TTLT-BGDĐT-BTTTT ngày 21 tháng 6 năm 2016 của Bộ trưởng Bộ Giáo dục và Đào tạo và Bộ trưởng Bộ Thông tin và Truyền thông;
+                </p>
+                <p>
+                        @if (item != null)
+                        {
+                            <table width="100%">
+                        <tr>
+                            <td colspan="2">
+                                Tên tôi là: @item.HovaDem @item.Ten
+                            </td>
+                            <td>Giới tính: @gt</td>
+                        </tr>
+                        <tr>
+                            <td>Sinh ngày: @item.NgaySinh</td>
+                            <td>Nơi sinh: @item.NoiSinh_Tinh_Ten</td>
+                            <td>Dân tộc: @item.DanToc_Ten</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">Số CCCD ( hoặc giấy tờ khác theo quy định): @item.CCCD</td>
+                            <td>Ngày cấp: @item.CCCD_NgayCap</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3">Nơi cấp: @item.CCCD_NoiCap</td>
+                        </tr>
+                        <tr>
+                            <td>Điện thoại: @item.DienThoai</td>
+                            <td colspan="2">Email: @item.Email</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3">Địa chỉ liên hệ: @item.DiaChi</td>
+                        </tr>
+                        <tr>
+                            <td>Khóa: @item.KhoahocID</td>
+                            <td colspan="2">Ngành: @item.Nganh_Ten</td>
+                        
+                        </tr>
+                        <tr>
+                            <td>Lớp: @item.LopID</td>
+                            <td>Mã sinh viên: @item.MaSinhvien</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td colspan="3">Tôi xin đăng ký dự thi cấp chứng chỉ Chứng chỉ Ứng dụng công nghệ thông tin cơ bản theo thông tư 03/2014/TT-BTTTT vào ngày @item.DotThi_Ten tại @item.DiaDiemThi_Ten</td>
+                        </tr>
+
+                        <tr>
+                            <td colspan="3">Tôi cam kết thực hiện đúng các quy định và quy chế thi.</td>
+                        </tr>
+                    </table>
+                    <table width="100%">
+                        <tr>
+                            <td width="50%">
+                            
+                            </td>
+                            <td width="50%" style="vertical-align: top;" class="text_center_col">
+                                <p style="width: 100%;"><i>Hà Nội, ngày      tháng     năm 20…</i></p>
+                                <p style="width: 100%;"><b>Người đăng ký dự thi</b></p>
+
+                                <p>
+                                <br />
+                                <br />
+                                <br />
+                                        <br />
+                            </p>
+                            <p style="width: 100%; text-align:center;">
+                                        <b>@item.HovaDem @item.Ten</b>
+                            </p>
+                            </td>
+                        </tr>
+                    </table>
+                        }
+                        
+                </p>
+            </div>
+            <div>
+                    @* @if (item != null && (item.PaymentSuccess==null || !item.PaymentSuccess.Value))
+                    {
+                        <RadzenButton ButtonType="ButtonType.Button" Click=@ThanhtoanQR Text="Thanh toán" />
+                    } *@
+                
+                    <RadzenButton ButtonType="ButtonType.Button" Click=@CreatePhieuDK Text="Tạo Phiếu đăng ký" />
+                    <span>@msg </span><a href="@link_file" target="_blank"> @a_msg </a>
+            </div>
+        </div>
+
+    </body>
+   @*  </Authorized>
+</AuthorizeView> *@
+
+@code {
+    [Parameter] public string id { get; set; }
+    DangkyTH03_View item = new DangkyTH03_View();
+    string gt;
+    string errStr = "";
+    private bool dkOnthi;
+    string link_file = "#";
+    string msg;
+    string a_msg;
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            item = await Http.GetFromJsonAsync<DangkyTH03_View>("api/DangkyTH03/TH03GetViewByID/" + @id);
+            if (item.GioiTinh != null && item.GioiTinh == 1) gt = "Nam"; else gt = "Nữ";
+        }
+        catch (Exception e)
+        {
+
+        }
+    }
+    protected async Task ThanhtoanQR()
+    {
+        try
+        {
+            PaymentInformationModel pay = new PaymentInformationModel();
+
+            //var response = await Http.GetAsync("api/Dotthi/DotthiGetByID/" + item.DotThi);
+            pay.Amount = (double)item.LePhiThi + (double)item.LePhiOn;
+            
+            pay.Name = item.Id + " " + item.CCCD + " " + item.HovaDem + " " + item.Ten;
+            pay.OrderType = item.DotThi;
+            pay.OrderDescription = item.DienThoai + " " + item.Email + " " + item.DiaChi;
+            pay.OrderId = "TIN03-" + item.Id;
+
+            var response = await Http.PostAsJsonAsync("api/VNPayQR/CreatePaymentUrl", @pay);
+            if (response.IsSuccessStatusCode)
+            {
+                var url = await response.Content.ReadAsStringAsync();
+                NavigationManager.NavigateTo(url);
+            }
+            else
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "Error: " + response.StatusCode + " " + response.Content.ToString());
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+    }
+    protected async Task CreatePhieuDK()
+    {
+        var response = await Http.GetAsync("api/pdfCreator/CreateDonDK/" + @item.Id);
+        if (response.IsSuccessStatusCode)
+        {
+            link_file = await response.Content.ReadAsStringAsync(); 
+            //link_file = Path.Combine(NavigationManager.BaseUri, link_file);
+            msg = "Tạo phiếu đăng ký thành công, bạn có thể tải phiếu";
+            a_msg = " TẠI ĐÂY";
+            //await JsRuntime.InvokeVoidAsync("DownloadFile", new { Url = link_file, FileName = "phieu.pdf" });
+        }
+        //NavigationManager.NavigateTo("Tinhoc03List");
+    }
+    void OnChange(bool value, string name)
+    {
+        Console.WriteLine($"{name} value changed to {value}");
+        if (value) item.DKOnThi = 1;
+        else item.DKOnThi = 0;
+    }
+    protected async Task OnSubmit()
+    {
+        try
+        {
+            //Validate data
+
+
+        }
+        catch (Exception e)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error:" + e.Message);
+        }
+
+    }
+    
+}

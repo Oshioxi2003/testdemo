@@ -1,0 +1,209 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ĐƠN ĐĂNG KÝ</title>
+</head>
+<style>
+    :root {
+        font-size: 12px;
+    }
+    * {
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 1.4rem;
+    }
+    .font1115 {
+        font-size: 1.15rem;
+    }
+
+    .font1115B {
+        font-size: 1.15rem;
+        font-weight: bold;
+    }
+
+    .font12 {
+        font-size: 1.2rem;
+    }
+    .font12B {
+        font-size: 1.2rem;
+        font-weight:bold;
+    }
+    .font13{
+        font-size: 1.3rem;
+    }
+    .font13B {
+        font-size: 1.3rem;
+        font-weight: bold;
+    }
+    .font14 {
+        font-size: 1.4rem;
+    }
+    .font14B {
+        font-size: 1.4rem;
+        font-weight: bold;
+    }
+    .txt_justify {
+        text-align: justify;
+    }
+    td {
+        padding: 3px;
+    }
+    .font16B {
+        font-size: 1.6rem;
+        font-weight: bold;
+    }
+    th, td {
+        padding: 1px;
+    }
+    table {
+        border-spacing: 0;
+    }
+</style>
+<body>
+    <!--<div style="width: 650px; height:200px; border: solid 0px #ff0000; display:flex;">
+        <div style="width: 300px; height:200px; border: solid 1px #ff0000; display:flex;"></div>
+        <div style="width: 350px; height:200px; border: solid 1px #ff0000; display:flex;"></div>
+    </div>-->
+    <table width="650px; border: 1px solide red;">
+        <tr>
+            <td class="font12" style="text-align: center; width:45%;">HỌC VIỆN THANH THIẾU NIÊN VIỆT NAM</td>
+            <td class="font12B" style="text-align: center; width: 55%;">CÔNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</td>
+        </tr>
+        <tr>
+            <td style="text-align: center; width: 45%;">
+                <div style="width: fit-content; margin: 0 auto;">
+                    <b><span class="font12B" style="border-bottom:1px solid #000">HĐ THI CHỨNG CHỈ ƯDCNTT CƠ BẢN</span></b>
+                    <!--<hr style="width: 30%;">-->
+                </div>
+
+            </td>
+            <td style="text-align: center; width: 55%;">
+                <div style="width: fit-content; margin: 0 auto; ">
+                    <b><span class="font13B" style="border-bottom:1px solid #000">Độc lập - Tự do - Hạnh phúc</span></b>
+                    <!--<hr style="width: 100%;"-->
+                </div>
+
+            </td>
+        </tr>
+    </table>
+
+    <div style="width: 650px; margin: 0 auto;">
+
+        <!--<table width="100%">
+        <tr>
+            <td style="text-align: center; width:45%;">HỌC VIỆN THANH THIẾU NIÊN VIỆT NAM</td>
+            <td style="text-align: center; width: 54%;"><b>CÔNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</b></td>
+        </tr>
+        <tr>
+            <td style="text-align: center; width: 45%;">
+                <div style="width: fit-content; margin: 0 auto;">
+                    <b><span style="border-bottom:1px solid #000">HĐ THI CHỨNG CHỈ ƯDCNTT CƠ BẢN</span></b>-->
+        <!--<hr style="width: 30%;">-->
+        <!--</div>
+
+        </td>
+        <td style="text-align: center; width: 55%;">
+            <div style="width: fit-content; margin: 0 auto; ">
+                <b><span style="border-bottom:1px solid #000">Độc lập - Tự do - Hạnh phúc</span></b>-->
+        <!--<hr style="width: 100%;"-->
+        <!--</div>
+
+                </td>
+            </tr>
+        </table>-->
+
+        <br />
+        <table width="650px">
+            <tr>
+                <td width="150px">
+                    <div style="width: 150px; float: left; border: 1px solid #000; height: 180px;padding: 5px;box-sizing: border-box;">
+                        <p style="font-size:14px">
+                            Ảnh 4x6
+                        </p>
+                    </div>
+                </td>
+                <td width="500px" style="text-align: center; vertical-align: middle;" class="font16B text_center_col">
+                    <b>PHIẾU DỰ THI CHỨNG CHỈ ỨNG DỤNG CNTT CƠ BẢN</b>
+                    <!--<table width="100%">
+                    </table>-->
+                </td>
+            </tr>
+        </table>
+        <br />
+        <table width="650px">
+            <tr>
+                <td colspan="2">
+                    Họ tên: {HO_TEN}
+                </td>
+                <td>Giới tính: {GIOI_TINH}</td>
+            </tr>
+            <tr>
+                <td>Sinh ngày: {NGAY_SINH}</td>
+                <td>Nơi sinh: {NOI_SINH}</td>
+                <td>Dân tộc: {DAN_TOC}</td>
+            </tr>
+            <tr>
+                <td colspan="2">Số CCCD: {SO_CCCD}</td>
+                <td>Ngày cấp: {NGAY_CAP}</td>
+            </tr>
+            <tr>
+                <td colspan="3">Nơi cấp: {NOI_CAP}</td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    Số báo danh: {SO_BD}
+                </td>
+                <td>
+                    Phòng thi: {PHONG_THI}
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">Đợt thi: {NGAY_THI}</td>
+                <td>Ca thi: {CA_THI}</td>
+            </tr>
+            <tr>
+                <td colspan="3"><b><i>Chú ý:</i></b></td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <div style="width: 100%; word-wrap: break-word;">
+                        - Thí sinh có mặt tại phòng thi đúng giờ quy định, xuất trình phiếu dự thi và CCCD<br />
+                        - Địa điểm thi:{DIA_DIEM_THI}<br />
+                        - Thí sinh đến muộn quá 15 phút sẽ không được dự thi.<br />
+                        - Khi đến nhận chứng chỉ phải xuất trình phiếu dự thi.<br />
+                    </div>
+                </td>
+            </tr>
+
+
+        </table>
+        <table width="650pxs">
+            <tr>
+                <td width="50%">
+                </td>
+                <td width="50%" style="vertical-align: top; text-align:center">
+                    <p style="width: 100%; text-align: center;"><i>Hà Nội, ngày &nbsp;&nbsp;&nbsp;&nbsp;tháng &nbsp;&nbsp;&nbsp; năm 20 </i></p>
+                    <P style="width: 100%; text-align: center;"><b>CHỦ TỊCH HỘI ĐỒNG</b></P>
+                    <p>
+                        <br />
+                        <br />
+                        <br />
+                        <br />
+                    </p>
+                    <p style="width: 100%; text-align:center;">
+
+                    </p>
+                </td>
+            </tr>
+        </table>
+        <!--<div style="width: 850px">
+            <p>
+
+            </p>
+        </div>-->
+    </div>
+
+</body>
+</html>

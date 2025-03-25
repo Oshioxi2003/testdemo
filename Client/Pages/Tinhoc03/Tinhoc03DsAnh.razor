@@ -1,0 +1,128 @@
+﻿@page "/Tinhoc03DsAnh/{dotthi}"
+@using Flic.Shared
+@using System.Net.Http.Headers
+@inject HttpClient _httpClient
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+
+@inject NavigationManager NavigationManager
+@inject NorthwindService service
+@inject IJSRuntime JsRuntime
+<div>
+    <PageTitle>Danh sách Phòng thi chứng chỉ ứng dụng công nghệ thông tin</PageTitle>
+
+    <AuthorizeView>
+        <NotAuthorized>
+            <span>You're not authorize</span>
+        </NotAuthorized>
+        <Authorized Context="Auth">
+            <div class="row">
+                <h3>Danh sách Phòng thi chứng chỉ ứng dụng công nghệ thông tin</h3>
+            </div>            
+
+            <div class="row">
+                @if (list != null)
+                {
+                    var dsPhongthi = list.Where(m => m.PhongThi != null).DistinctBy(m => m.PhongThi).ToList();
+                    @foreach (var pt in dsPhongthi)
+                    {
+                        var dsCathi = list.Where(m => m.PhongThi!=null && m.PhongThi == pt.PhongThi).Where(m=>m.CaThi!=null).DistinctBy(m => m.CaThi).ToList();
+                        @foreach (var c in dsCathi)
+                        {
+                            var dsThisinh = list.Where(m => m.PhongThi!=null && m.PhongThi == pt.PhongThi).Where(m => m.CaThi!=null && m.CaThi == c.CaThi).ToList();
+                            <div class="container" style="width: 100%;">
+                                <div style="width: 100%;">
+                                    <div>DANH SÁCH ẢNH PHÒNG THI </div>
+                                    <div>KỲ THI CẤP CHỨNG CHỈ ỨNG DỤNG CÔNG NGHỆ THÔNG TIN</div>
+                                    <div>@pt.PhongThi @c.CaThi</div>
+                                </div>
+                                <div style="width: 100%;">
+                                    @foreach (var ts in dsThisinh)
+                                    {
+                                        <div style="width: 25%; float: left; box-sizing: border-box">
+                                            <div>
+                                                <div>@ts.SoBD</div>
+                                                <div>@ts.CCCD</div>
+                                                <div>@ts.HovaDem @ts.Ten</div>
+                                                <div>@ts.NgaySinh</div>
+                                            </div>
+                                            <div style="width:100%; height: 150px; border: 1px solid #000;">
+
+                                            </div>
+                                        </div>                                        
+                                        
+                                    }
+                                </div>
+                                <div>
+                                    Phòng thi @pt.PhongThi Ca: @c.CaThi	có	@dsThisinh.Count thí sinh
+                                </div>
+                                <div class="row">
+                                    
+                                    <div class="col4" style="float:right;">
+                                        <div>
+                                            ..., ngày .... tháng .... năm ..........
+                                        </div>
+                                        <div>
+                                            CHỦ TỊCH HỘI ĐỒNG THI
+                                        </div>
+                                        <div>
+                                            (Ký và ghi rõ họ tên)
+                                        </div>                                      
+
+
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                            
+                        }
+                    }
+                }              
+
+               
+            </div>
+
+        </Authorized>
+    </AuthorizeView>
+</div>
+
+@code {
+    [Parameter] public string dotthi { get; set; }
+    IEnumerable<DangkyTH03_View> list;
+    LapDSTinhoc para = new LapDSTinhoc();
+    List<string> gt = new List<string>() { "Nữ", "Nam" };
+    bool isLoading;
+    int count;
+
+    void OnClick(string link)
+    {
+        NavigationManager.NavigateTo(link, true);
+    }
+    async void Filter()
+    {
+        
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {            
+            if (dotthi !=null && dotthi !="")
+            {
+                var response = await _httpClient.PostAsJsonAsync("api/DangkyTH03/TH03GetDSPTView", @dotthi);
+                if (response.IsSuccessStatusCode)
+                {
+                    list = await response.Content.ReadFromJsonAsync<List<DangkyTH03_View>>();
+                    //await grid.Reload();
+                    InvokeAsync(StateHasChanged);
+                }
+            }
+                
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            string ErrMessage = e.Message;
+        }
+    }
+    
+}
+

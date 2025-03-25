@@ -1,0 +1,122 @@
+﻿@page "/LoaiLophocEdit/{Id}"
+@using Flic.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+<AuthorizeView>
+    <NotAuthorized>
+        <span>You're not authorize</span>
+    </NotAuthorized>
+    <Authorized Context="Auth">
+        <div class="row">
+            <h3>Thêm Loại Lớp học</h3>
+            <RadzenTemplateForm TItem="LoaiLophoc" Data=@item Submit=@OnSubmit>
+
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Id" Text="Mã Lớp" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenTextBox Name="Id" @bind-Value=@item.Id />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Id" Text="Chưa nhập mã lớp" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="TenLop" Text="Tên Lớp" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenTextBox Name="TenLop" @bind-Value=@item.TenLop />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="TenLop" Text="Chưa nhập Tên lớp" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Trangthai" Text="Trạng thái" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenNumeric Name="Trangthai" @bind-Value=@item.Trangthai />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Trangthai" Text="Chưa nhập Trạng thái" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                    </div>
+                    <div class="col-6">
+                        <RadzenButton ButtonType="ButtonType.Submit" Text="Lưu" />
+                        <RadzenButton ButtonType="ButtonType.Button" Click=@Cancel Text="Hủy" />
+                    </div>
+                    <div class="col-2">
+                    </div>
+                </div>
+
+            </RadzenTemplateForm>
+        </div>
+    </Authorized>
+</AuthorizeView>
+
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+    LoaiLophoc item = new LoaiLophoc();
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var response = await Http.GetAsync("api/LoaiLophoc/LoaiLophocGetByID/" + Id);
+
+            if (response.IsSuccessStatusCode)
+            {
+                item = await response.Content.ReadFromJsonAsync<LoaiLophoc>();
+            }
+            else
+            {
+                await JsRuntime.InvokeVoidAsync("alert", response.StatusCode);
+            }
+
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            
+            await JsRuntime.InvokeVoidAsync("alert", e.Message);
+        }
+
+    }
+
+    protected async Task OnSubmit()
+    {
+        try
+        {
+            var response = await Http.PutAsJsonAsync("api/LoaiLophoc/LoaiLophocUpdate", @item);
+            if (response.IsSuccessStatusCode)
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "Cập nhật thành công!");
+                NavigationManager.NavigateTo("LoaiLophoclist");
+            }
+            else
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "Không thành công!");
+            }
+        }
+        catch (Exception e)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error:" + e.Message);
+        }
+
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("LoaiLophoclist");
+    }
+
+
+}

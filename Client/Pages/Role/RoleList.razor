@@ -1,0 +1,57 @@
+﻿@page "/RoleList"
+@using Flic.Shared
+@using System.Net.Http.Headers
+@inject HttpClient _httpClient
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+
+<div>
+    <a href="/RoleAdd"> Thêm mới</a>
+    @if (list != null)
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th width="25%" scope="col" align="center">ID</th>
+                    <th width="15%" scope="col" align="center"> Tên vai trò</th>
+                    <th width="15%" scope="col" align="center"> Tên vai trò</th>
+                    <th width="25%" scope="col" align="center"> Tên vai trò</th>
+                    <th width="25%" scope="col"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in list)
+                {
+                    <tr>
+                        <th scope="row">@item.Id</th>
+                        <td>@item.Name</td>
+                        <td>@item.NormalizedName</td>
+                        <td>@item.ConcurrencyStamp</td>
+                        <td scope="col">
+                            <a href="/RoleEdit/@item.Id">Edit</a> |
+                            <a href="/RoleDelete/@item.Id">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+@code {
+    List<Microsoft.AspNetCore.Identity.IdentityRole> list = new List<Microsoft.AspNetCore.Identity.IdentityRole>();
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync("api/Role/GetList");
+            response.EnsureSuccessStatusCode();
+            list = await response.Content.ReadFromJsonAsync<List<Microsoft.AspNetCore.Identity.IdentityRole>>();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+
+#nullable disable
+    }
+
+}

@@ -1,0 +1,158 @@
+﻿@page "/DKHocEditAdmin/{Id:int}"
+@using Flic.Client.Services;
+@using Flic.Shared
+@using System.Net.Mail;
+
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+@inject IAuthService AuthService
+
+
+<div class="row">
+    <h3>ĐĂNG KÝ HỌC</h3>
+    <RadzenTemplateForm TItem="DKHoc" Data=@item Submit=@OnSubmit>
+        <div class="row">
+            <div class="col-10">
+                <RadzenTextBox Name="HovaDem" @bind-Value=@item.HovaDem Placeholder="Họ và đệm" />
+                <RadzenTextBox Name="Ten" @bind-Value=@item.Ten Placeholder="Tên" />
+            </div>
+            <div class="col-2">
+                <RadzenRequiredValidator Component="HovaDem" Text="Họ và đệm" />
+                <RadzenRequiredValidator Component="Ten" Text="Nhập Tên" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <RadzenTextBox Name="DienThoai" @bind-Value=@item.DienThoai Placeholder="Điện thoại" />
+                <RadzenTextBox Name="Email" @bind-Value=@item.Email Placeholder="Email" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <RadzenTextBox Name="DiaChi" @bind-Value=@item.DiaChi Placeholder="Địa chỉ thường trú" Style="width: 100%" />
+                <RadzenRequiredValidator Component="DiaChi" Text="Nhập địa chỉ" />
+            </div>
+        </div>
+
+
+        <div class="row">
+            <div class="col-12">
+                <RadzenTextBox Name="MaSinhvien" @bind-Value=@item.MaSinhvien Placeholder="Mã sinh viên" />
+                <RadzenDropDown TValue="string" @bind-Value=@item.KhoahocID Placeholder="--Chọn khóa học--" AllowFiltering="true" Data="@(KhoahocList)" TextProperty="Name" ValueProperty="Id" />
+                <RadzenDropDown TValue="string" @bind-Value=@item.KhoaID Placeholder="--Chọn Khoa--" AllowFiltering="true" Data="@(KhoaList)" TextProperty="Name" ValueProperty="Id" />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <RadzenDropDown TValue="string" @bind-Value=@item.NganhID Placeholder="--Chọn Ngành--" AllowFiltering="true" Data="@(NganhList)" TextProperty="Name" ValueProperty="Id" />
+                <RadzenDropDown TValue="string" @bind-Value=@item.LopID Placeholder="--Chọn Lớp--" Data="@(LopList.Where(o => o.KhoahocID == item.KhoahocID && o.NganhID == item.NganhID))" ValueProperty="Id" TextProperty="Name" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <RadzenDropDown TValue="int" @bind-Value=@item.CourseId Placeholder="--Chọn lớp bồi dưỡng--" AllowFiltering="true" Data="@(LophocList)" TextProperty="TenLop" ValueProperty="Id" />
+                <RadzenNumeric Name="Trangthai" @bind-Value=@item.Trangthai Placeholder="Trạng thái" />
+            </div>
+        </div>
+
+
+        <div class="row">
+            <div class="col-12">
+                <RadzenButton ButtonType="ButtonType.Submit" Text="Lưu" />
+                <RadzenButton ButtonType="ButtonType.Button" Click=@Cancel Text="Hủy" />
+            </div>
+            <div class="col-2">
+            </div>
+        </div>
+
+    </RadzenTemplateForm>
+</div>
+
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    DKHoc item = new DKHoc();
+
+    List<Khoa> KhoaList = new List<Khoa>();
+    List<Khoahoc> KhoahocList = new List<Khoahoc>();
+    List<Nganh> NganhList = new List<Nganh>();
+    List<Lop> LopList = new List<Lop>();
+
+    List<Lophoc> LophocList = new List<Lophoc>();
+
+    string errStr = "";
+    private bool dkOnthi;
+    private class GioiTinh
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+    }
+    IEnumerable<GioiTinh> GioiTinhList = new List<GioiTinh>() { new GioiTinh() { Id = 1, Name = "Nam" }, new GioiTinh() { Id = 0, Name = "Nữ" } };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+
+            var response = await Http.GetAsync("api/Khoa/KhoaGetList");
+            KhoaList = await response.Content.ReadFromJsonAsync<List<Khoa>>();
+            //KhoaList.Insert(0, new Khoa() { Id = "", Name = "---Chọn Khoa----" });
+
+            response = await Http.GetAsync("api/Khoahoc/KhoahocGetList");
+            KhoahocList = await response.Content.ReadFromJsonAsync<List<Khoahoc>>();
+            //KhoahocList.Insert(0, new Khoahoc() { Id = "", Name = "---Chọn Khóa học----" });
+
+            NganhList = await Http.GetFromJsonAsync<List<Nganh>>("api/Nganh/NganhGetList");
+            LopList = await Http.GetFromJsonAsync<List<Lop>>("api/Lop/LopGetList");
+
+
+            LophocList = await Http.GetFromJsonAsync<List<Lophoc>>("api/Lophoc/LophocGetListActive");
+
+            response = await Http.GetAsync("api/DKHoc/DKHocGetByID/" + Id);
+            if (response.IsSuccessStatusCode)
+            {
+                item = await response.Content.ReadFromJsonAsync<DKHoc>();
+            }
+        }
+        catch (Exception e)
+        {
+
+        }
+    }
+
+    protected async Task OnSubmit()
+    {
+        try
+        {
+            //
+            if (item.KhoahocID == null) item.KhoahocID = " ";
+
+            var response = await Http.PutAsJsonAsync("api/DKHoc/DKHocUpdate", @item);
+            if (response.IsSuccessStatusCode)
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "Cập nhật thành công!");
+                NavigationManager.NavigateTo("/DKHocList");
+            }
+            else
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "Cập nhật không thành công!");
+            }
+
+        }
+        catch (Exception e)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error:" + e.Message);
+        }
+
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("/DKHocList");
+    }
+}

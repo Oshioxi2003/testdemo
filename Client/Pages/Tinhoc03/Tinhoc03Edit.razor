@@ -1,0 +1,253 @@
+﻿@page "/Tinhoc03Edit/{id}"
+@using Flic.Client.Services;
+@using Flic.Shared
+@using System.Net.Mail;
+
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+@inject IAuthService AuthService
+@attribute [Authorize(Roles = "Admin, Quanly, TIN03")]  
+
+
+<div class="row">
+    <h3>ĐĂNG KÝ THI CHỨNG CHỈ TIN HỌC THEO THÔNG TƯ 03</h3>
+    <RadzenTemplateForm TItem="DangkyTH03" Data=@item Submit=@OnSubmit>
+        <div class="row">
+            <div class="col-10">
+                <RadzenTextBox Name="HovaDem" @bind-Value=@item.HovaDem Placeholder="Họ và đệm" />
+                <RadzenTextBox Name="Ten" @bind-Value=@item.Ten Placeholder="Tên" />
+            </div>
+            <div class="col-2">
+                <RadzenRequiredValidator Component="HovaDem" Text="Họ và đệm" />
+                <RadzenRequiredValidator Component="Ten" Text="Nhập Tên" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <RadzenTextBox Name="NgaySinh" @bind-Value=@item.NgaySinh Placeholder="Ngày sinh (dd/mm/yyyy)" />
+                <RadzenDropDown TValue="int" Data=@TinhList TextProperty="Name" ValueProperty="Id" @bind-Value=@item.NoiSinh_Tinh Placeholder="--Chọn nơi sinh--" />
+                <RadzenRequiredValidator Component="NgaySinh" Text="Nhập ngày sinh" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <RadzenDropDown TValue="int" Data=@GioiTinhList TextProperty="Name" ValueProperty="Id" @bind-Value=@item.GioiTinh Placeholder="Giới tính" />
+                <RadzenDropDown TValue="int" Data=@DantocList TextProperty="Name" ValueProperty="Id" @bind-Value=@item.DanToc Placeholder="--Chọn Dân tộc--" />
+            </div>
+
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <RadzenTextBox Name="CCCD" @bind-Value=@item.CCCD Placeholder="Số CCCD" Disabled />
+                <RadzenTextBox Name="CCCD_NgayCap" @bind-Value=@item.CCCD_NgayCap Placeholder="Ngày cấp(dd/mm/yyyy)" />
+                <RadzenTextBox Name="CCCD_NoiCap" @bind-Value=@item.CCCD_NoiCap Placeholder="Nơi cấp" />
+                @*<RadzenDropDown TValue="int" Data=@TinhList TextProperty="Name" ValueProperty="Id" @bind-Value=@item.CCCD_NoiCap Placeholder="--Chọn nơi cấp--" />*@
+            </div>
+
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <RadzenTextBox Name="DienThoai" @bind-Value=@item.DienThoai Placeholder="Điện thoại" />
+                <RadzenTextBox Name="Email" @bind-Value=@item.Email Placeholder="Email" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <RadzenTextBox Name="DiaChi" @bind-Value=@item.DiaChi Placeholder="Địa chỉ thường trú" Style="width: 100%" />
+                <RadzenRequiredValidator Component="DiaChi" Text="Nhập địa chỉ" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <RadzenDropDown TValue="string" Data=@DiemthiList TextProperty="Name" ValueProperty="Id" @bind-Value=@item.DiaDiemThi Placeholder="--Chọn Điểm thi--" />
+                <RadzenDropDown TValue="string" Data=@DotthiList TextProperty="Name" ValueProperty="Id" @bind-Value=@item.DotThi Placeholder="--Chọn Đợt thi--" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <RadzenTextBox Name="MaSinhvien" @bind-Value=@item.MaSinhvien Placeholder="Mã sinh viên" />
+                <RadzenDropDown TValue="string" @bind-Value=@item.KhoahocID Placeholder="--Chọn khóa học--" AllowFiltering="true" Data="@(KhoahocList)" TextProperty="Name" ValueProperty="Id" />
+                <RadzenDropDown TValue="string" @bind-Value=@item.KhoaID Placeholder="--Chọn Khoa--" AllowFiltering="true" Data="@(KhoaList)" TextProperty="Name" ValueProperty="Id" />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <RadzenDropDown TValue="string" @bind-Value=@item.NganhID Placeholder="--Chọn Ngành--" AllowFiltering="true" Data="@(NganhList)" TextProperty="Name" ValueProperty="Id" />
+                <RadzenDropDown TValue="string" @bind-Value=@item.LopID Placeholder="--Chọn Lớp--" Data="@(LopList.Where(o => o.KhoahocID == item.KhoahocID && o.KhoaID == item.KhoaID && o.NganhID == item.NganhID))" ValueProperty="Id" TextProperty="Name" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <RadzenLabel Component="OnThi" Text="Đăng ký ôn" />
+                <RadzenCheckBox TValue="bool" Name="OnThi" @bind-Value=@dkOnthi Change=@(args => @OnChange(args, "")) />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <RadzenButton ButtonType="ButtonType.Submit" Text="Lưu" />
+                <RadzenButton ButtonType="ButtonType.Button" Click=@Cancel Text="Hủy" />
+            </div>
+            <div class="col-2">
+            </div>
+        </div>
+
+    </RadzenTemplateForm>
+</div>
+
+@code {
+    [Parameter] public string id { get; set; }
+    DangkyTH03 item = new DangkyTH03();
+
+    List<DMTinh> TinhList = new List<DMTinh>();
+    List<DMTinh> NoicapList;
+
+    List<DMDantoc> DantocList = new List<DMDantoc>();
+    List<Diemthi> DiemthiList = new List<Diemthi>();
+    List<Dotthi> DotthiList = new List<Dotthi>();
+
+    List<Khoa> KhoaList = new List<Khoa>();
+    List<Khoahoc> KhoahocList = new List<Khoahoc>();
+    List<Nganh> NganhList = new List<Nganh>();
+    List<Lop> LopList = new List<Lop>();
+    List<Tin03_Trangthai> TrangthaiList = new List<Tin03_Trangthai>(); 
+    string errStr = "";
+    private bool dkOnthi;
+    private class GioiTinh
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+    }
+    IEnumerable<GioiTinh> GioiTinhList = new List<GioiTinh>() { new GioiTinh() { Id = 1, Name = "Nam" }, new GioiTinh() { Id = 0, Name = "Nữ" } };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            item = await Http.GetFromJsonAsync<DangkyTH03>("api/DangkyTH03/TH03GetByID/" + @id);
+
+            var response = await Http.GetAsync("api/DMTinh/DMTinhGetList");
+            TinhList = await response.Content.ReadFromJsonAsync<List<DMTinh>>();            
+
+            response = await Http.GetAsync("api/DMDantoc/DMDantocGetList");
+            DantocList = await response.Content.ReadFromJsonAsync<List<DMDantoc>>();
+            
+            response = await Http.GetAsync("api/Diemthi/DiemthiGetList");
+            DiemthiList = await response.Content.ReadFromJsonAsync<List<Diemthi>>();
+            
+            response = await Http.GetAsync("api/Dotthi/DotthiGetList");
+            DotthiList = await response.Content.ReadFromJsonAsync<List<Dotthi>>();
+            
+            response = await Http.GetAsync("api/Khoa/KhoaGetList");
+            KhoaList = await response.Content.ReadFromJsonAsync<List<Khoa>>();
+            //KhoaList.Insert(0, new Khoa() { Id = "", Name = "---Chọn Khoa----" });
+
+            response = await Http.GetAsync("api/Khoahoc/KhoahocGetList");
+            KhoahocList = await response.Content.ReadFromJsonAsync<List<Khoahoc>>();
+            //KhoahocList.Insert(0, new Khoahoc() { Id = "", Name = "---Chọn Khóa học----" });
+
+            NganhList = await Http.GetFromJsonAsync<List<Nganh>>("api/Nganh/NganhGetList");
+            LopList = await Http.GetFromJsonAsync<List<Lop>>("api/Lop/LopGetList");
+            //TrangthaiList = await Http.GetFromJsonAsync<List<Tin03_Trangthai>>("api/Tin03Trangthai/Tin03TrangthaiGetList");
+                        
+        }
+        catch (Exception e)
+        {
+
+        }
+    }
+
+    void OnChange(bool value, string name)
+    {
+        Console.WriteLine($"{name} value changed to {value}");
+        if (value) item.DKOnThi = 1;
+        else item.DKOnThi = 0;
+    }
+    protected async Task OnSubmit()
+    {
+        try
+        {           
+            //Validate data
+            var response = await Http.GetAsync("api/Dotthi/DotthiGetByID/" + item.DotThi);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var dt = await response.Content.ReadFromJsonAsync<Dotthi>();
+
+                if (item.DKOnThi == 1)
+                {
+                    item.LePhiOn = dt.PhiOn.Value;
+                }
+                item.LePhiThi = dt.Phithi.Value;
+
+            }
+            //
+            response = await Http.PutAsJsonAsync("api/DangkyTH03/TH03Update", @item);
+            if (response.IsSuccessStatusCode)
+            {
+                RegisterModel Reg = new RegisterModel();
+                Random rnd = new Random();
+
+                string pass = RandomPassword.CreateRandomPassword();
+                Reg.Username = item.CCCD;
+                Reg.Email = item.Email;
+                Reg.Password = pass;
+                Reg.ConfirmPassword = pass;
+                Reg.Role = "TIN03";
+
+                var result = await AuthService.Register(Reg);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    EmailData emailData = new EmailData();
+
+                    emailData.EmailToId = item.Email;
+                    emailData.EmailToName = item.HovaDem + " " + item.Ten;
+                    string _text = "Trung tâm Ngoại ngữ-Tin học thông báo bạn đã đăng ký thành công! Bạn có thể đăng nhập vào hệ thống để theo dõi thông tin <br>";
+                    _text += "Tài khoản của bạn là số căn cước công dân, mật khẩu của bạn là:<b>" + pass + "</b> < br> ";
+                    _text += "Thông tin chi tiết xin liên hệ với Trung tâm Ngoại ngữ-Tin học";
+
+
+                    emailData.EmailSubject = "Thông báo đăng ký thi chứng chỉ Tin học thành công";
+
+                    emailData.EmailBody = _text;
+
+                    var _mail = await Http.PostAsJsonAsync("api/Email/SendEmail", @emailData);
+                    if (_mail.IsSuccessStatusCode)
+                    {
+                        await JsRuntime.InvokeVoidAsync("alert", "Đăng ký thành công! Bạn kiểm tra Email để có thông tin chi tiết");
+                    }
+                    else
+                    {
+                        await JsRuntime.InvokeVoidAsync("alert", "Đăng ký thành công! Bạn có thể đăng nhập với Email và mật khẩu là: " + pass + " để sửa và xem thông tin chi tiết!");
+                    }
+
+                }
+                else
+                {
+                    await JsRuntime.InvokeVoidAsync("alert", "Đăng ký gặp lỗi khi tạo tài khoản đăng nhập!");
+                }
+
+            }
+
+            NavigationManager.NavigateTo("Tinhoc03View/"+id);
+        }
+        catch (Exception e)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error:" + e.Message);
+        }
+
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("Tinhoc03View/"+ id);
+    }
+}

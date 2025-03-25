@@ -1,0 +1,187 @@
+﻿@inherits LayoutComponentBase
+
+<style>
+    html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .layout {
+        display: flex;
+        height: 100vh;
+        overflow: hidden; /* Ẩn cuộn tổng thể */
+    }
+
+    .sidebar.collapsed + .main-content {
+        margin-left: 60px;
+    }
+
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 20%; /* Hoặc điều chỉnh theo nhu cầu */
+        background: white;
+        color: 004b8d;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .sidebar33 {
+        height: 100vh;
+        background: white;
+        overflow-y: auto; /* Cuộn khi nội dung dài */
+    }
+
+        /* Tùy chỉnh thanh cuộn cho sidebar */
+        .sidebar33::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .sidebar33::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+
+    .sidebar h2 {
+        font-size: 18px;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    .main-content {
+        flex-grow: 1;
+        height: 100vh;
+        overflow-y: auto;
+        background: white;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .header {
+        font-size: 22px;
+        font-weight: bold;
+        text-align: center;
+        padding: 10px;
+        color: #004b8d;
+        border-bottom: 2px solid #004b8d;
+    }
+    /* Thanh cuộn tùy chỉnh */
+    .sidebar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+        border-radius: 4px;
+    }
+
+
+    /* Sidebar cố định bên trái */
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 260px; /* Điều chỉnh độ rộng */
+        height: 100vh;
+        background: white;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+        overflow-y: auto;
+    }
+
+        /* Tùy chỉnh thanh cuộn */
+        .sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+        }
+
+
+    /* Phần nội dung chính sẽ mở rộng hết phần còn lại */
+    .content {
+        flex-grow: 1;
+        margin-left: 245px;
+    }
+
+    .text-header {
+        color: white;
+    }
+</style>
+
+<div class="layout">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2 class="text-header">FLIC-VYA - Trung tâm Ngoại ngữ - Tin học</h2>
+        <div class="sidebar33">
+            <RadzenPanelMenu class="">
+                <RadzenPanelMenuItem Text="Home" Path="/lienhe4" Icon="home" />
+                <RadzenPanelMenuItem Text="Dự trù kinh phí" Path="DutruKP" Icon="calculate" />
+                <RadzenPanelMenuItem Text="Tin tức" Path="Thongbao" Icon="feed" />
+
+                <RadzenPanelMenuItem Text="Tra cứu" Icon="search">
+                    <RadzenPanelMenuItem Text="Học phí" Path="TracuuHP" Icon="payments" />
+                    <RadzenPanelMenuItem Text="Kết quả thi Chứng chỉ Tin" Path="tracuuTin03" Icon="assignment" />
+                    <RadzenPanelMenuItem Text="Lớp học" Path="Tracuu" Icon="class" />
+                </RadzenPanelMenuItem>
+
+                <AuthorizeView Roles="Admin,KETOAN">
+                    <Authorized>
+                        <RadzenPanelMenuItem Text="Danh mục" Icon="category">
+                            <RadzenPanelMenuItem Text="Vai trò" Path="RoleList" Icon="admin_panel_settings" />
+                            <RadzenPanelMenuItem Text="Khoa" Path="KhoaList" Icon="account_balance" />
+                            <RadzenPanelMenuItem Text="Khóa học" Path="KhoahocList" Icon="library_books" />
+                            <RadzenPanelMenuItem Text="Ngành học" Path="NganhList" Icon="school" />
+                            <RadzenPanelMenuItem Text="Lớp học" Path="LopList" Icon="groups" />
+                        </RadzenPanelMenuItem>
+                        <RadzenPanelMenuItem Text="Học phí" Icon="account_balance_wallet">
+                            <RadzenPanelMenuItem Text="Loại khoản thu" Path="LoaiKhoanthuList" Icon="list_alt" />
+                            <RadzenPanelMenuItem Text="Kỳ thanh toán" Path="KyThanhtoanList" Icon="date_range" />
+                            <RadzenPanelMenuItem Text="Sinh viên" Path="StudentInlineEditList" Icon="person" />
+                            <RadzenPanelMenuItem Text="Khoản thu" Path="ThutienInlineEditList" Icon="receipt_long" />
+                        </RadzenPanelMenuItem>
+                    </Authorized>
+                </AuthorizeView>
+
+                <AuthorizeView>
+                    <Authorized>
+                        <RadzenPanelMenuItem Text="Đăng xuất" Path="LogOut" Icon="logout" />
+                    </Authorized>
+                    <NotAuthorized>
+                        <RadzenPanelMenuItem Text="Đăng nhập" Path="Login" Icon="login" />
+                        <RadzenPanelMenuItem Text="Đăng nhập với Google" Path="api/GoogleAuth/login" Icon="g_translate" />
+                    </NotAuthorized>
+                </AuthorizeView>
+            </RadzenPanelMenu>
+        </div>
+    </div>
+
+    <!-- Nội dung chính -->
+    <div class="main-content">
+        <header class="header">
+            FLIC-VYA - Học viện Thanh thiếu niên Việt Nam
+        </header>
+        <article class="content">
+            @Body
+        </article>
+    </div>
+</div>
+
+
+@code {
+    void OnParentClicked(MenuItemEventArgs args)
+    {
+        Console.WriteLine($"{args.Text} clicked from parent");
+    }
+
+    void OnChildClicked(MenuItemEventArgs args)
+    {
+        Console.WriteLine($"{args.Text} from child clicked");
+    }
+
+    void OnClicked(MenuItemEventArgs args)
+    {
+        Console.WriteLine($"{args.Text} from child clicked");
+    }
+}

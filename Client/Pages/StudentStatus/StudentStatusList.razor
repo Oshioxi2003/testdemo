@@ -1,0 +1,59 @@
+﻿@page "/StudentStatusList"
+@using Flic.Shared
+@using System.Net.Http.Headers
+@inject HttpClient _httpClient
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+
+<div>
+    <a href="/StudentStatusAdd"> Thêm mới</a>
+    @if (ErrMessage != "")
+    {
+        <span>@ErrMessage</span>
+    }
+    @if (list != null)
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th width="20%" scope="col" align="center"> ID</th>
+                    <th width="40%" scope="col" align="center"> Tên Trạng thái</th>                    
+                    <th width ="20%" scope="col"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in list)
+                {
+                    <tr>
+                        <th scope="row">@item.Id</th>
+                        <td>@item.Name</td>
+                        
+                        <td scope="col">
+                            <a href="/StudentStatusEdit/@item.Id">Edit</a> |
+                            <a href="/StudentStatusDelete/@item.Id">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+@code {
+    List<StudentStatus> list = new List<StudentStatus>();
+    string ErrMessage = "";
+    protected override async Task OnInitializedAsync()
+    {               
+
+        try{
+            var response = await _httpClient.GetAsync("api/StudentStatus/StudentStatusGetList");            
+            list = await response.Content.ReadFromJsonAsync<List<StudentStatus>>();
+            ErrMessage = "";
+        }catch(Exception e){
+            Console.WriteLine(e.Message);
+            string ErrMessage = e.Message;
+        }
+        
+#nullable disable
+    }
+
+}
+

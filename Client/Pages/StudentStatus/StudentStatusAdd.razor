@@ -1,0 +1,62 @@
+﻿@page "/StudentStatusAdd/"
+@using Flic.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+<h2>Thêm Loại khoản thu</h2>
+<EditForm Model="@item" OnValidSubmit="@Save">
+
+<div class="row">
+    
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="CountryCode">Mã</label>
+            <InputText class="form-control" @bind-Value="@item.Id" />
+        </div>
+    </div>    
+</div>
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="CountryCode">Tên trạng thái</label>
+            <InputText class="form-control" @bind-Value="@item.Name" />
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="form-group">         
+            <button type="submit" class="btn btn-success">Save </button>
+            <button class="btn btn-secondary" type="reset">Hủy</button>
+        </div>
+    </div>
+</div>
+</EditForm>
+@code {
+    StudentStatus item = new StudentStatus();    
+
+    public string SelectedId { get; set; }
+    public string ErrMessage = "";
+    string countryId = "";
+    protected override async Task OnInitializedAsync()
+    {
+        
+
+    }
+    protected async Task Save()
+    {
+        try{
+            var response = await Http.PostAsJsonAsync("api/StudentStatus/StudentStatusAdd", @item);
+            await JsRuntime.InvokeVoidAsync("alert", "Saved Successfully!");
+            NavigationManager.NavigateTo("StudentStatusList");
+        }catch (Exception e){
+            await JsRuntime.InvokeVoidAsync("alert", "Error:" + e.Message);
+        }
+        
+    }    
+    
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("KhoanthuList");
+    }
+}

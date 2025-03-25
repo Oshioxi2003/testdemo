@@ -1,0 +1,284 @@
+﻿@using System.Security.Claims
+@inject AuthenticationStateProvider GetAuthenticationStateAsync
+
+@* <style>
+    .nav-item{
+        height: 2.5rem;
+    }
+</style> *@
+<div class="top-row pl-4 navbar navbar-dark">
+    <a class="navbar-brand" href="">VYA-Management system</a>
+
+    <button class="navbar-toggler" @onclick="ToggleNavMenu">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+</div>
+
+
+<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+    <ul class="nav flex-column">        
+
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="oi oi-home" aria-hidden="true"></span> Homewsssssssssssss
+            </NavLink>
+        </li>
+        
+        <AuthorizeView Roles="Admin">
+            <Authorized>                
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="RoleList">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Danh mục vai trò
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="AccountList">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Danh mục tài khoản
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="KhoaList">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Danh mục Khoa
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="KhoahocList">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Danh mục khóa học
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="NganhList">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Danh mục ngành
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="LopList">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Danh mục lớp
+                    </NavLink>
+                </li>             
+
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="StudentList">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Danh sách sinh viên
+                    </NavLink>
+                </li>
+                
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="LoaiKhoanthuList">
+                        <span class="oi oi-plus" aria-hidden="true"></span> DM Loại khoản thu
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="KyThanhtoanList">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Kỳ thanh toán
+                    </NavLink>
+                </li>
+                
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="ThutienList">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Danh sách thu tiền
+                    </NavLink>
+                </li>
+                
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="DiemthiList">
+                        <span class="oi oi-plus" aria-hidden="true"></span> DM HĐ thi
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="DotthiList">
+                        <span class="oi oi-plus" aria-hidden="true"></span> DM Đợt thi
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="Tin03TrangthaiList">
+                        <span class="oi oi-plus" aria-hidden="true"></span> DM Trạng thái ĐK
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="Tinhoc03List">
+                        <span class="oi oi-plus" aria-hidden="true"></span> DS đăng ký
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="Tinhoc03DSPT">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Phòng thi
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="Tinhoc03Diem">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Điểm thi
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="Tinhoc03SoCapCC">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Sổ cấp CC
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="#">
+                        <span class="oi oi-plus" aria-hidden="true"></span> 
+                    </NavLink>
+                </li>
+            </Authorized>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="KETOAN">
+            <Authorized>
+                @* <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="PhongKTXList">
+                        <span class="oi oi-plus" aria-hidden="true"></span> DM Phòng KTX
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="SinhvienPhongKTXList">
+                        <span class="oi oi-plus" aria-hidden="true"></span> DSSV ở KTX
+                    </NavLink>
+                </li> *@
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="LoaiKhoanthuList">
+                        <span class="oi oi-plus" aria-hidden="true"></span> DM Loại khoản thu
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="KyThanhtoanList">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Kỳ thanh toán
+                    </NavLink>
+                </li>
+                @*<li class="nav-item px-3">
+                    <NavLink class="nav-link" href="KhoanthuList">
+                        <span class="oi oi-plus" aria-hidden="true"></span> DM khoản thu
+                    </NavLink>
+                </li>*@
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="ThutienList">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Danh sách thu tiền
+                    </NavLink>
+                </li>
+                @* <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="#">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Profile
+                    </NavLink>
+                </li> *@
+            </Authorized>
+        </AuthorizeView>
+        
+        <AuthorizeView Roles="SINHVIEN">
+            <Authorized>
+                @*<li class="nav-item px-3">
+                    <NavLink class="nav-link" href="StudentProfile">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Hồ sơ
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="StudentFees">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Học phí
+                    </NavLink>
+                </li>*@
+
+            </Authorized>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="TIN03">
+            <Authorized>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="Tinhoc03PhieuDK">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Phiếu đăng ký
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="Tinhoc03Phongthi">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Danh sách phòng thi
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="Tinhoc03Ketqua">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Điểm thi
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="Logout">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Đăng xuất
+                    </NavLink>
+                </li>
+            </Authorized>
+        </AuthorizeView>
+        <AuthorizeView Roles="QUANLY">
+            <Authorized>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="AccountList">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Danh mục tài khoản
+                    </NavLink>
+                </li>
+               <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="Tinhoc03List">
+                        <span class="oi oi-plus" aria-hidden="true"></span> DS đăng ký
+                    </NavLink>
+                </li>                
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="Tinhoc03DSPT">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Phòng thi
+                    </NavLink>
+                </li>                
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="Tinhoc03Diem">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Điểm thi
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="Tinhoc03SoCapCC">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Sổ cấp CC
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="DiemthiList">
+                        <span class="oi oi-plus" aria-hidden="true"></span> DM HĐ thi
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="DotthiList">
+                        <span class="oi oi-plus" aria-hidden="true"></span> DM Đợt thi
+                    </NavLink>
+                </li>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="Tin03TrangthaiList">
+                        <span class="oi oi-plus" aria-hidden="true"></span> Trạng thái ĐK
+                    </NavLink>
+                </li>
+            </Authorized>
+        </AuthorizeView>
+        <AuthorizeView> 
+            <Authorized>
+                
+            </Authorized>
+           <NotAuthorized>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="normal">
+                        <span class="oi oi-list-rich" aria-hidden="true"></span> Login
+                    </NavLink>
+                </li>
+            </NotAuthorized>   
+        </AuthorizeView>
+        
+        
+    </ul>
+</div>
+
+@code {
+    bool collapseNavMenu = true;
+    //private string user;
+    private string user_name;
+
+    string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        var authstate = await GetAuthenticationStateAsync.GetAuthenticationStateAsync();
+        var user = authstate.User;
+        user_name = user.Identity.Name;
+    }
+}

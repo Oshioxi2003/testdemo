@@ -1,0 +1,46 @@
+﻿@page "/RoleAdd/"
+@using Flic.Shared
+@using Flic.Shared.AspIdentity
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+<h2>Thêm mới Khoa</h2>
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="CountryCode">Tên vai trò</label>
+            <input form="CountryCode" class="form-control" @bind="@role" />
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="form-group">
+            <input type="button" class="btn btn-primary" @onclick="@Save" value="Save" />
+            <input type="button" class="btn" @onclick="@Cancel" value="Cancel" />
+        </div>
+    </div>
+</div>
+
+@code {
+    RoleView item = new RoleView();
+    string? role;
+    protected async Task Save()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/Role/Add", @role);
+            await JsRuntime.InvokeVoidAsync("alert", "Saved Successfully!");
+            NavigationManager.NavigateTo("RoleList");
+        }
+        catch (Exception e)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error:" + e.Message);
+        }
+
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("RoleList");
+    }
+}

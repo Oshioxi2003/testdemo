@@ -1,0 +1,228 @@
+﻿@page "/Tinhoc03DSPT"
+@using Flic.Shared
+@using System.Net.Http.Headers
+@inject HttpClient _httpClient
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+
+@inject NavigationManager NavigationManager
+@inject NorthwindService service
+@inject IJSRuntime JsRuntime
+<div>
+    <PageTitle>Danh sách Phòng thi chứng chỉ ứng dụng công nghệ thông tin</PageTitle>
+
+    <AuthorizeView>
+        <NotAuthorized>
+            <span>You're not authorize</span>
+        </NotAuthorized>
+        <Authorized Context="Auth">
+            <div class="row">
+                <h3>Danh sách Phòng thi chứng chỉ ứng dụng công nghệ thông tin</h3>
+            </div>
+            <RadzenTemplateForm TItem="DangkyTH03">
+                <div class="row">
+                    <div class="col-12">
+                        Đợt thi:
+                        <RadzenDropDown Data=@_dotthiList TextProperty="Name" ValueProperty="Id" @bind-Value=@maDotthi Placeholder="--Chọn Đợt thi--"
+                                        AllowClear="true" Multiple="true" TValue="List<string>" Change=@OnChange />
+
+                        @*<RadzenDropDown TValue="string" Data=@_dotthiList TextProperty="Name" ValueProperty="Id" @bind-Value=@maDotthi Placeholder="--Chọn Đợt thi--" />
+
+                        <RadzenButton Click=@(args => Filter()) Text="Xem DS phòng thi" ButtonStyle="ButtonStyle.Primary" />*@
+                        <RadzenButton Text="Phòng thi" Icon="grid_on" Click="@(args => Export("PT","excel"))" ButtonStyle="ButtonStyle.Primary" />
+                        <RadzenButton Text="DS Ảnh" Icon="grid_on" Click="@(args => Export("ANH","excel"))" ButtonStyle="ButtonStyle.Primary" />
+                        <RadzenButton Text="Lý thuyết" Icon="grid_on" Click="@(args => Export("LT","excel"))" ButtonStyle="ButtonStyle.Primary" />
+                        <RadzenButton Text="Thực hành" Icon="grid_on" Click="@(args => Export("TH","excel"))" ButtonStyle="ButtonStyle.Primary" />
+                        <RadzenButton Text="TKSV" Icon="grid_on" Click="@(args => Export("TKPT","excel"))" ButtonStyle="ButtonStyle.Primary" />
+                        <RadzenButton Text="TKM" Icon="grid_on" Click="@(args => Export("TK","excel"))" ButtonStyle="ButtonStyle.Primary" />                        
+                    </div>
+                </div>
+            </RadzenTemplateForm>
+            
+            <div class="row">              
+                <span>@msg </span><a href="@link_file" target="_blank"> @a_msg </a>
+                <RadzenDataGrid @ref="grid" IsLoading="@isLoading" Count="@count" Data="@list"
+                                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterMode="FilterMode.Advanced" AllowSorting="true" AllowColumnPicking="false"
+                                AllowFiltering="true" AllowPaging="true" PageSize="30" PagerHorizontalAlign="HorizontalAlign.Center" TItem="DangkyTH03_View" AllowColumnalseResize="true">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="DangkyTH03_View" Property="stt" Title="STT" Filterable="false" Width="70px" />
+                        <RadzenDataGridColumn TItem="DangkyTH03_View" Property="SoBD" Title="SDB" Width="100%" />
+                        <RadzenDataGridColumn TItem="DangkyTH03_View" Property="CCCD" Title="CCCD" Width="100%" />
+                        <RadzenDataGridColumn TItem="DangkyTH03_View" Property="HovaDem" Title="Họ đệm" Width="100%" />
+                        <RadzenDataGridColumn TItem="DangkyTH03_View" Property="Ten" Title="Tên" Width="100%" />
+                        <RadzenDataGridColumn TItem="DangkyTH03_View" Property="GioiTinh" Title="Giới" Width="80px" >
+                            <Template Context="data">                                
+                                    @gt[@data.GioiTinh.Value]
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="DangkyTH03_View" Property="NgaySinh" Title="Ngày sinh" Filterable="false" Width="100%" />
+                        <RadzenDataGridColumn TItem="DangkyTH03_View" Property="NoiSinh_Tinh_Ten" Title="Nơi sinh" Width="100%" />                        
+                        <RadzenDataGridColumn TItem="DangkyTH03_View" Property="PhongThi" Title="Phòng thi" Filterable="false" Width="100%"/>
+                        <RadzenDataGridColumn TItem="DangkyTH03_View" Property="CaThi" Title="Ca thi" Filterable="false" Width="100%"/>                        
+                        <RadzenDataGridColumn TItem="DangkyTH03_View" Property="Matkhau" Title="Mật khẩu" Filterable="false" Width="100%" />
+                        <RadzenDataGridColumn TItem="DangkyTH03_View" Property="" Title="" Filterable="false" Width="100%">
+                            <Template Context="data">
+                                <AuthorizeView Roles="Admin,QUANLY">
+                                    <a href="/Tinhoc03TheDuthi/@data.Id">Thẻ</a>
+                                </AuthorizeView>                                
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </div>
+
+        </Authorized>
+    </AuthorizeView>
+</div>
+
+@code {
+    IEnumerable<DangkyTH03_View> list;
+    LapDSTinhoc para= new LapDSTinhoc();
+    //string maDotthi = "";
+    RadzenDataGrid<DangkyTH03_View> grid;
+    List<string> dotthList = new List<string>();
+    IEnumerable<string> selectedDotthi;
+
+    List<bool> DuDKthiList = new List<bool>();
+    IEnumerable<bool> selectedDuDKThi;
+    List<Dotthi> _dotthiList;
+    List<string> maDotthi;
+    List<string> gt = new List<string>() { "Nữ", "Nam"};
+    bool isLoading;
+    int count;
+    string link_file = "#";
+    string a_msg, msg;
+
+    void OnClick(string link)
+    {     
+        string combinedString = string.Join(";", maDotthi.ToArray());
+        link = link + "/" + combinedString;
+        NavigationManager.NavigateTo(link, true);
+    }
+    async void Filter()
+    {
+        var response = await _httpClient.PostAsJsonAsync("api/DangkyTH03/TH03GetDSPTView", @maDotthi);
+        if (response.IsSuccessStatusCode)
+        {
+            list = await response.Content.ReadFromJsonAsync<List<DangkyTH03_View>>();
+            //await grid.Reload();
+            InvokeAsync(StateHasChanged);
+        }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+
+        try
+        {
+            _dotthiList = await _httpClient.GetFromJsonAsync<List<Dotthi>>("api/Dotthi/DotthiGetList");
+            if (_dotthiList != null)
+            {
+                foreach (var it in _dotthiList)
+                {
+                    dotthList.Add(it.Id);
+                }
+            }
+            DuDKthiList.Clear();
+            DuDKthiList.Add(true);
+            DuDKthiList.Add(false);
+
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            string ErrMessage = e.Message;
+        }
+    }
+    async Task OnSelectedDotthiChange(object value)
+    {
+        if (selectedDotthi != null && !selectedDotthi.Any())
+        {
+            selectedDotthi = null;
+        }
+
+        await grid.FirstPage();
+    }
+    async Task OnSelectedDuDKThiChange(object value)
+    {
+        if (selectedDuDKThi != null && !selectedDuDKThi.Any())
+        {
+            selectedDuDKThi = null;
+        }
+
+        await grid.FirstPage();
+    }
+    public async void Export(string w, string type)
+    {        
+        if (list == null || list.Count() == 0)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Bạn chưa chọn đợt thi");
+            return;
+        }
+        List<DangkyTH03_View> l1 = new List<DangkyTH03_View>(list);
+        try
+        {
+            Query q = new Query()
+                {
+                    OrderBy = grid.Query.OrderBy,
+                    Filter = grid.Query.Filter,
+                    Select = string.Join(",", grid.ColumnsCollection.Where(c => c.GetVisible()))//.Select(c => c.Property))
+                };
+            string combinedString = string.Join(";", maDotthi.ToArray());
+            if (w == "PT")
+            {
+                service.Export2("Tinhoc03DSPT2Excel", type, q, combinedString);
+            }
+            else if (w == "TK")
+            {
+                service.Export2("Tinhoc03DSTaikhoan", type, q, combinedString);
+            }
+            else if (w == "TKPT")
+            {
+                service.Export2("Tinhoc03DSTaikhoanPT", type, q, combinedString);
+            }
+            else if (w == "LT")
+            {
+                service.Export2("Tinhoc03DSLT2Excel", type, q, combinedString);
+            }
+            else if (w == "TH")
+            {
+                service.Export2("Tinhoc03DSTH2Excel", type, q, combinedString);
+            }
+            else if (w == "ANH")
+            {   
+                service.Export2("Tinhoc03DsAnh", type, q, combinedString);
+                //service.Export2("Tinhoc03DsAnhPDF", type, q, combinedString);
+                //var response = await _httpClient.GetAsync("api/pdfCreator/CreateAnhPhongthi/" + combinedString);
+                //if (response.IsSuccessStatusCode)
+                //{
+                //    link_file = await response.Content.ReadAsStringAsync();                    
+                //    msg = "Tạo phiếu đăng ký thành công, bạn có thể tải phiếu";
+                //    a_msg = " TẠI ĐÂY";
+                //    //await JsRuntime.InvokeVoidAsync("DownloadFile", new { Url = link_file, FileName = "phieu.pdf" });
+                //}
+            }
+
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+        list = l1;
+        InvokeAsync(StateHasChanged);
+    }
+    private async void OnChange(object args)
+    {
+        if (maDotthi != null && maDotthi.Count > 0)
+        {
+            string combinedString = string.Join(";", maDotthi.ToArray());
+            //var response = await _httpClient.GetAsync("api/DangkyTH03/TH03GetListView/" + combinedString);
+            var response = await _httpClient.PostAsJsonAsync("api/DangkyTH03/TH03GetDSPTView", @combinedString);
+            //response.EnsureSuccessStatusCode();
+            if (response.IsSuccessStatusCode)
+            {
+                list = await response.Content.ReadFromJsonAsync<List<DangkyTH03_View>>();
+                InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+}
+

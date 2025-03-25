@@ -1,0 +1,49 @@
+﻿@page "/PaymentCallback"
+@using Flic.Client.Services;
+@using Flic.Shared
+@using System.Net.Mail;
+
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+@inject IAuthService AuthService
+
+<p>Mã hóa đơn: @rs.OrderId</p>
+@* <p>@rs.Token</p> *@
+<p>Phương thức thanh toán: @rs.PaymentMethod</p>
+<p>Mô tả: @rs.OrderDescription</p>
+<p>Mã thanh toán: @rs.PaymentId</p>
+<p>Trạng thái: @if (rs.Success)
+    {
+        <span>Thành công</span>
+    }
+    else {        
+    <span> Không thành công </span>
+    }
+</p>
+<p>Mã giao dịch: @rs.TransactionId</p>
+<p>Mã kết quả: @rs.VnPayResponseCode</p>
+
+
+@code {
+    private PaymentResponseModel rs = new PaymentResponseModel();
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            string para = NavigationManager.Uri.Replace(NavigationManager.BaseUri, "");
+            string newUri = "api/VnPayQR/" + para;
+            var response = await Http.GetAsync(newUri);
+            if (response.IsSuccessStatusCode)
+            {
+                rs = await response.Content.ReadFromJsonAsync<PaymentResponseModel>();
+            }           
+
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+    }
+    
+}

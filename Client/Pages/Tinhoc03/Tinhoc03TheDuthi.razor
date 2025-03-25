@@ -1,0 +1,185 @@
+﻿@page "/Tinhoc03TheDuthi/{id}"
+@using Flic.Client.Services;
+@using Flic.Shared
+@using System.Net.Mail;
+
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+@inject IAuthService AuthService
+<AuthorizeView>
+    <Authorized>
+        <style>
+        p {
+            font-size: 20px;
+        }
+
+        td {
+            font-size: 20px;
+        }
+
+        .text_center_col {
+            text-align: center;
+        }
+    </style>
+
+    <body style="font-size: 16px; font-family: 'Times New Roman', Times, serif;">
+        <div style="width: 850px; margin: 0 auto;">
+            <table width="100%">
+                <tr>
+                    <td class="text_center_col">HỌC VIỆN THANH THIẾU NIÊN VIỆT NAM</td>
+                    <td class="text_center_col"><b>CÔNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</b></td>
+                </tr>
+                <tr>
+                    <td class="text_center_col">
+                        <div style="width: fit-content; margin: 0 auto;">
+                                <b><span style="border-bottom:1px solid #000;margin:0 auto;">HĐ THI CHỨNG CHỈ ƯDCNTT CƠ BẢN</span></b>
+                                    @*<span style="border-bottom:1px solid #000; margin:0 auto;">HỌC VIỆN THANH THIẾU NIÊN VIỆT NAM</span</b>*@
+                            <!--<hr style="width: 30%;">-->
+                        </div>
+
+                    </td>
+                    <td class="text_center_col">
+                        <div style="width: fit-content; margin: 0 auto; ">
+                            <b><span style="border-bottom:1px solid #000; margin:0 auto;">Độc lập - Tự do - Hạnh phúc</span></b>
+                            <!--<hr style="width: 100%;"-->
+                        </div>
+
+                    </td>
+                </tr>
+            </table>
+            <br />
+                <table width="100%">
+                    <tr>
+                        <td width="200px">
+                            <div style="width: 150px; float: left; border: 1px solid #000; height: 200px;padding: 5px;box-sizing: border-box;">
+                                <p style="font-size:14px">
+                                    
+                                </p>
+                            </div>
+                        </td>
+                        <td style="text-align: center; vertical-align: middle;" class="text_center_col">
+                            <b>PHIẾU DỰ THI CHỨNG CHỈ ỨNG DỤNG CNTT CƠ BẢN</b>
+                            
+                        </td>
+                    </tr>
+                </table>
+            <div style="width: 100%">
+                
+                <p>
+                    <table width="100%">                    
+                    
+                    <tr>
+                        <td colspan="2">
+                            Họ và tên: @item.HovaDem @item.Ten
+                        </td>
+                        <td>Giới tính: @gt</td>
+                    </tr>
+                    <tr>
+                                <td>Sinh ngày: @item.NgaySinh</td>
+                                <td>Nơi sinh: @item.NoiSinh_Tinh_Ten</td>
+                                <td>Dân tộc: @item.DanToc_Ten </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">Số CCCD: @item.CCCD</td>
+                                <td>Ngày cấp: @item.CCCD_NgayCap</td>
+                    </tr>
+                    <tr>
+                                <td colspan="3">Nơi cấp: @item.CCCD_NoiCap</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">Ngày thi: @item.DotThi_Ten</td>
+                        
+                        <td>Ca thi: @item.CaThi</td>
+                    </tr>
+                            <tr>
+                                <td colspan="2">
+                                    Số báo danh: @item.SoBD
+                                </td>
+                                <td>
+                                    Phòng thi: @item.PhongThi
+                                </td>
+                            </tr>
+                    <tr>
+                        <td colspan="3"><b><i>Chú ý:</i></b></td>
+                    </tr>                    
+                    <tr>
+                        <td colspan="3">
+                            - Thí sinh có mặt tại phòng thi đúng giờ quy định, xuất trình phiếu dự thi và CCCD<br />
+                            - Địa điểm thi: @item.DiaDiemThi_Ten<br />
+                            - Thí sinh đến muộn quá 15 phút sẽ không được dự thi.<br />
+                            - Khi đến nhận chứng chỉ phải xuất trình phiếu dự thi.<br />
+                        </td>
+                    </tr>
+
+                    
+                </table>
+                <table width="100%">
+                    <tr>
+                        <td width="50%">
+                            
+                        </td>
+                        <td width="50%" style="vertical-align: top; text-align:center">
+                            <p style="width: 100%; text-align: center;"><i>Hà Nội, ngày &nbsp;&nbsp;&nbsp;&nbsp;tháng &nbsp;&nbsp;&nbsp; năm 20 </i></p>
+                            <P style="width: 100%; text-align: center;"><b>CHỦ TỊCH HỘI ĐỒNG THI</b></P>
+                            <p>
+                                <br />
+                                <br />
+                                <br />
+                                <br />
+                            </p>
+                            <p style="width: 100%; text-align:center;">
+                                
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+                </p>
+            </div>
+            <div>   
+                    <RadzenButton ButtonType="ButtonType.Button" Click=@CreatePhieuDK Text="Tạo thẻ dự thi" />
+                    <span>@msg </span><a href="@link_file" target="_blank"> @a_msg </a>
+            </div>
+        </div>
+
+    </body>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+        [Parameter] public string id { get; set; }
+        DangkyTH03_View item = new DangkyTH03_View();
+        
+    //List<string> gt = new List<string>() { "Nữ", "Nam" };
+    string gt = "";
+    private bool dkOnthi;
+    string link_file = "#";
+    string msg;
+    string a_msg;
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            item = await Http.GetFromJsonAsync<DangkyTH03_View>("api/DangkyTH03/TH03GetViewByID/" + @id);
+            if (item.GioiTinh != null && item.GioiTinh == 1) gt = "Nam"; else gt = "Nữ";
+        }
+        catch (Exception e)
+        {
+
+        }
+    }
+    protected async Task CreatePhieuDK()
+    {
+        var response = await Http.GetAsync("api/pdfCreator/CreateTheDuthi/" + @item.Id);
+        if (response.IsSuccessStatusCode)
+        {
+            link_file = await response.Content.ReadAsStringAsync(); 
+            //link_file = Path.Combine(NavigationManager.BaseUri, link_file);
+            msg = "Tạo thẻ dự thi của Thí sinh ";
+            a_msg = " TẠI ĐÂY";
+            //await JsRuntime.InvokeVoidAsync("DownloadFile", new { Url = link_file, FileName = "Theduthi.pdf" });
+        }
+        //NavigationManager.NavigateTo("Tinhoc03List");
+    }
+    
+}

@@ -1,0 +1,118 @@
+﻿@page "/fileupload"
+@inject HttpClient Http
+@using System.IO
+@using Flic.Shared
+@*@inject IWebHostEnvironment env*@
+
+<h3>FileUpload</h3>
+<h1>Blazor WebAssembly File Upload</h1>
+
+<h3>@Message</h3>
+
+@*<form @onsubmit="OnSubmit">*@
+<EditForm Model="@item" OnValidSubmit="@OnSubmit">
+    
+        <div class="row">
+            <div class="col-md-12">
+                <InputSelect class="form-control" @bind-Value="@KhoahocID">
+                    <option value="">---Chọn khóa học---</option>
+                    @if (KhoahocList!=null){
+                        @foreach (var it in KhoahocList)
+                        {
+                            <option value="@it.Id">@it.Name</option>
+                        }
+                    }
+                    
+                </InputSelect>
+                <InputSelect class="form-control" @bind-Value="@KhoaID">
+                    <option value="">---Chọn Khoa---</option>
+                    @if (KhoaList!=null){
+                        @foreach (var it in KhoaList)
+                        {
+                            <option value="@it.Id">@it.Name</option>
+                        }
+                    }
+                    
+                </InputSelect>
+                <InputSelect class="form-control" @bind-Value="@NganhID">
+                    <option value="">---Chọn Ngành---</option>
+                    @if(NganhList!=null){
+                        @foreach (var it in NganhList)
+                        {
+                            <option value="@it.Id">@it.Name</option>
+                        }
+                    }
+                    
+                </InputSelect>
+                <InputSelect class="form-control" @bind-Value="@LopID">
+                    <option value="">---Chọn Lớp---</option>
+                    @if (LopList != null){
+                        @foreach (var it in LopList)
+                        {
+                            <option value="@it.Id">@it.Name</option>
+                        }
+                    }
+                    
+                </InputSelect>
+            </div>
+        </div>
+    
+
+    <InputFile OnChange="OnInputFileChange" multiple />
+    <br /><br />
+    <button type="submit">Upload Selected File(s)</button>
+</EditForm>
+@*</form>*@
+@code {
+    private Lop item= new Lop();
+    string Message = "No file(s) selected";
+    IReadOnlyList<IBrowserFile> selectedFiles;
+    private List<Khoahoc> KhoahocList;
+    private List<Khoa> KhoaList;
+    private List<Nganh> NganhList;
+    private List<Lop> LopList;
+    private string KhoahocID;
+    private string KhoaID;
+    private string NganhID;
+    private string LopID;
+    
+    private void OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        selectedFiles = e.GetMultipleFiles();
+        Message = $"{selectedFiles.Count} file(s) selected";
+        this.StateHasChanged();
+    }
+
+    private async void OnSubmit()
+    {
+        foreach (var file in selectedFiles)
+        {
+            Stream stream = file.OpenReadStream();
+            MemoryStream ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            stream.Close();
+
+            UploadedFile uploadedFile = new UploadedFile();
+            uploadedFile.FileName = file.Name;
+            uploadedFile.FileContent = ms.ToArray();
+            ms.Close();
+
+            await Http.PostAsJsonAsync<UploadedFile>("/api/student/StudentUploadFile", uploadedFile);
+        }
+        Message = $"{selectedFiles.Count} file(s) uploaded on server";
+        this.StateHasChanged();
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {         
+            KhoahocList = await Http.GetFromJsonAsync<List<Khoahoc>>("api/Khoahoc/KhoahocGetList");
+            KhoaList = await Http.GetFromJsonAsync<List<Khoa>>("api/Khoa/KhoaGetList");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Error" + e.Message.ToString());
+        }
+
+    }
+}

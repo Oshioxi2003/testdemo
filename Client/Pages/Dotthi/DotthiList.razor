@@ -1,0 +1,98 @@
+﻿@page "/DotthiList"
+@using Flic.Shared
+@using System.Net.Http.Headers
+@inject HttpClient _httpClient
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+@inject NavigationManager NavigationManager
+@inject NorthwindService service
+
+<div>
+    <PageTitle>Danh sách đợt thi</PageTitle>
+
+    <AuthorizeView>
+        <NotAuthorized>
+            <span>You're not authorize</span>
+        </NotAuthorized>
+        <Authorized Context="Auth">
+            <div class="row">
+                <h3>Danh sách đợt thi</h3>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <RadzenButton Click=@(args => OnClick("/DotthiAdd")) Text="Thêm mới" ButtonStyle="ButtonStyle.Primary" />
+                    <RadzenButton Text="Export XLS" Icon="grid_on" Click="@(args => Export("excel"))" ButtonStyle="ButtonStyle.Primary" />
+                </div>
+                <RadzenDataGrid @ref="grid" AllowColumnPicking="false" AllowFiltering="true"
+                                FilterMode="FilterMode.Advanced" AllowPaging="true" AllowSorting="true"
+                                Data="@_list" TItem="Dotthi" PageSize="40" AllowColumnResize="true">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="Dotthi" Property="Id" Title="ID" Width="140px" Filterable="false" />
+                        <RadzenDataGridColumn TItem="Dotthi" Property="Name" Title="Tên" Width="140px" Filterable="false" />
+                        <RadzenDataGridColumn TItem="Dotthi" Property="Description" Title="Mô tả" />
+                        <RadzenDataGridColumn TItem="Dotthi" Property="NgayThi" Title="Ngày thi" />
+                        <RadzenDataGridColumn TItem="Dotthi" Property="Phithi" Title="Phí thi" />
+                        <RadzenDataGridColumn TItem="Dotthi" Property="PhiOn" Title="Phí ôn" />
+                        <RadzenDataGridColumn TItem="Dotthi" Property="Status" Title="Trạng thái" />
+                        <RadzenDataGridColumn TItem="Dotthi" Property="" Title="" Filterable="false">
+                            <Template Context="data">
+                                <a href="/DotthiEdit/@data.Id">Edit</a> |
+                                <a href="/DotthiDelete/@data.Id">Delete</a>
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </div>
+
+
+        </Authorized>
+    </AuthorizeView>
+</div>
+
+@code {
+    List<Dotthi> _list = new List<Dotthi>();
+    string ErrMessage = "";
+    RadzenDataGrid<Dotthi> grid;
+
+    void OnClick(string link)
+    {
+        NavigationManager.NavigateTo(link, true);
+    }
+    protected override async Task OnInitializedAsync()
+    {
+
+        try
+        {
+            var response = await _httpClient.GetAsync("api/Dotthi/DotthiGetList");
+            response.EnsureSuccessStatusCode();
+            _list = await response.Content.ReadFromJsonAsync<List<Dotthi>>();
+            ErrMessage = "";
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            string ErrMessage = e.Message;
+        }
+
+#nullable disable
+    }
+    public void Export(string type)
+    {
+        try
+        {
+            Query q = new Query()
+                {
+                    OrderBy = grid.Query.OrderBy,
+                    Filter = grid.Query.Filter,
+                    Select = string.Join(",", grid.ColumnsCollection.Where(c => c.GetVisible()))//.Select(c => c.Property))
+                };
+            service.Export("Dotthi", type, q);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+    }
+
+}
+

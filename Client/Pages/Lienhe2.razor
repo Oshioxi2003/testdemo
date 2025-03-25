@@ -1,0 +1,824 @@
+﻿@page "/Lienhe2"
+@layout NoHeaderLayout
+@using System.Security.Claims
+@using Flic.Client.Services;
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@using Flic.Shared
+@using Flic.Shared.Models
+@using Newtonsoft.Json
+@inject HttpClient Http
+@inject IJSRuntime JsRuntime
+@using MudBlazor
+@using BlazorComponents.ChartJS
+@using BlazorComponents.Shared
+@using System.Globalization
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Index - Medicio Bootstrap Template</title>
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+
+  <!-- Favicons -->
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  @* <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet"> *@
+
+  <!-- Vendor CSS Files -->
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="assets/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+  <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="css/Test.css" rel="stylesheet">
+
+  <!-- =======================================================
+  * Template Name: Medicio
+  * Template URL: https://bootstrapmade.com/medicio-free-bootstrap-theme/
+  * Updated: Aug 07 2024 with Bootstrap v5.3.3
+  * Author: BootstrapMade.com
+  * License: https://bootstrapmade.com/license/
+  ======================================================== -->
+</head>
+
+<body class="index-page">
+
+  <header id="header" class="header sticky-top">
+
+    <div class="branding d-flex align-items-center">
+
+      <div class="container position-relative d-flex align-items-center justify-content-end">
+        <a href="index.html" class="logo d-flex align-items-center me-auto">
+          <h1 class="sitename">FLIC-VYA</h1>  
+        </a>
+
+        <nav id="navmenu" class="navmenu">
+          <ul>
+            <li><a href="lienhe2" class="active">Home</a></li>
+            <li><a href="lienhe2">Giới thiệu</a></li>
+            <li><a href="#services">Dịch vụ</a></li>
+            <li><a href="#courses">Khóa học</a></li>
+            @* <li class="dropdown"><a href="#"><span>Dropdown</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+              <ul>
+                <li><a href="#">Dropdown 1</a></li>
+                <li class="dropdown"><a href="#"><span>Deep Dropdown</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                  <ul>
+                    <li><a href="#">Deep Dropdown 1</a></li>
+                  </ul>
+                </li>
+                <li><a href="#">Dropdown 2</a></li>
+              </ul>
+            </li> *@
+            <li><a href="#contact">Liên hệ</a></li>
+          </ul>
+          <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+        </nav>
+
+        <a class="cta-btn" href="Login">Login</a>
+
+      </div>
+
+    </div>
+
+  </header>
+
+  <main class="main">
+
+    <!-- Hero Section -->
+    <section id="Hero" class="hero section">
+
+      <div id="hero-carousel" class="carousel slides carousel-fade" data-bs-ride="carousel" data-bs-interval="5000">
+
+        <div class="carousel-item active">
+          <img src="/img/hero-carousel/2.jpg" alt="">
+        </div><!-- End Carousel Item -->
+
+        <div class="carousel-item">
+          <img src="img/hero-carousel/3.jpg" alt="">
+        </div><!-- End Carousel Item -->
+
+        <div class="carousel-item">
+          <img src="img/hero-carousel/4.jpg" alt="">
+        </div><!-- End Carousel Item -->
+          
+        <a class="carousel-control-prev" href="#hero-carousel" role="button" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon bi bi-chevron-left" aria-hidden="true"></span>
+        </a>
+
+        <a class="carousel-control-next" href="#hero-carousel" role="button" data-bs-slide="next">
+          <span class="carousel-control-next-icon bi bi-chevron-right" aria-hidden="true"></span>
+        </a>
+
+        <ol class="carousel-indicators"></ol>
+
+      </div>
+
+    </section><!-- /Hero Section -->
+
+    <!-- Featured Services Section -->
+    <section id="featured-services" class="featured-services section">
+
+      <div class="container">
+
+        <div class="row gy-4">
+
+          <div class="col-xl-3 col-md-6 d-flex"  >
+            <div class="service-item position-relative">
+              <div class="icon"><i class="fas fa-heartbeat icon"></i></div>
+              <h4><a href="" class="stretched-link">Phương Pháp Hiện Đại</a></h4>
+              <p>Các khóa học được thiết kế theo phương pháp giảng dạy tiên tiến, giúp học viên tiếp thu nhanh và ứng dụng thực tế.</p>
+            </div>
+          </div><!-- End Service Item -->
+
+          <div class="col-xl-3 col-md-6 d-flex">
+            <div class="service-item position-relative">
+              <div class="icon"><i class="fas fa-pills icon"></i></div>
+              <h4><a href="" class="stretched-link">Giảng Viên Kinh Nghiệm</a></h4>
+              <p>Đội ngũ giảng viên giàu kinh nghiệm, nhiệt tình hỗ trợ học viên trong quá trình học tập.</p>
+            </div>
+          </div><!-- End Service Item -->
+
+          <div class="col-xl-3 col-md-6 d-flex">
+            <div class="service-item position-relative">
+              <div class="icon"><i class="fas fa-thermometer icon"></i></div>
+              <h4><a href="" class="stretched-link">Lộ Trình Cá Nhân Hóa</a></h4>
+              <p>Chương trình học phù hợp với từng cấp độ, từ cơ bản đến nâng cao, đảm bảo học viên đạt được mục tiêu đề ra.</p>
+            </div>
+          </div><!-- End Service Item -->
+
+          <div class="col-xl-3 col-md-6 d-flex">
+            <div class="service-item position-relative">
+              <div class="icon"><i class="fas fa-dna icon"></i></div>
+              <h4><a href="" class="stretched-link">Thực Hành & Ứng Dụng</a></h4>
+              <p>Không chỉ học lý thuyết, học viên được thực hành ngay trong lớp và áp dụng vào công việc, cuộc sống.</p>
+            </div>
+          </div><!-- End Service Item -->
+
+        </div>
+
+      </div>
+
+    </section><!-- /Featured Services Section -->
+
+    <!-- Call To Action Section -->
+    <section id="call-to-action" class="call-to-action section accent-background">
+
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-xl-10">
+            <div class="text-center">
+              <h3>Cần Hỗ Trợ Ngay? Liên Hệ Với Chúng Tôi!</h3>
+              <p>Nếu bạn đang gặp khó khăn hoặc cần tư vấn về khóa học, đừng ngần ngại liên hệ ngay với chúng tôi. Đội ngũ chuyên viên luôn sẵn sàng hỗ trợ bạn một cách nhanh chóng và tận tình.</p>
+              <a class="cta-btn" href="#appointment">Liên hệ</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section><!-- /Call To Action Section -->
+
+    <!-- About Section -->
+    <section id="lienhe2" class="lienhe2 section">
+
+      <!-- Section Title -->
+      <div class="container section-title">
+        <h2>Trung Tâm Anh Ngữ & Tin Học FLIC-VYA<br></h2>
+        <p>Chúng tôi tự hào là trung tâm đào tạo tiếng Anh và tin học hàng đầu, cung cấp các khóa học chất lượng cao, giúp học viên phát triển kỹ năng và nâng cao cơ hội nghề nghiệp.</p>
+      </div><!-- End Section Title -->
+
+      <div class="container">
+
+        <div class="row gy-4">
+          <div class="col-lg-6 position-relative align-self-start">
+            <img src="img/abouts.jpg" class="img-fluid" alt="">
+          </div>
+          <div class="col-lg-6 content" >
+            <h3>Sứ Mệnh Của Chúng Tôi</h3>
+            <ul>
+              <li><i class="bi bi-check2-all"></i> <span>Giúp học viên tự tin giao tiếp bằng tiếng Anh trong học tập và công việc.</span></li>
+              <li><i class="bi bi-check2-all"></i> <span>Đào tạo kỹ năng tin học từ cơ bản đến nâng cao, đáp ứng nhu cầu thực tế.</span></li>
+              <li><i class="bi bi-check2-all"></i> <span>Cung cấp phương pháp học tập hiện đại, dễ hiểu, mang lại hiệu quả cao.</span></li>
+              <li><i class="bi bi-check2-all"></i> <span>Giảng viên giàu kinh nghiệm, tận tâm hướng dẫn từng học viên.</span></li>
+              <li><i class="bi bi-check2-all"></i> <span>Chương trình học linh hoạt, phù hợp với mọi đối tượng.</span></li>
+              <li><i class="bi bi-check2-all"></i> <span>Cơ sở vật chất hiện đại, hỗ trợ tối đa việc học tập.</span></li>
+              <li><i class="bi bi-check2-all"></i> <span>Cam kết chất lượng, đầu ra đảm bảo với chứng chỉ uy tín.</span></li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+
+    </section><!-- /About Section -->
+
+    <!-- Stats Section -->
+    <section id="stats" class="stats section">
+
+      <div class="container">
+
+        <div class="row gy-4">
+
+          <div class="col-lg-3 col-md-6">
+            <div class="stats-item d-flex align-items-center w-100 h-100">
+              <i class="fas fa-user-md flex-shrink-0"></i>
+              <div>
+                <span data-purecounter-start="0" data-purecounter-end="25" data-purecounter-duration="1" class="purecounter"></span>
+                <p>Giảng viên 50</p>
+              </div>
+            </div>
+          </div><!-- End Stats Item -->
+
+          <div class="col-lg-3 col-md-6">
+            <div class="stats-item d-flex align-items-center w-100 h-100">
+              <i class="far fa-hospital flex-shrink-0"></i>
+              <div>
+                <span data-purecounter-start="0" data-purecounter-end="5" data-purecounter-duration="1" class="purecounter"></span>
+                <p>Cơ sở 5</p>
+              </div>
+            </div>
+          </div><!-- End Stats Item -->
+
+          <div class="col-lg-3 col-md-6">
+            <div class="stats-item d-flex align-items-center w-100 h-100">
+              <i class="fas fa-flask flex-shrink-0"></i>
+              <div>
+                <span data-purecounter-start="0" data-purecounter-end="500" data-purecounter-duration="1" class="purecounter"></span>
+                <p>Sinh viên 1000</p>
+              </div>
+            </div>
+          </div><!-- End Stats Item -->
+
+          <div class="col-lg-3 col-md-6">
+            <div class="stats-item d-flex align-items-center w-100 h-100">
+              <i class="fas fa-award flex-shrink-0"></i>
+              <div>
+                <span data-purecounter-start="0" data-purecounter-end="150" data-purecounter-duration="1" class="purecounter"></span>
+                <p>Chứng chỉ Topic</p>
+              </div>
+            </div>
+          </div><!-- End Stats Item -->
+
+        </div>
+
+      </div>
+
+    </section><!-- /Stats Section -->
+
+
+    <!-- Services Section -->
+    <section id="services" class="services section">
+
+      <!-- Section Title -->
+      <div class="container section-title">
+        <h2>Dịch vụ của chúng tôi</h2>
+      </div><!-- End Section Title -->
+
+      <div class="container">
+
+        <div class="row gy-4">
+
+          <div class="col-lg-4 col-md-6" >
+            <div class="service-item  position-relative">
+              <div class="icon">
+                <i class="fas fa-heartbeat"></i>
+              </div>
+              <a href="#" class="stretched-link">
+                <h3>Đào tạo Tiếng Anh</h3>
+              </a>
+              <div class="text-left">
+                <p>Các khóa học từ cơ bản đến nâng cao</p>
+                <p>Luyện thi TOEIC, IELTS, giao tiếp chuyên sâu</p>
+                <p>Dạy kèm 1-1 theo yêu cầuo</p>
+              </div>
+            </div>
+          </div><!-- End Service Item -->
+
+          <div class="col-lg-4 col-md-6">
+            <div class="service-item position-relative">
+              <div class="icon">
+                <i class="fas fa-pills"></i>
+              </div>
+              <a href="#" class="stretched-link">
+                <h3>Đào tạo Tin học</h3>
+              </a>
+              <div class="text-left">
+                <p>Tin học văn phòng (Word, Excel, PowerPoint)</p>
+                <p>Lập trình cơ bản và nâng cao (Python, Java, C#)</p>
+                <p>Đồ họa và thiết kế (Photoshop, AI, Canva)</p>
+              </div>    </div>          
+          </div><!-- End Service Item -->
+
+          <div class="col-lg-4 col-md-6" >
+            <div class="service-item position-relative">
+              <div class="icon">
+                <i class="fas fa-hospital-user"></i>
+              </div>
+              <a href="#" class="stretched-link">
+                <h3>Dịch vụ khác</h3>
+              </a>
+              <div class="text-left">
+                <p>Tư vấn định hướng học tập</p>
+                <p>Hỗ trợ học viên trong quá trình học</p>
+                <p>Cấp chứng chỉ hoàn thành khóa học</p>
+              </div>   </div>          
+          </div><!-- End Service Item -->
+        </div>
+
+      </div>
+
+    </section><!-- /Services Section -->  
+
+
+    <section id="courses" class="courses section light-background">
+      <!-- Section Title -->
+      <div class="container section-title Canle-Pading" >
+          <h2 class="text-center">🎓 Các Khóa Học</h2>
+      </div><!-- End Section Title -->
+
+      <div class="container">
+          @foreach (var loaiLH in LoaiLop_List)
+          {
+              <div class="course-category">
+                  <h3>@loaiLH.TenLop</h3>
+              </div>
+
+              <div class="row">
+                  @foreach (var item in list_course.Where(m => m.LoaiLop == loaiLH.Id))
+                  {
+                      <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
+                          <div class="course-card">
+                              <div class="member-img">
+                                  <img src="@((item.ImagePath ?? "images/vya_no_images.jfif"))" class="img-fluid" alt="Course Image">
+                        
+                              </div>
+                              <div class="member-info">
+                                  <h4>@item.TenLop</h4>
+                                  <p>@((MarkupString)item.Mota)</p>
+                                  <a href="/DKHocAdd/@item.Id" class="register-btn">Đăng Ký</a>
+                              </div>
+                          </div>
+                      </div><!-- End Course Item -->
+                  }
+              </div>
+          }
+      </div>
+  </section><!-- /Courses Section -->
+
+    <style>
+        /* Căn chỉnh padding về 0 */
+        .Canle-Pading {
+            padding: 0 !important;
+        }
+
+        /* Định dạng tiêu đề */
+        .course-category {
+            width: 100%;
+            margin: 20px 0;
+            font-size: 1.5em;
+            color: #e74c3c;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        /* Card khóa học */
+        .course-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-align: center;
+            with: 400px;
+            height: 500px;
+        }
+
+        .course-card:hover {
+            transform: translateY(-7px);
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Hình ảnh khóa học */
+        .member-img {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+
+        .member-img img {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+        }
+
+
+        /* Thông tin khóa học */
+        .member-info {
+            padding: 15px;
+        }
+
+        .member-info h4 {
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .member-info p {
+            font-size: 0.95em;
+            color: #666;
+            text-align: justify;
+        }
+
+        /* Nút đăng ký */
+        .register-btn {
+            display: inline-block;
+            padding: 10px 15px;
+            color: #fff;
+            background: #007bff;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 1em;
+            transition: background 0.3s;
+        }
+
+        .register-btn:hover {
+            background: #0056b3;
+        }
+    </style>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact section">
+
+      <!-- Section Title -->
+      <div class="container section-title">
+        <h2>Liên hệ</h2>
+        <p>Liên hệ ngay với chúng tôi để được tư vấn chi tiết về các khóa học và nhận hỗ trợ tận tình từ đội ngũ chuyên gia!</p>
+      </div><!-- End Section Title -->
+
+      <div class="mb-5" >
+        <div class="contact-map">
+            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3724.813040181326!2d105.80000907596666!3d21.00161178855081!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3135ab39f434c6e7%3A0x123456789abcdef!2zSOG7jWMgdmnDqm4gVGhhbmggdGhpw6puIFZp4buHdCBOYW0!5e0!3m2!1sen!2s!4v1694000000000!5m2!1sen!2s"
+                    width="100%" height="300" style="border:0;" allowfullscreen="" loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
+        </div>      </div><!-- End Google Maps -->
+
+      <div class="container">
+
+        <div class="row gy-4">
+          <div class="col-lg-6 ">
+            <div class="row gy-4">
+
+              <div class="col-lg-12">
+                <div class="info-item d-flex flex-column justify-content-center align-items-center" >
+                  <i class="bi bi-geo-alt"></i>
+                  <h3>Address</h3>
+                  <p>Số 3, Phố Chùa Láng, Phường Láng Thượng, Quận Đống Đa, Hà Nội</p>
+                </div>
+              </div><!-- End Info Item -->
+
+              <div class="col-md-6">
+                <div class="info-item d-flex flex-column justify-content-center align-items-center" >
+                  <i class="bi bi-telephone"></i>
+                  <h3>Call Vn</h3>
+                  <p>+84 5589554855</p>
+                </div>
+              </div><!-- End Info Item -->
+
+              <div class="col-md-6">
+                <div class="info-item d-flex flex-column justify-content-center align-items-center" >
+                  <i class="bi bi-envelope"></i>
+                  <h3>Email Vn</h3>
+                  <p>info@edu.vn</p>
+                </div>
+              </div><!-- End Info Item -->
+
+            </div>
+          </div>
+
+          <div class="col-lg-6">
+            <form action="forms/contact.php" method="post" class="php-email-form">
+              <div class="row gy-4">
+
+                <div class="col-md-6">
+                  <input type="text" name="name" class="form-control" placeholder="Your Name" required="">
+                </div>
+
+                <div class="col-md-6 ">
+                  <input type="email" class="form-control" name="email" placeholder="Your Email" required="">
+                </div>
+
+                <div class="col-md-12">
+                  <input type="text" class="form-control" name="subject" placeholder="Subject" required="">
+                </div>
+
+                <div class="col-md-12">
+                  <textarea class="form-control" name="message" rows="4" placeholder="Message" required=""></textarea>
+                </div>
+
+                <div class="col-md-12 text-center">
+                  <div class="loading">Loading</div>
+                  <div class="error-message"></div>
+                  <div class="sent-message">Your message has been sent. Thank you!</div>
+
+                  <button type="submit">Send Message</button>
+                </div>
+
+              </div>
+            </form>
+          </div><!-- End Contact Form -->
+
+        </div>
+
+      </div>
+
+    </section><!-- /Contact Section -->
+
+  </main>
+
+  <footer id="footer" class="footer light-background">
+
+    <div class="container footer-top">
+      <div class="row gy-4">
+        <div class="col-lg-4 col-md-6 footer-about">
+          <a href="index.html" class="logo d-flex align-items-center">
+            <span class="sitename">FLIC-VYA</span>
+          </a>
+          <div class="footer-contact pt-3">
+            <p>Số 3, Phố Chùa Láng, Phường Láng Thượng, </p>
+            <p>Quận Đống Đa, Hà Nội</p>
+            <p class="mt-3"><strong>Phone:</strong> <span>+84 5589554855</span></p>
+            <p><strong>Email:</strong> <span>info@edu.vn</span></p>
+          </div>
+          <div class="social-links d-flex mt-4">
+            <a href=""><i class="bi bi-twitter-x"></i></a>
+            <a href=""><i class="bi bi-facebook"></i></a>
+            <a href=""><i class="bi bi-instagram"></i></a>
+            <a href=""><i class="bi bi-linkedin"></i></a>
+          </div>
+        </div>
+
+        <div class="col-lg-2 col-md-3 footer-links">
+          <h4>Liên kết</h4>
+          <ul>
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Giới thiệu</a></li>
+            <li><a href="#">Dịch vụ</a></li>
+            <li><a href="#">Khóa học</a></li>
+            <li><a href="#">Liên hệ</a></li>
+          </ul>
+        </div>
+
+        <div class="col-lg-2 col-md-3 footer-links">
+          <h4>Khóa Học</h4>
+          <ul>
+            <li><a href="#">Tiếng anh</a></li>
+            <li><a href="#">Tin học</a></li>
+          </ul>
+        </div>
+      <div class="col-lg-2 col-md-3 footer-links">
+        <h4>Hỗ trợ & Tư vấn</h4>
+        <ul>
+          <li><a href="#">Hướng dẫn đăng ký</a></li>
+          <li><a href="#">Chính sách học phí</a></li>
+          <li><a href="#">Câu hỏi thường gặp</a></li>
+          <li><a href="#">Tư vấn khóa học</a></li>
+          <li><a href="#">Liên hệ hỗ trợ</a></li>
+        </ul>
+      </div>
+
+        <div class="col-lg-2 col-md-3 footer-links">
+          <h4>Giới thiệu</h4>
+          <ul>
+            <p>Trung tâm Đào tạo và Đánh giá năng lực Ngoại ngữ - Công nghệ thông tin trực</p>
+          </ul>
+        </div> 
+
+      </div>
+    </div>
+
+    <div class="container copyright text-center mt-4">
+      <p>© <span>Copyright</span> <strong class="px-1 sitename">Trung tâm Đào tạo và Đánh giá năng lực Ngoại ngữ - Công nghệ thông tin.</strong></p>
+      <div class="credits">
+      </div>
+    </div>
+
+  @* <div id="preloader"></div> *@
+  </footer>
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Preloader -->
+  @* <div id="preloader"></div> *@
+
+  <!-- Vendor JS Files -->
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/php-email-form/validate.js"></script>
+  <script src="assets/vendor/aos/aos.js"></script>
+  <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="assets/vendor/purecounter/purecounter_vanilla.js"></script>
+  <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
+
+  <!-- Main JS File -->
+  <script src="assets/js/main.js"></script>
+  <!-- JS -->
+<script src="/assets/vendor/aos/aos.js"></script>
+<script src="/assets/vendor/aos/aos.js"></script>
+<script>
+  AOS.init();
+</script>
+
+<script src="assets/vendor/aos/aos.js" defer></script>
+
+
+
+</body>
+
+</html>
+
+
+
+@code {
+    [Parameter]
+    public Int32? mod { get; set; }
+    [Parameter]
+    public Int32? aid { get; set; }
+
+    //private int index; //default value cannot be 0 -> first selectedindex is 0.
+    private string authMessage;
+    private string surnameMessage;
+    private IEnumerable<Claim> claims = Enumerable.Empty<Claim>();
+    private DashboardResult item = new DashboardResult();
+    private IJSObjectReference _jsModule;
+    private IJSObjectReference MyChart;
+    RadzenDataGrid<StudentStatistic> grid;
+    bool isLoading = false;
+    bool showDataLabels = false;
+    int count;
+    //private bool ShowErrors;
+    private string Error = "";
+
+    private LoginModel loginModel = new LoginModel();
+
+    
+
+    List<Flic.Shared.Models.Article> list = new List<Flic.Shared.Models.Article>();
+
+    List<Flic.Shared.Models.LoaiLophoc> LoaiLop_List = new List<Flic.Shared.Models.LoaiLophoc>();
+
+    List<Flic.Shared.Models.Lophoc> list_english = new List<Flic.Shared.Models.Lophoc>();
+    List<Flic.Shared.Models.Lophoc> list_japanese = new List<Flic.Shared.Models.Lophoc>();
+    List<Flic.Shared.Models.Lophoc> list_chinese = new List<Flic.Shared.Models.Lophoc>();
+    List<Flic.Shared.Models.Lophoc> list_tin03 = new List<Flic.Shared.Models.Lophoc>();
+    List<Flic.Shared.Models.Lophoc> list_course = new List<Flic.Shared.Models.Lophoc>();
+
+
+    //EventConsole console;
+
+    void OnParentClicked(MenuItemEventArgs args)
+    {
+        Console.WriteLine($"{args.Text} clicked from parent");
+    }
+
+    void OnChildClicked(MenuItemEventArgs args)
+    {
+        Console.WriteLine($"{args.Text} from child clicked");
+    }
+
+
+    private async Task HandleLogin()
+    {
+        //ShowErrors = false;
+
+        var result = await AuthService.Login(loginModel);
+
+        if (result.Successful)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+        else
+        {
+            Error = result.Error;
+            //ShowErrors = true;
+        }
+    }
+
+    async Task Reset()
+    {
+        grid.Reset(true);
+        await grid.FirstPage(true);
+    }
+
+    async Task LoadData(LoadDataArgs args)
+    {
+
+    }
+    class DataItem
+    {
+        public string Quarter { get; set; }
+        public double Revenue { get; set; }
+    }
+    class ChartSeriesData
+    {
+        public string title { get; set; }
+        public List<DataItem> data { get; set; }
+    }
+    string FormatAsUSD(object value)
+    {
+        return ((double)value).ToString();// .ToString("C0", CultureInfo.CreateSpecificCulture("en-US"));
+    }
+
+    List<ChartSeriesData> chartData = new List<ChartSeriesData>();
+
+
+
+    protected override async Task OnInitializedAsync()
+    {        
+
+        try{
+            item = await Http.GetFromJsonAsync<DashboardResult>("api/Dashboard");
+
+            var response = await Http.GetAsync("api/Article/ArticleGetList");
+
+            if (response.IsSuccessStatusCode)
+            {
+                list = await response.Content.ReadFromJsonAsync<List<Flic.Shared.Models.Article>>();
+            }
+            if (item != null)
+            {
+                if (item.student_stats != null)
+                {
+
+                    var khoaList = item.student_stats.Select(m => m.KhoahocID).Distinct();
+                    foreach (var k in khoaList)
+                    {
+                        List<DataItem> dtList = new List<DataItem>();
+                        var ls = item.student_stats.Where(m => m.KhoahocID == k).ToList();
+                        foreach(var st in ls)
+                        {
+                            dtList.Add(new DataItem { Quarter = st.NganhID, Revenue = st.NumStudent.Value });
+                        }
+                        chartData.Add(new ChartSeriesData { title = k, data = dtList });
+                    }
+
+
+                }
+                response = await Http.GetAsync("api/Lophoc/LophocGetListActive");
+                if (response.IsSuccessStatusCode)
+                {
+                    list_course = await response.Content.ReadFromJsonAsync<List<Flic.Shared.Models.Lophoc>>();
+                }
+                //
+                response = await Http.GetAsync("api/LoaiLophoc/LoaiLophocGetListActive");
+                if (response.IsSuccessStatusCode)
+                {
+                    LoaiLop_List = await response.Content.ReadFromJsonAsync<List<Flic.Shared.Models.LoaiLophoc>>();
+                }
+
+            }
+            
+            
+
+            this.StateHasChanged();
+        }
+        catch (Exception e){
+            Console.WriteLine("Error" + e.Message.ToString());
+        }
+
+    }
+
+    private async Task GetClaimsPrincipalData()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            authMessage = $"{user.Identity.Name} is authenticated.";
+            claims = user.Claims;
+            surnameMessage =
+                $"Surname: {user.FindFirst(c => c.Type == ClaimTypes.Surname)?.Value}";
+        }
+        else
+        {
+            authMessage = "The user is NOT authenticated.";
+        }
+    }
+}
+
+
+ 

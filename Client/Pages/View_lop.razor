@@ -1,0 +1,93 @@
+﻿@page "/ViewLop/{id:int?}"
+
+@using Flic.Shared
+@using Flic.Shared.Models
+@using Newtonsoft.Json
+@inject HttpClient Http
+@inject IJSRuntime JsRuntime
+
+
+
+<br />
+@if (@id != null && list!=null)
+{
+    <span>
+    @item.TenLop
+</span>
+<div>
+    @((MarkupString)item.ChiTiet)
+    <hr />
+    @foreach (var item in list)
+    {
+        <div class="right_section_item">            
+            <div class="right_section_item_abs">
+                <a href="/ViewLop/@item.Id">@item.TenLop</a>
+            </div>
+        </div>
+    }
+    </div>
+}else if (list!=null)
+{
+    @foreach (var item in list)
+    {
+        <div class="right_section_item">
+            <div class="right_section_item_img">
+                <img src=" @item.ImagePath" width="100px" />
+            </div>
+            <div class="right_section_item_abs">
+                <a href="/ViewLop/@item.Id">@item.TenLop</a>
+            </div>
+        </div>
+    }
+}
+@code {
+    
+    [Parameter]
+    public Int32 id { get; set; }
+
+    private Int32 _id, _cat;
+
+    List<Flic.Shared.Models.Lophoc>list = new List<Flic.Shared.Models.Lophoc>();
+    Flic.Shared.Models.Lophoc item = new Flic.Shared.Models.Lophoc();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (id != null)
+        {
+            var response = await Http.GetAsync("api/LopHoc/LophocGetByID/" + id);
+            if (response.IsSuccessStatusCode)
+            {
+                item = await response.Content.ReadFromJsonAsync<Flic.Shared.Models.Lophoc>();
+                
+                var res = await Http.GetAsync("api/LopHoc/LopHocGetListByLoaiLop/" + item.LoaiLop);
+
+                if (res.IsSuccessStatusCode)
+                {
+                    list = await res.Content.ReadFromJsonAsync<List<Flic.Shared.Models.Lophoc>>();
+                }
+            }
+        }
+
+               
+    }
+    protected override async void OnParametersSet()
+    {
+        if (id!=null && _id != id)
+        {
+            _id = id;
+            var response = await Http.GetAsync("api/LopHoc/LophocGetByID/" + id);
+            if (response.IsSuccessStatusCode)
+            {
+                item = await response.Content.ReadFromJsonAsync<Flic.Shared.Models.Lophoc>();
+                var res = await Http.GetAsync("api/LopHoc/LopHocGetListByLoaiLop/" + item.LoaiLop);
+
+                if (res.IsSuccessStatusCode)
+                {
+                    list = await res.Content.ReadFromJsonAsync<List<Flic.Shared.Models.Lophoc>>();
+                }
+            }
+            this.StateHasChanged();
+        }
+        
+    }
+}

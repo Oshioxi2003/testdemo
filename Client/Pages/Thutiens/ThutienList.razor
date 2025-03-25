@@ -1,0 +1,389 @@
+﻿@page "/ThutienList/"
+@* @page "/ThutienList/{lp}/{ktt}" *@
+@inject NavigationManager NavigationManager
+
+@*@attribute [Authorize(Roles = "Admin")]*@
+
+@using Flic.Shared
+@using Newtonsoft.Json
+@inject HttpClient Http
+@inject NorthwindService service
+@inject IJSRuntime JsRuntime
+
+<div>
+    <PageTitle>Danh sách Thu tiền</PageTitle>
+
+    <AuthorizeView>
+        <NotAuthorized>
+            <span>You're not authorize</span>
+        </NotAuthorized>
+        <Authorized Context="Auth">
+            @* <EditForm Model="@item" OnValidSubmit="@Save"> *@
+            @* <EditForm OnValidSubmit="@Save"> *@
+                <div class="row">
+                    <h3>Danh sách Thu tiền</h3>
+
+                </div>
+                <div class="row">                    
+                    <div class="form-group">
+                        <RadzenDropDown Data=@LoaiKhoanthuList TextProperty="MoTa" ValueProperty="MaLoaiKhoanThu"
+                        @bind-Value=@LoaiKhoanthuID Placeholder="--Chọn Khoản thu--"
+                                        AllowClear="true" Multiple="false" TValue="string"
+                                        Change=@OnChangeKhoanthu />
+                        <RadzenDropDown Data=@KyThanhtoanList TextProperty="Name" ValueProperty="Id"
+                        @bind-Value=@KyThanhToanID Placeholder="--Chọn Kỳ thanh toán--"
+                                        AllowClear="true" Multiple="false" TValue="string"
+                                        Change=@OnChangeKyThanhtoan />
+                    </div>
+                    
+                </div> 
+                <div class="row">
+                    <div class="form-group">
+                        <RadzenButton Click=@(args => OnClick("/ThutienAdd")) Text="Thêm mới" ButtonStyle="ButtonStyle.Primary" />
+                        <RadzenButton Click=@(args => OnClick("/ThutienLapDS")) Text="Lập danh sách Tiền Học phí" ButtonStyle="ButtonStyle.Primary" />
+                        <RadzenButton Click=@(args => OnClick("/ThutienImport")) Text="Nhập danh sách thu tiền" ButtonStyle="ButtonStyle.Primary" />
+                        <RadzenButton Click=@(args => OnClick("/ThutienImportTrangthai")) Text="Cập nhập trạng thái" ButtonStyle="ButtonStyle.Primary" />
+                        <RadzenButton Text="Export XLS" Icon="grid_on" Click="@(args => Export("excel"))" ButtonStyle="ButtonStyle.Primary" />
+                    </div>                        
+                 </div>
+                <div class="row">
+                    <RadzenDataGrid @ref="grid" AllowColumnPicking="false" AllowFiltering="true"
+                                    FilterMode="FilterMode.Advanced" AllowPaging="true" AllowSorting="true"
+                                    Data="@ThuTienList" TItem="ThuTienView" PageSize="40" AllowColumnResize="true">
+                        <Columns>
+                            <RadzenDataGridColumn TItem="ThuTienView" Property="id" Title="ID" Width="70px" Filterable="false" />
+                            <RadzenDataGridColumn TItem="ThuTienView" Property="MaSinhVien" Title="Mã SV" Width="120px" />
+                            <RadzenDataGridColumn TItem="ThuTienView" Property="HoDem" Title="Họ đệm" Width="170px" />
+                            <RadzenDataGridColumn TItem="ThuTienView" Property="Ten" Title="Tên" Width="100px" />
+                            <RadzenDataGridColumn TItem="ThuTienView" Property="Ngaysinh" Title="Ngày sinh" Width="120px" />
+                            @*<RadzenDataGridColumn TItem="Student" Property="KhoahocID" Title="Khóa" />*@
+                            <RadzenDataGridColumn TItem="ThuTienView" Property="KhoahocID" Title="Khóa" Width="60px"
+                                                  Type="typeof(IEnumerable<string>)" FilterValue="@selectedKhoahoc" FilterOperator="FilterOperator.Contains">
+                                <FilterTemplate Context="data">
+                                    <RadzenDropDown @bind-Value=@selectedKhoahoc Style="width:100%"
+                                                    Change=@OnSelectedKhoahocChange Data="@(khoahocList)" AllowClear="true" Multiple="true" />
+                                </FilterTemplate>
+                            </RadzenDataGridColumn>
+                            <RadzenDataGridColumn TItem="ThuTienView" Property="NganhID" Title="Ngành" Type="typeof(IEnumerable<string>)" FilterValue="@selectedNganh" FilterOperator="FilterOperator.Contains">
+                                <FilterTemplate Context="data">
+                                    <RadzenDropDown @bind-Value=@selectedNganh Style="width:100%"
+                                                    Change=@OnSelectedNganhChange Data="@(nganhList)" AllowClear="true" Multiple="true" />
+                                </FilterTemplate>
+                            </RadzenDataGridColumn>
+
+                            <RadzenDataGridColumn TItem="ThuTienView" Property="LopID" Title="Lớp"
+                                                  Type="typeof(IEnumerable<string>)" FilterValue="@selectedLop" FilterOperator="FilterOperator.Contains">
+                                <FilterTemplate Context="data">
+                                    <RadzenDropDown @bind-Value=@selectedLop Style="width:100%"
+                                                    Change=@OnSelectedLopChange Data="@(lopList)" AllowClear="true" Multiple="true" />
+                                </FilterTemplate>
+                            </RadzenDataGridColumn>
+                            @* <RadzenDataGridColumn TItem="ThuTienView" Property="LoaiKhoanthuID" Title="Khoản thu"
+                                Type="typeof(IEnumerable<string>)" FilterValue="@selectedKhoanthus" FilterOperator="FilterOperator.Contains">
+                                <FilterTemplate Context="loaiKT">
+                                    <RadzenDropDown @bind-Value=@selectedKhoanthus Style="width:100%"
+                                                    Change=@OnSelectedKhoanthuChange Data="@(khoanthus)" AllowClear="true" Multiple="true" />
+                                </FilterTemplate>
+                            </RadzenDataGridColumn> *@
+                            @* <RadzenDataGridColumn TItem="ThuTienView" Property="KyThanhToan" Title="Kỳ thanh toán" /> *@
+                            <RadzenDataGridColumn TItem="ThuTienView" Property="SoTien" Title="Số tiền" >
+                            <Template Context="dat">
+                                @String.Format("{0:##,##}", dat.SoTien)
+                            </Template>
+                            </RadzenDataGridColumn>
+                            <RadzenDataGridColumn TItem="ThuTienView" Property="TrangThai" Title="Trạng thái"/>
+                                                 @* Type="typeof(IEnumerable<int>)" FilterValue="@selectedTrangthai" FilterOperator="FilterOperator.Contains">
+                                <FilterTemplate Context="data">
+                                    <RadzenDropDown @bind-Value=@selectedTrangthai Style="width:100%"
+                                                    Change=@OnSelectedTrangthaiChange Data="@(trangthaiFilterList)" AllowClear="true" Multiple="true" />
+                                </FilterTemplate>
+                            </RadzenDataGridColumn>
+*@
+
+                            <RadzenDataGridColumn TItem="ThuTienView" Property="" Title="" Filterable="false">
+                                <Template Context="data">
+                                    <a href="/ThutienEdit/@data.id" target="_blank">Edit</a>
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                </div>
+            <div class="row">
+                <p>
+                    Tổng số sinh viên: @ThuTienList.Count() / Tổng số tiền: @{
+                        double a = ThuTienList.Sum(o => o.SoTien).Value;
+                        <span>@a.ToString("#,##0")</span>
+                    } / Số sinh viên đã nộp @{
+                        int b = ThuTienList.Where(m => m.TrangThai == 1).Count();
+                        <span>@b.ToString("#,##0")</span>
+                    } / Số tiền @{
+                        double c = ThuTienList.Where(m => m.TrangThai == 1).Sum(o => o.SoTien).Value;
+                        <span>@c.ToString("#,##0")</span>
+                    }
+                </p>
+            </div>
+            @* </EditForm> *@
+        </Authorized>
+    </AuthorizeView>
+</div>
+
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; }
+   
+
+    RadzenDataGrid<ThuTienView> grid;
+    //int pageSize { set; get; } = 20;
+
+
+    //protected string SearchString { get; set; } = string.Empty;
+    bool busy;
+    bool isLoading;
+    int count;
+    List<ThuTienView> ThuTienList = new List<ThuTienView>();
+
+    List<string> khoahocList = new List<string>();
+    IEnumerable<string> selectedKhoahoc;
+
+    List<string> nganhList = new List<string>();
+    IEnumerable<string> selectedNganh;
+
+    List<string> lopList = new List<string>();
+    IEnumerable<string> selectedLop;
+
+    List<int> trangthaiFilterList = new List<int> { 0, 1 };
+    IEnumerable<string> selectedTrangthai;
+
+    List<string> khoanthus = new List<string> ();
+    IEnumerable<string> selectedKhoanthus;
+
+    List<LoaiKhoanthu> LoaiKhoanthuList = new List<LoaiKhoanthu>();
+    List<KyThanhtoan> KyThanhtoanList = new List<KyThanhtoan>();
+    //public List<string> LoaiKhoanthuID;
+    string KyThanhToanID;
+    string LoaiKhoanthuID;
+
+    async Task OnSelectedKhoahocChange(object value)
+    {
+        if (selectedKhoahoc != null && !selectedKhoahoc.Any())
+        {
+            selectedKhoahoc = null;
+        }
+
+        await grid.FirstPage();
+    }
+    async Task OnSelectedNganhChange(object value)
+    {
+        if (selectedNganh != null && !selectedNganh.Any())
+        {
+            selectedNganh = null;
+        }
+
+        await grid.FirstPage();
+    }
+    async Task OnSelectedLopChange(object value)
+    {
+        if (selectedLop != null && !selectedLop.Any())
+        {
+            selectedLop = null;
+        }
+
+        await grid.FirstPage();
+    }
+    async Task OnSelectedTrangthaiChange(object value)
+    {
+        if (selectedTrangthai != null && !selectedTrangthai.Any())
+        {
+            selectedTrangthai = null;
+        }
+
+        await grid.FirstPage();
+    }
+    async Task OnSelectedKhoanthuChange(object value)
+    {
+        if (selectedKhoanthus != null && !selectedKhoanthus.Any())
+        {
+            selectedKhoanthus = null;
+        }
+
+        await grid.FirstPage();
+    }
+    void OnClick(string link)
+    {
+        NavigationManager.NavigateTo(link, true);
+    }
+
+    async Task OnBusyClick()
+    {
+        busy = true;
+        await Task.Delay(2000);
+        busy = false;
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            List<Khoahoc> KhoahocList;
+            List<Khoa> KhoaList;
+            List<Nganh> NganhList;
+            List<Lop> LopList;
+            List<StudentStatus> TrangthaiList = new List<StudentStatus>();
+            List<LoaiKhoanthu> _khoanthus = new List<LoaiKhoanthu>();
+
+            //item.Pagesize = -1;
+
+            var response = await Http.GetAsync("api/LoaiKhoanthu/LoaiKhoanthuGetList");
+            if (response.IsSuccessStatusCode)
+            {
+                _khoanthus = await response.Content.ReadFromJsonAsync<List<LoaiKhoanthu>>();
+            }else
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "Error:" + response.StatusCode);
+            }
+            if (_khoanthus != null)
+            {
+                foreach (var it in _khoanthus)
+                {
+                    khoanthus.Add(it.MaLoaiKhoanThu);
+                }
+            }
+            KhoahocList = await Http.GetFromJsonAsync<List<Khoahoc>>("api/Khoahoc/KhoahocGetList");
+            if (KhoahocList != null)
+            {
+                foreach (var it in KhoahocList)
+                {
+                    khoahocList.Add(it.Id);
+                }
+            }
+            NganhList = await Http.GetFromJsonAsync<List<Nganh>>("api/Nganh/NganhGetList");
+            if (NganhList != null)
+            {
+                foreach (var it in NganhList)
+                {
+                    nganhList.Add(it.Id);
+                }
+            }
+
+            LopList = await Http.GetFromJsonAsync<List<Lop>>("api/Lop/LopGetList");
+            if (LopList != null)
+            {
+                foreach (var it in LopList)
+                {
+                    lopList.Add(it.Id);
+                }
+            }
+
+            response = await Http.GetAsync("api/LoaiKhoanthu/LoaiKhoanthuGetList");
+
+            if (response.IsSuccessStatusCode)
+            {
+                LoaiKhoanthuList = await response.Content.ReadFromJsonAsync<List<LoaiKhoanthu>>();
+            }
+
+            response = await Http.GetAsync("api/KyThanhtoan/KyThanhtoanGetList/" + LoaiKhoanthuID);
+            if (response.IsSuccessStatusCode)
+            {
+                KyThanhtoanList = await response.Content.ReadFromJsonAsync<List<KyThanhtoan>>();
+            }
+
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Error" + e.Message.ToString());
+        }
+
+    }
+
+    void Change(object value)
+    {
+        grid.Reload();
+    }
+    private async void OnChangeKyThanhtoan(object args)
+    {
+        if (KyThanhToanID != null) { 
+
+            var response = await Http.GetAsync("api/Thutien/ThutienGetByKyThanhtoan/" + LoaiKhoanthuID + "/" + KyThanhToanID);
+
+            if (response.IsSuccessStatusCode)
+            {
+                ThuTienList = await response.Content.ReadFromJsonAsync<List<ThuTienView>>();
+                
+                this.StateHasChanged();
+            }else if ((int)response.StatusCode == 401)
+            {
+                NavigationManager.NavigateTo("/Login", true);
+            }
+            else
+            {
+                
+            }
+            
+        }
+        
+    }
+    private async void OnChangeKhoanthu(object args)
+    {
+        if (LoaiKhoanthuID != null)
+        {
+            var response = await Http.GetAsync("api/KyThanhtoan/KyThanhtoanGetByKhoanthu/" + LoaiKhoanthuID);
+            if (response.IsSuccessStatusCode)
+            {
+                KyThanhtoanList = await response.Content.ReadFromJsonAsync<List<KyThanhtoan>>();
+                this.StateHasChanged();
+            }
+            else
+            {
+                KyThanhtoanList.Clear();
+                this.StateHasChanged();
+            }
+        }
+        
+    }
+    protected async Task Save()
+    {
+        // try
+        // {
+        //     var response = await Http.PostAsJsonAsync("api/Student/StudentAdd", @item);            
+        // }
+        // catch (Exception e)
+        // {
+            
+        // }
+
+    }
+    async Task LoadData(LoadDataArgs args)
+    {
+        isLoading = true;
+
+        //var result = await service.GetEmployees(filter: args.Filter, top: args.Top, skip: args.Skip, orderby: args.OrderBy, count: true);
+        // Update the Data property
+        //employees = result.Value.AsODataEnumerable();
+        // Update the count
+        //count = result.Count;
+
+        isLoading = false;
+    }
+
+
+    public void Export(string type)
+    {
+        try
+        {
+            Query q = new Query()
+                {
+                    OrderBy = grid.Query.OrderBy,
+                    Filter = grid.Query.Filter,
+                    Select = string.Join(",", grid.ColumnsCollection.Where(c => c.GetVisible()))//.Select(c => c.Property))
+                };
+            //service.Export("Thutiens", type, q);
+            //string combinedString = string.Join(";", maKhoahoc.ToArray());
+            //service.Export("Students", type, q);
+            service.Export2("Thutiens", type, q, KyThanhToanID);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+    }
+}

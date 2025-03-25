@@ -1,0 +1,78 @@
+﻿@page "/Tin03TrangthaiList"
+@using Flic.Shared
+@using System.Net.Http.Headers
+@inject HttpClient _httpClient
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+@inject NavigationManager NavigationManager
+@inject NorthwindService service
+
+<div>
+    <PageTitle>Danh sách trạng thái đăng ký Tin học 03</PageTitle>
+
+    <AuthorizeView>
+        <NotAuthorized>
+            <span>You're not authorize</span>
+        </NotAuthorized>
+        <Authorized Context="Auth">
+            <div class="row">
+                <h3>Danh sách trạng thái đăng ký Tin học 03</h3>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <RadzenButton Click=@(args => OnClick("/Tin03TrangthaiAdd")) Text="Thêm mới" ButtonStyle="ButtonStyle.Primary" />                    
+                </div>
+                <RadzenDataGrid @ref="grid" AllowColumnPicking="false" AllowFiltering="true"
+                                FilterMode="FilterMode.Advanced" AllowPaging="true" AllowSorting="true"
+                                Data="@_list" TItem="Tin03_Trangthai" PageSize="40" AllowColumnResize="true">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="Tin03_Trangthai" Property="Id" Title="ID" Width="140px" Filterable="false" />
+                        <RadzenDataGridColumn TItem="Tin03_Trangthai" Property="Name" Title="Tên" Width="140px" Filterable="false" />                        
+
+                        <RadzenDataGridColumn TItem="Tin03_Trangthai" Property="" Title="" Filterable="false">
+                            <Template Context="data">
+                                <a href="/Tin03TrangthaiEdit/@data.Id">Edit</a> |
+                                <a href="/Tin03TrangthaiDelete/@data.Id">Delete</a>
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </div>
+
+
+        </Authorized>
+    </AuthorizeView>
+</div>
+
+@code {
+    List<Tin03_Trangthai> _list = new List<Tin03_Trangthai>();
+    string ErrMessage = "";
+    RadzenDataGrid<Tin03_Trangthai> grid;
+
+    void OnClick(string link)
+    {
+        NavigationManager.NavigateTo(link, true);
+    }
+    protected override async Task OnInitializedAsync()
+    {
+
+        try
+        {
+            var response = await _httpClient.GetAsync("api/Tin03Trangthai/Tin03TrangthaiGetList");            
+            if (response.IsSuccessStatusCode)
+            {
+                _list = await response.Content.ReadFromJsonAsync<List<Tin03_Trangthai>>();
+                ErrMessage = "";
+            }
+            
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            string ErrMessage = e.Message;
+        }
+    }
+    
+
+}
+

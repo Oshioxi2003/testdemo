@@ -1,0 +1,3 @@
+recordType,requestId,svrProviderCode,merchantId,serviceType,custId,custname,amount,currencyCode, billCycle,billId,transTime,status,bankTransId,recordChecksum
+01,6cfa1d9f6295458aaea38f16baeebc401,VTB,729,,202001011,PHẠM VĂN DŨNG Xây dựng Đảng và Chính quyền Nhà nước Khoa chính trị học K09-D1,6000000,VND,HPK1,billId,20221006150123,S_Thành công,199C834F1C18BB4DFC2,Checksum
+01,6cfa1d9f6295458aaea38f16baeebc401,VTB,729,,202001011,PHẠM VĂN DŨNG Xây dựng Đảng và Chính quyền Nhà nước Khoa chính trị học K09-D1,6000000,VND,HPK1,billId,20221006150123,S_Thành công,199C834F1C18BB4DFC2,Checksum

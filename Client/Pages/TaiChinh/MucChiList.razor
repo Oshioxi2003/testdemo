@@ -1,0 +1,304 @@
+﻿@page "/MucchiInlineEditList"
+@using Flic.Shared.Models.TaiChinh
+@using System.Net.Http.Headers
+
+@inject HttpClient _httpClient
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+
+@inject NavigationManager NavigationManager
+@inject NorthwindService service
+
+@inject IJSRuntime JsRuntime
+<div>
+    <PageTitle>Danh sách Mục chi</PageTitle>
+
+    <AuthorizeView>
+        <NotAuthorized>
+            <span>You're not authorize</span>
+        </NotAuthorized>
+        <Authorized Context="Auth">
+            <div class="row">
+                <h3>Danh sách Mục chi</h3>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="add_circle" Text="Thêm mới"
+                                  Click="@InsertRow" Disabled="@(editMode == DataGridEditMode.Single && ordersToInsert.Count() > 0)" />                    
+                </div>
+                
+                <div class="col-md-3">
+                    <RadzenButton Text="Export XLS" Icon="grid_on" Click="@(args => Export("excel"))" ButtonStyle="ButtonStyle.Primary" />
+                </div>
+            </div>
+            
+            <div class="row">
+                <RadzenDataGrid @ref="ordersGrid" AllowAlternatingRows="false" AllowPaging="true"
+                                AllowFiltering="true" FilterMode="FilterMode.Advanced"
+                                PageSize="30" AllowSorting="true" EditMode="@editMode" Data="@list" TItem="TAICHINH_MucChi" RowUpdate="@OnUpdateRow"
+                                RowCreate="@OnCreateRow" Sort="@Reset" Page="@Reset" Filter="@Reset">
+
+                    <Columns>
+                        <RadzenDataGridColumn TItem="TAICHINH_MucChi" Property="Id" Title="ID" Width="80px" Filterable="false" Frozen="true" />                                               
+
+                        <RadzenDataGridColumn TItem="TAICHINH_MucChi" Property="@nameof(TAICHINH_MucChi.TenMuc)" Title="Tên mục" Width="400px">
+                            <EditTemplate Context="order">
+                                <RadzenTextBox @bind-Value="order.TenMuc" Style="width:400px; display: block; font-size:smaller" Name="TenMuc" aria-label="Nhập TenMuc" />
+                                <RadzenRequiredValidator Text="Tên không được trống" Component="TenMuc" Popup="true" />
+                            </EditTemplate>
+                        </RadzenDataGridColumn>
+                                              
+
+                        <RadzenDataGridColumn TItem="TAICHINH_MucChi" Property="NhomMuc" Title="Nhóm mục" Width="250px"
+                                              Type="typeof(IEnumerable<string>)" FilterValue="@selectedNhom" FilterOperator="FilterOperator.Contains">
+                            <EditTemplate Context="order">
+                                <RadzenDropDown @bind-Value="order.NhomMuc" Data="@NhomList" TextProperty="@nameof(TAICHINH_NhomMuc.TenNhom)"
+                                                ValueProperty="@nameof(TAICHINH_NhomMuc.MaNhom)"
+                                                InputAttributes="@(new Dictionary<string,object>(){ { "aria-label", "Chọn ngành" }})" />
+                            </EditTemplate>                            
+                        </RadzenDataGridColumn>
+
+                        <RadzenDataGridColumn TItem="TAICHINH_MucChi" Property="@nameof(TAICHINH_MucChi.DoiTuong)" Title="Đối tượng">
+                            <EditTemplate Context="order">
+                                <RadzenNumeric @bind-Value="order.DoiTuong" Style="width:80px; display: block; font-size:smaller" Name="DoiTuong" aria-label="Nhập đối tượng" />
+                                <RadzenRequiredValidator Text="Đối tượng không được trống" Component="DoiTuong" Popup="true" />
+                            </EditTemplate>
+                        </RadzenDataGridColumn>
+
+                        <RadzenDataGridColumn TItem="TAICHINH_MucChi" Property="@nameof(TAICHINH_MucChi.MaTongHop)" Title="Mã tổng hợp">
+                            <EditTemplate Context="order">
+                                <RadzenNumeric @bind-Value="order.MaTongHop" Style="width:80px; display: block; font-size:smaller" Name="MaTongHop" aria-label="Nhập Mã tổng hợp" />
+                                <RadzenRequiredValidator Text="Mã tổng hợp không được trống" Component="MaTongHop" Popup="true" /> 
+                            </EditTemplate>
+                        </RadzenDataGridColumn>
+                         
+
+                        <RadzenDataGridColumn TItem="TAICHINH_MucChi" Context="order" Filterable="false" Sortable="false" TextAlign="TextAlign.Right" Frozen="true">
+                            <Template Context="order">
+                                <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@(args => EditRow(order))" @onclick:stopPropagation="true">
+                                </RadzenButton>
+                                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Variant="Variant.Flat" Shade="Shade.Lighter" Size="ButtonSize.Medium" class="rz-my-1 rz-ms-1" Click="@(args => DeleteRow(order))" @onclick:stopPropagation="true">
+                                </RadzenButton>
+                            </Template>
+                            <EditTemplate Context="order">
+                                <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@((args) => SaveRow(order))" aria-label="Save">
+                                </RadzenButton>
+                                <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" class="rz-my-1 rz-ms-1" Click="@((args) => CancelEdit(order))" aria-label="Cancel">
+                                </RadzenButton>
+                                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Variant="Variant.Flat" Shade="Shade.Lighter" Size="ButtonSize.Medium" class="rz-my-1 rz-ms-1" Click="@(args => DeleteRow(order))" aria-label="Delete">
+                                </RadzenButton>
+                            </EditTemplate>
+                        </RadzenDataGridColumn>
+
+                    </Columns>
+                </RadzenDataGrid>
+
+            </div>
+
+        </Authorized>
+    </AuthorizeView>
+</div>
+
+@code {
+
+    bool isLoading;
+    int count;
+    string selectedNhom;
+
+    List<TAICHINH_MucChi> list;
+    RadzenDataGrid<TAICHINH_MucChi> ordersGrid;
+
+    List<TAICHINH_NhomMuc> NhomList;
+
+    DataGridEditMode editMode = DataGridEditMode.Single;
+
+    List<TAICHINH_MucChi> ordersToInsert = new List<TAICHINH_MucChi>();
+    List<TAICHINH_MucChi> ordersToUpdate = new List<TAICHINH_MucChi>();
+
+
+    /// <summary>
+    void Reset()
+    {
+        ordersToInsert.Clear();
+        ordersToUpdate.Clear();
+    }
+
+    void Reset(TAICHINH_MucChi order)
+    {
+        ordersToInsert.Remove(order);
+        ordersToUpdate.Remove(order);
+    }    
+
+    async Task EditRow(TAICHINH_MucChi order)
+    {
+
+        if (editMode == DataGridEditMode.Single && ordersToInsert.Count() > 0)
+        {
+            Reset();
+        }
+
+        ordersToUpdate.Add(order);
+        await ordersGrid.EditRow(order);
+    }
+
+    async void OnUpdateRow(TAICHINH_MucChi order)
+    {
+        Reset(order);
+
+        var response = await _httpClient.PutAsJsonAsync("api/MucChi/MucChiUpdate", @order);
+        if (response.IsSuccessStatusCode)
+        {
+
+        }
+        else
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Saved Successfully!");
+        }
+
+    }
+
+    async Task SaveRow(TAICHINH_MucChi order)
+    {
+        await ordersGrid.UpdateRow(order);
+    }
+
+    async void CancelEdit(TAICHINH_MucChi order)
+    {
+        Reset(order);
+        ordersGrid.CancelEditRow(order);
+        TAICHINH_MucChi item = new TAICHINH_MucChi();
+        try
+        {
+            if (order.Id > 0)
+            {
+                item = await _httpClient.GetFromJsonAsync<TAICHINH_MucChi>("api/MucChi/MucChiGetByID/" + order.Id);
+                var result = from r in list where r.Id == order.Id select r;
+                result.First().TenMuc = item.TenMuc;
+                result.First().NhomMuc = item.NhomMuc;
+                result.First().DoiTuong = item.DoiTuong;
+                result.First().MaTongHop = item.MaTongHop;                
+            }
+
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+        InvokeAsync(StateHasChanged);
+    }
+
+    async Task DeleteRow(TAICHINH_MucChi order)
+    {
+        Reset(order);
+
+        if (list.Contains(order))
+        {
+            //dbContext.Remove<Order>(order);
+
+            //dbContext.SaveChanges();
+            try
+            {
+                var response = _httpClient.DeleteAsync("api/MucChi/MucChiDelete/" + order.Id);
+                list.Remove(order);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+
+            await ordersGrid.Reload();
+        }
+        else
+        {
+            ordersGrid.CancelEditRow(order);
+            await ordersGrid.Reload();
+        }
+    }
+
+    async Task InsertRow()
+    {
+        if (editMode == DataGridEditMode.Single)
+        {
+            Reset();
+        }
+
+        var order = new TAICHINH_MucChi();
+        ordersToInsert.Add(order);
+        await ordersGrid.InsertRow(order);
+    }
+
+    async void OnCreateRow(TAICHINH_MucChi order)
+    {
+        try
+        {
+            var response = _httpClient.PostAsJsonAsync("api/MucChi/MucChiAdd", @order);
+        }
+        catch (Exception e)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error:" + e.Message);
+        }
+
+        ordersToInsert.Remove(order);
+    }
+    /// </summary>
+
+    void onpage()
+    {
+        List<TAICHINH_MucChi> l1 = new List<TAICHINH_MucChi>(list);
+        //Console.WriteLine(this.grid.Page);
+        list = l1;
+    }
+    void OnClick(string link)
+    {
+        NavigationManager.NavigateTo(link, true);
+    }
+    protected override async Task OnInitializedAsync()
+    {
+
+        try
+        {
+            var response = await _httpClient.GetAsync("api/MucChi/MucChiGetList");            
+            if (response.IsSuccessStatusCode)
+            {
+                list = await response.Content.ReadFromJsonAsync<List<TAICHINH_MucChi>>();
+            }
+            response = await _httpClient.GetAsync("api/NhomMuc/NhomMucGetList");
+            if (response.IsSuccessStatusCode)
+            {
+                NhomList = await response.Content.ReadFromJsonAsync<List<TAICHINH_NhomMuc>>();
+            }
+            
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            string ErrMessage = e.Message;
+        }
+    }   
+    
+
+    public void Export(string type)
+    {
+        // try
+        // {
+        //     Query q = new Query()
+        //         {
+        //             OrderBy = grid.Query.OrderBy,
+        //             Filter = grid.Query.Filter,
+        //             Select = string.Join(",", grid.ColumnsCollection.Where(c => c.GetVisible()))//.Select(c => c.Property))
+        //         };
+        //     string combinedString = string.Join(";", maKhoahoc.ToArray());
+        //     service.Export2("Students", type, q, combinedString);
+        // }
+        // catch (Exception e)
+        // {
+        //     Console.WriteLine(e.Message);
+        // }
+    }
+
+    private async void OnChange(object args)
+    {
+        
+    }
+
+}
+

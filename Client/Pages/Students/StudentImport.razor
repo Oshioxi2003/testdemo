@@ -1,0 +1,238 @@
+﻿@page "/StudentImport/"
+
+@inject HttpClient Http
+@using System.IO
+@using Flic.Shared
+@*@inject IWebHostEnvironment env*@
+
+<h3>Nhập khẩu danh sách sinh viên</h3>
+<p>Tệp danh sách có các cột theo thứ tự như sau: STT, Mã sinh viên ,Họ đệm, Tên, Ngày sinh, Giới Tính, CCCD </p>
+<h3>@Message</h3>
+
+@*<form @onsubmit="OnSubmit">*@
+<EditForm Model="@item" OnValidSubmit="@OnSubmit">
+
+    <div class="row">
+        <div class="col-md-3">
+            <InputSelect class="form-control" @bind-Value="@item.KhoahocID">
+                <option value="">---Chọn khóa học---</option>
+                @if (KhoahocList != null)
+                {
+                    @foreach (var it in KhoahocList)
+                    {
+                        <option value="@it.Id">@it.Name</option>
+                    }
+                }
+
+            </InputSelect>
+        </div>
+        <div class="col-md-3">
+            <InputSelect class="form-control" ValueChanged="@((string value ) => KhoaHasChanged(value))" ValueExpression="@(() => item.KhoaID)" Value="@item.KhoaID">
+                <option value="">---Chọn khoa---</option>
+                @if (KhoaList != null)
+                {
+                    @foreach (var it in KhoaList)
+                    {
+                        <option value="@it.Id">@it.Name</option>
+                    }
+                }
+
+            </InputSelect>
+        </div>
+        <div class="row">
+            <div class="col-md-3">                
+                <InputSelect class="form-control" ValueChanged="@((string value ) => NganhHasChanged(value))" ValueExpression="@(() => item.NganhID)" Value="@item.NganhID">
+                    <option value="">---Chọn ngành---</option>
+
+                    @if (NganhList != null)
+                    {
+                        @foreach (var it in NganhList)
+                        {
+                            <option value="@it.Id">@it.Name</option>
+                        }
+                    }
+                </InputSelect>
+            </div>
+            <div class="col-md-3">                
+                <InputSelect class="form-control" @bind-Value="@item.LopID">
+                    <option value="">---Chọn Lớp---</option>
+                    @if (LopList != null)
+                    {
+                        @foreach (var it in LopList)
+                        {
+                            <option value="@it.Id">@it.Name</option>
+                        }
+                    }
+                </InputSelect>
+            </div>
+        </div>
+        
+    </div>
+    <div class="row">
+        <div class="col-md-3">
+            <InputFile OnChange="OnInputFileChange" multiple />
+        </div>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-success">Thực hiện</button>
+        </div>
+    </div>
+        
+    @if (result != null)
+    {
+        <div>
+            <p>Danh sách sinh viên Imported thành công!</p>
+            <table>
+                @if (result.ImportedList != null)
+                {
+                    foreach (var it in result.ImportedList)
+                    {
+                        <tr>
+                            <td>@it.MaSV</td>
+                            <td>@it.HoDem</td>
+                            <td>@it.Ten</td>
+                            <td>@it.Ngaysinh</td>
+                        </tr>
+                    }
+                }
+            </table>
+        </div>
+        <div>
+            <p>Danh sách sinh viên đã tồn tại trong hệ thông!</p>
+            <table>
+               @if( result.ExistList != null)
+                {
+                @foreach (var it in result.ExistList)
+                {
+                <tr>
+                    <td>@it.MaSV</td>
+                    <td>@it.HoDem</td>
+                    <td>@it.Ten</td>
+                    <td>@it.Ngaysinh</td>
+                </tr>
+                }
+                }
+            </table>
+        </div>
+        <div>
+            <p>Danh sách Import lỗi!</p>
+            <table>
+                @if (result.ErrorList != null)
+                {
+                    foreach (var it in result.ErrorList)
+                    {
+                        <tr>
+                            <td>@it.MaSV</td>
+                            <td>@it.HoDem</td>
+                            <td>@it.Ten</td>
+                            <td>@it.Ngaysinh</td>
+                        </tr>
+                    }
+                }
+            </table>
+        </div>
+    }
+    
+</EditForm>
+@*</form>*@
+@code {
+    private StudentImportView item = new StudentImportView();
+    string Message = "Chưa chọn tệp danh sách nào";
+    IReadOnlyList<IBrowserFile> selectedFiles;
+    private List<Khoahoc> KhoahocList;
+    private List<Khoa> KhoaList;
+    private List<Nganh> NganhList;
+    private List<Lop> LopList;
+    private string KhoahocID;
+    private string KhoaID;
+    private string NganhID;
+    private string LopID;
+    private StudentImportResult result = new StudentImportResult();
+    private void OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        selectedFiles = e.GetMultipleFiles();
+        Message = $"{selectedFiles.Count} file(s) selected";
+        this.StateHasChanged();
+    }
+
+    private async void OnSubmit()
+    {
+        foreach (var file in selectedFiles)
+        {
+            Stream stream = file.OpenReadStream();
+            MemoryStream ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            stream.Close();
+
+            //UploadedFile uploadedFile = new UploadedFile();
+            //uploadedFile.FileName = file.Name;
+            //uploadedFile.FileContent = ms.ToArray();
+
+            item.FileName = file.Name;
+            item.FileContent = ms.ToArray();
+            ms.Close();
+
+            var rs = await Http.PostAsJsonAsync<StudentImportView>("/api/student/StudentUploadFile", item);
+            result = await rs.Content.ReadFromJsonAsync<StudentImportResult>();
+
+        }
+        Message = $"{selectedFiles.Count} file(s) uploaded on server";
+        this.StateHasChanged();
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            KhoahocList = await Http.GetFromJsonAsync<List<Khoahoc>>("api/Khoahoc/KhoahocGetList");
+            KhoaList = await Http.GetFromJsonAsync<List<Khoa>>("api/Khoa/KhoaGetList");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Error" + e.Message.ToString());
+        }
+
+    }
+    private async Task KhoaHasChanged(string value)
+    {
+        item.KhoaID = value;
+        //SelectedId = value;
+        
+        if (value == "")
+        {
+            NganhList.Clear();
+        }
+        else
+        {
+            var response = await Http.GetAsync("api/Nganh/NganhGetListByKhoa/" + value);
+            NganhList = await response.Content.ReadFromJsonAsync<List<Nganh>>();
+        }
+    }
+    private async Task NganhHasChanged(string value)
+    {
+        item.NganhID = value;
+        
+        if (value == "")
+        {
+            LopList.Clear();
+        }
+        else
+        {
+            var response = await Http.GetAsync("api/Lop/LopGetListByKhoahocNganh/" + item.KhoahocID + "/" + value);
+            LopList = await response.Content.ReadFromJsonAsync<List<Lop>>();
+            this.StateHasChanged();
+        }
+    }
+    protected async void KhoaChange(ChangeEventArgs _khoaId)
+    {
+        KhoaID = _khoaId.Value.ToString();
+        var response = await Http.GetAsync("api/Nganh/NganhGetListByKhoa/" + _khoaId.Value.ToString());
+        NganhList = await response.Content.ReadFromJsonAsync<List<Nganh>>();
+        this.StateHasChanged();
+    }
+
+    protected async void NganhChange(ChangeEventArgs nganhId)
+    {
+        var response = await Http.GetAsync("api/Lop/LopGetListByKhoahocNganh/" + KhoahocID + "/" + nganhId.Value);
+        LopList = await response.Content.ReadFromJsonAsync<List<Lop>>();
+        this.StateHasChanged();
+    }
+}

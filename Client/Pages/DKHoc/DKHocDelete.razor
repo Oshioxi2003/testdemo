@@ -1,0 +1,60 @@
+﻿@page "/DKHocDelete/{Id:int}"
+@using Flic.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+<h2>Xóa Đăng ký học</h2>
+
+@if (item != null)
+{
+    <p>Bạn chắc chắn xóa mục tin?</p>
+    <p>Họ tên: @item.HovaDem @item.Ten</p>
+    <p>Email: @item.Email</p>
+    <p>Địa chỉ: @item.DiaChi</p>
+    <p>Mã đăng ký: @item.Id</p>
+    <p>Mã khóa học: @item.CourseId</p>
+    <p>Học phí: @item.Hocphi</p>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <input type="button" class="btn btn-primary" @onclick="@Delete" value="Delete" />
+                <input type="button" class="btn btn-secondary" @onclick="@Cancel" value="Cancel" />
+            </div>
+        </div>
+    </div>
+}
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    DKHoc item = new DKHoc();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await Http.GetAsync("api/DKHoc/DKHocGetByID/" + Id);
+
+        if (response.IsSuccessStatusCode)
+        {
+            item = await response.Content.ReadFromJsonAsync<DKHoc>();
+        }
+        else
+        {
+            await JsRuntime.InvokeVoidAsync("alert", response.StatusCode);
+        }
+    }
+
+    protected async Task Delete()
+    {
+        var response = await Http.DeleteAsync("api/DKHoc/DKHocDelete/" + Id);
+        if (response.IsSuccessStatusCode)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Xóa Đăng ký học thành công!");
+            NavigationManager.NavigateTo("DKHocList");
+        }
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("DKHocList");
+    }
+
+}

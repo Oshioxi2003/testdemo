@@ -1,0 +1,250 @@
+﻿@page "/LophocAdd/"
+@using Flic.Shared
+@using Newtonsoft.Json
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+<AuthorizeView>
+    <NotAuthorized>
+        <span>You're not authorize</span>
+    </NotAuthorized>
+    <Authorized Context="Auth">
+        <div class="row">
+            <h3>Thêm Lớp học</h3>
+            <RadzenTemplateForm TItem="Lophoc" Data=@item Submit=@OnSubmit>
+                
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="LoaiLop" Text="Loại Lớp" />                        
+                    </div>
+                    <div class="col-6">
+                        @* <RadzenTextBox Name="LoaiLop" @bind-Value=@item.LoaiLop /> *@
+                        <RadzenDropDown TValue="string" Name="LoaiLop"  Data=@LoaiLophocList TextProperty="TenLop" ValueProperty="Id" @bind-Value=@item.LoaiLop />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="LoaiLop" Text="Chưa nhập mã lớp" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="TenLop" Text="Tên Lớp" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenTextBox Name="TenLop" @bind-Value=@item.TenLop />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="TenLop" Text="Chưa nhập Tên lớp" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Mota" Text="Mô tả" />
+                    </div>
+                    <div class="col-6">
+                        @* <RadzenTextBox Name="Mota" @bind-Value=@item.Mota /> *@
+                        <RadzenHtmlEditor Name="Mota" @bind-Value=@item.Mota 
+                        style="height: 300px; width: 100%" Input=@OnInput Change=@OnChange Paste=@OnPaste 
+                        Execute=@OnExecute UploadUrl="api/upload/image" />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Mota" Text="Chưa nhập Mô tả lớp học" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Hocphi" Text="Học phí" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenNumeric Name="Hocphi" @bind-Value=@item.Hocphi />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Hocphi" Text="Chưa nhập Học phí" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="ImagePath" Text="Ảnh đại diện" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenUpload Multiple="false" Accept="image/*" Url="api/upload/single"
+                                      Progress=@(args => OnProgress(args, "Images only upload")) class="w-100"
+                                      Complete=@(args => OnComplete(args))
+                        @bind-Value=@item.ImagePath />
+                    </div>
+                    <div class="col-2">                        
+                        <RadzenImage Path="@item.ImagePath" Style="width: 15rem;" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="ChiTiet" Text="Nội dung" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenHtmlEditor Name="ChiTiet" @bind-Value=@item.ChiTiet style="height: 300px; width: 100%" Input=@OnInput Change=@OnChange Paste=@OnPaste Execute=@OnExecute UploadUrl="api/upload/image" />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="ChiTiet" Text="Nhập nội dung" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Trangthai" Text="Trạng thái" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenNumeric Name="Trangthai" @bind-Value=@item.Trangthai />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Trangthai" Text="Chưa nhập Trạng thái" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="QRActive" Text="QR Active" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenCheckBox Name="QRActive" @bind-Value=@item.QRActive />
+
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="VNPAYActive" Text="VN Pay Active" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenCheckBox Name="VNPAYActive" @bind-Value=@item.VNPAYActive />
+
+                    </div>
+                </div>
+                <div class="row"><br /></div>
+                <div class="row">
+                    <div class="col-2">
+                    </div>
+                    <div class="col-6">
+                        <RadzenButton ButtonType="ButtonType.Submit" Text="Lưu" />
+                        <RadzenButton ButtonType="ButtonType.Button" Click=@Cancel Text="Hủy" />
+                    </div>
+                    <div class="col-2">
+                    </div>
+                </div>
+
+            </RadzenTemplateForm>
+        </div>
+    </Authorized>
+</AuthorizeView>
+
+
+@code {
+    Lophoc item = new Lophoc();
+
+    List<LoaiLophoc> LoaiLophocList = new List<LoaiLophoc>();
+    class UploadResponse
+    {
+        public string url { get; set; }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {            
+            var response = await Http.GetAsync("api/LoaiLophoc/LoaiLophocGetList");
+            if (response.IsSuccessStatusCode)
+            {
+                LoaiLophocList = await response.Content.ReadFromJsonAsync<List<LoaiLophoc>>();
+            }else
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "Không nạp được danh sách loại lớp học!");
+            }
+        }
+        catch (Exception e)
+        {            
+            await JsRuntime.InvokeVoidAsync("alert", e.Message);
+        }
+
+
+    }
+    void OnPaste(HtmlEditorPasteEventArgs args)
+    {
+        //console.Log($"Paste: {args.Html}");
+        //console = args.Html;
+    }
+
+    void OnChange(string html)
+    {
+        //console.Log($"Change: {html}");
+        //console = html;
+    }
+
+    void OnInput(string html)
+    {
+        //console.Log($"Input: {html}");
+        //console = html;
+    }
+
+    void OnExecute(HtmlEditorExecuteEventArgs args)
+    {
+        //console.Log($"Execute: {args.CommandName}");
+        //console = args.CommandName;
+    }
+
+    void OnProgress(UploadProgressArgs args, string name)
+    {
+        // console.Log($"{args.Progress}% '{name}' / {args.Loaded} of {args.Total} bytes.");
+
+        // if (args.Progress == 100)
+        // {
+        //     foreach (var file in args.Files)
+        //     {
+        //         //console.Log($"Uploaded: {file.Name} / {file.Size} bytes");
+        //     }
+        // }
+    }
+
+    void OnComplete(UploadCompleteEventArgs args)
+    {
+        //var yourObject = System.Text.Json.JsonDocument.Parse(args.JsonResponse);
+        //retrieve the value
+        //var url = yourObject.RootElement.GetProperty("url");
+        UploadResponse rs = JsonConvert.DeserializeObject<UploadResponse>(args.RawResponse);
+
+        Console.Write($"Server response: {args.JsonResponse}");
+        Console.Write($"Server response: {args.RawResponse}");
+        item.ImagePath =rs.url;
+    }
+
+    void OnClick(string text)
+    {
+        //console = htmlValue;
+    }
+
+    protected async Task OnSubmit()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/Lophoc/LophocAdd", @item);
+            if (response.IsSuccessStatusCode)
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "Thêm mới thành công!");
+                NavigationManager.NavigateTo("Lophoclist");
+            }else
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "Không thành công!");
+            }
+        }
+        catch (Exception e)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error:" + e.Message);            
+        }
+
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("Lophoclist");
+    }
+
+    private async Task OnChange(object value)
+    {
+        
+    }
+}

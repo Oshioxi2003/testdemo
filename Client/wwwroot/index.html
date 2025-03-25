@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Flic</title>
+    <base href="/" />
+    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
+
+    <link href="Flic.Client.styles.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+    <!--<link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />-->
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/material-base.css">
+    <link href="css/app.css" rel="stylesheet" />
+
+
+    <!-- FONT-AWESOME -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+          integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- FONT-GOOGLE -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <!-- BOOTSTRAP templete-->
+    <!-- Favicons -->
+    <link href="assets/img/favicon.png" rel="icon">
+    <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Jost:300,300i,400,400i,500,500i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+    <link rel="stylesheet" href="main.css">
+
+</head>
+
+<body>
+    <div id="app">Loading...</div>
+    <!--<script src="//cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js">-->
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+    <!--<script src="//cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>-->
+
+    <script src="_framework/blazor.webassembly.js"></script>
+    <!--<script src="_content/MudBlazor/MudBlazor.min.js"></script>-->
+    <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
+    <script src="./js/openfile.js"></script>
+    <script src="./js/googleAuth.js"></script>
+
+
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script>
+        // Global function to handle Google Sign-In callback
+        window.handleGoogleSignIn = function (response) {
+            const credential = response.credential;
+            DotNet.invokeMethodAsync('Flic.Client', 'ProcessGoogleToken', credential);
+        }
+
+        // Function to initialize Google Sign-In
+        window.initiateGoogleLogin = function () {
+            google.accounts.id.prompt();
+        }
+
+        // Initialize Google Sign-In client
+        window.initializeGoogleAuth = function (dotNetReference) {
+            google.accounts.id.initialize({
+                client_id: 'YOUR_GOOGLE_CLIENT_ID',
+                callback: handleGoogleSignIn,
+                auto_select: false,
+                cancel_on_tap_outside: true
+            });
+
+            // Store the DotNet reference for callbacks
+            window.googleAuthDotNetReference = dotNetReference;
+        }
+    </script>
+
+
+
+</body>
+
+</html>

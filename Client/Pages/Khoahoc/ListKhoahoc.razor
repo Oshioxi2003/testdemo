@@ -1,0 +1,122 @@
+﻿@page "/KhoahocList"
+@using Flic.Shared
+@using System.Net.Http.Headers
+@inject HttpClient _httpClient
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+@inject NavigationManager NavigationManager 
+@inject NorthwindService service
+@layout MainLayout
+
+<div>
+    <PageTitle>Danh sách Khóa học</PageTitle>
+
+    <AuthorizeView>
+        <NotAuthorized>
+            <span>You're not authorize</span>
+        </NotAuthorized>
+        <Authorized Context="Auth">
+            <div class="row">
+                <h3>Danh sách Khóa học</h3>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <RadzenButton Click=@(args => OnClick("/KhoahocAdd")) Text="Thêm mới" ButtonStyle="ButtonStyle.Primary" />
+                    <RadzenButton Text="Export XLS" Icon="grid_on" Click="@(args => Export("excel"))" ButtonStyle="ButtonStyle.Primary" />
+                </div>
+                <RadzenDataGrid @ref="grid" AllowColumnPicking="false" AllowFiltering="true"
+                                FilterMode="FilterMode.Advanced" AllowPaging="true" AllowSorting="true"
+                                Data="@list" TItem="Khoahoc" PageSize="40" AllowColumnResize="true">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="Khoahoc" Property="Id" Title="ID" Width="140px" Filterable="false" />
+                        <RadzenDataGridColumn TItem="Khoahoc" Property="Name" Title="Tên Khoa" />
+                        
+
+                        <RadzenDataGridColumn TItem="Khoahoc" Property="" Title="" Filterable="false">
+                            <Template Context="data">
+                                <a href="/KhoahocEdit/@data.Id">Edit</a> |
+                                <a href="/Khoahocdelete/@data.Id">Delete</a>
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </div>
+
+
+        </Authorized>
+    </AuthorizeView>
+</div>
+@*
+<div>
+    <a href="/KhoahocAdd"> Thêm mới</a>
+    @if (errMessage !=""){
+        <span>@errMessage</span>
+    }
+    @if (list != null)
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th width="40%" scope="col" align="center">ID</th>
+                    <th width="15%" scope="col" align="center"> Tên khóa</th>
+                    <th width ="20%" scope="col"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in list)
+                {
+                    <tr>
+                        <th scope="row">@item.Id</th>
+                        <td>@item.Name</td>                        
+                        <td scope="col">
+                            <a href="/KhoahocEdit/@item.Id">Edit</a> |
+                            <a href="/KhoahocDelete/@item.Id">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>*@
+@code {
+    List<Khoahoc> list = new List<Khoahoc>();
+    RadzenDataGrid<Khoahoc> grid;
+
+    string errMessage = "";
+    void OnClick(string link)
+    {
+        NavigationManager.NavigateTo(link);
+    }
+    protected override async Task OnInitializedAsync()
+    {  
+
+        try{
+            var response = await _httpClient.GetAsync("api/Khoahoc/KhoahocGetList");
+            //response.EnsureSuccessStatusCode();
+            list = await response.Content.ReadFromJsonAsync<List<Khoahoc>>();
+            errMessage = "";
+        }catch(Exception e){
+            Console.WriteLine(e.Message);
+            errMessage = e.Message;
+        }
+        
+#nullable disable
+    }
+    public void Export(string type)
+    {
+        try
+        {
+            Query q = new Query()
+                {
+                    OrderBy = grid.Query.OrderBy,
+                    Filter = grid.Query.Filter,
+                    Select = string.Join(",", grid.ColumnsCollection.Where(c => c.GetVisible()))//.Select(c => c.Property))
+                };
+            service.Export("Khoas", type, q);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+    }
+}

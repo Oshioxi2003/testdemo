@@ -1,0 +1,79 @@
+﻿@page "/KhoaEdit/{Id}"
+@using Flic.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+<AuthorizeView>
+    <NotAuthorized>
+        <span>You're not authorize</span>
+    </NotAuthorized>
+    <Authorized Context="Auth">
+        <div class="row">
+            <h3>Sửa thông tin Khoa</h3>
+            <RadzenTemplateForm TItem="Khoa" Data=@item Submit=@OnSubmit>
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Id" Text="Mã Khoa" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenTextBox Name="Id" @bind-Value=@item.Id />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Id" Text="Nhập mã khoa" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                        <RadzenLabel Component="Name" Text="Tên Khoa" />
+                    </div>
+                    <div class="col-6">
+                        <RadzenTextBox Name="Name" @bind-Value=@item.Name />
+                    </div>
+                    <div class="col-2">
+                        <RadzenRequiredValidator Component="Name" Text="Nhập Tên" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-2">
+                    </div>
+                    <div class="col-6">
+                        <RadzenButton ButtonType="ButtonType.Submit" Text="Lưu" />
+                        <RadzenButton ButtonType="ButtonType.Button" Click=@Cancel Text="Hủy" />
+                    </div>
+                    <div class="col-2">
+                    </div>
+                </div>
+
+            </RadzenTemplateForm>
+        </div>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    [Parameter]
+    public string Id { get; set; } = "0";
+    Khoa item = new Khoa();
+    string ErrMessage = "";
+    protected override async Task OnInitializedAsync()
+    {
+        item = await Http.GetFromJsonAsync<Khoa>("api/Khoa/KhoaGetByID/" + Id);
+    }
+    protected async Task OnSubmit()
+    {
+        var response = await Http.PutAsJsonAsync("api/Khoa/KhoaUpdate", @item);
+        bool obj = await response.Content.ReadFromJsonAsync<bool>();
+        if (obj)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Updated Successfully!");
+            NavigationManager.NavigateTo("KhoaList");
+            ErrMessage = "";
+        }else {
+            ErrMessage = "Cập nhật Khoa không thành công!";
+        }
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("KhoaList");
+    }
+}

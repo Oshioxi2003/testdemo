@@ -1,0 +1,136 @@
+﻿@page "/ArticleIndex"
+@using Flic.Shared
+@using System.Net.Http.Headers
+@inject HttpClient _httpClient
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+@inject NavigationManager NavigationManager
+@inject NorthwindService service
+@inject IJSRuntime JsRuntime
+<style>
+    .news_container{
+        display: inline-flex;
+    }
+</style>
+<div>
+    @{
+        int i = 0;
+        
+        @for (i=0; i< Math.Min(4, list.Count ); i++)
+        {
+            var item = @list[i];
+            <div style="width:95%; margin: 0 auto;">
+                    <div>
+                    <a href="/ArticleDetail/@item.Id">
+                        @((MarkupString)item.Title)
+                    </a>    
+                    
+                    </div>
+                    <div class="news_container">
+                        <div style="width: 105px;padding-right: 5px;">
+                            <RadzenImage Path="@item.ImagePath" Style="width: 100px;" />
+                        </div>
+                        <div>
+                            @((MarkupString)item.ArticleAbstract)
+                        </div>
+                        
+                    </div>
+                </div>
+                <hr />
+        }
+        <span>Tin cũ hơn</span>
+        <ul>
+        @for (i = 4; i < list.Count; i++)
+        {
+            var item = @list[i];
+                var link = "/ArticleDetail/"+@item.Id;
+                <li>
+                    <a href="/ArticleDetail/@item.Id" @onclick:preventDefault>@((MarkupString)item.Title)</a>
+                </li>                  
+        }
+        </ul>
+    }
+    
+</div>
+
+@code {
+    // [Parameter]    
+    public string Id { get; set; }    
+    public string Name { get; set; }
+
+    
+
+    string ErrMessage = "";
+    List<Article> list = new List<Article>();
+    RadzenDataGrid<Article> grid;
+
+    public void GetId()
+    {
+        var uri = new Uri(NavigationManager.Uri);
+        Id = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query).TryGetValue("id", out var type) ? type.First() : "";
+    }
+    public void GetName()
+    {
+        var uri = new Uri(NavigationManager.Uri);
+        Name = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query).TryGetValue("name", out var type) ? type.First() : "";
+    }
+
+
+    void OnClick(string link)
+    {
+        NavigationManager.NavigateTo(link, true);
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            HttpResponseMessage response;
+            GetId();
+            GetName();
+            if (Id == null || Id =="")
+            {
+                response = await _httpClient.GetAsync("api/Article/ArticleGetList/");
+            }
+            else
+            {
+                response = await _httpClient.GetAsync("api/Article/ArticleGetListBySection/" + Id);
+            }            
+            
+            if (response.IsSuccessStatusCode)
+            {
+                list = await response.Content.ReadFromJsonAsync<List<Article>>();
+
+                //await JsRuntime.InvokeVoidAsync("alert", "Error: " + list.Count);
+            }
+            else
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "Error: " + response.StatusCode + " " + response.Content.ToString());
+            }
+            
+            ErrMessage = "";
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            ErrMessage = e.Message;
+        }
+    }
+    
+
+    public void Export(string type)
+    {
+        try
+        {
+            Query q = new Query()
+                {
+                    OrderBy = grid.Query.OrderBy,
+                    Filter = grid.Query.Filter,
+                    Select = string.Join(",", grid.ColumnsCollection.Where(c => c.GetVisible()))//.Select(c => c.Property))
+                };
+            service.Export("Articles", type, q);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+    }
+}

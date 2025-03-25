@@ -1,0 +1,530 @@
+﻿@page "/index1"
+
+@using System.Security.Claims
+@using Flic.Client.Services;
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@using Flic.Shared
+@using Flic.Shared.Models
+@using Newtonsoft.Json
+@inject HttpClient Http
+@inject IJSRuntime JsRuntime
+@using MudBlazor
+@using BlazorComponents.ChartJS
+@using BlazorComponents.Shared
+@using System.Globalization
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
+<style>
+    ._card {
+        margin: 0 auto !important;
+    }
+</style>
+
+
+<AuthorizeView>
+    <NotAuthorized>
+        
+        
+
+            <!-- Sidebar on click -->
+            <nav class="w3-sidebar w3-bar-block w3-white w3-card w3-animate-left w3-xxlarge" style="display:none;z-index:2" id="mySidebar">
+                <a href="javascript:void(0)" onclick="w3_close()" class="w3-bar-item w3-button w3-display-topright w3-text-teal">
+                    Close
+                    <i class="fa fa-remove"></i>
+                </a>
+                <a href="#" class="w3-bar-item w3-button">Link 1</a>
+                <a href="#" class="w3-bar-item w3-button">Link 2</a>
+                <a href="#" class="w3-bar-item w3-button">Link 3</a>
+                <a href="#" class="w3-bar-item w3-button">Link 4</a>
+                <a href="#" class="w3-bar-item w3-button">Link 5</a>
+            </nav>
+
+            <!-- Navbar -->
+            <div class="w3-top">
+                <div class="w3-bar w3-theme-d2 w3-left-align">                    
+                    <a class="w3-bar-item w3-button w3-hide-medium w3-hide-large w3-right w3-hover-white w3-theme-d2" href="javascript:void(0);" onclick="openNav()"><i class="fa fa-bars"></i></a>
+                    <a href="#" class="w3-bar-item w3-button w3-teal"><i class="fa fa-home w3-margin-right"></i>Home</a>
+                    <a href="#team" class="w3-bar-item w3-button w3-hide-small w3-hover-white">Giới thiệu</a>
+                    <a href="#work" class="w3-bar-item w3-button w3-hide-small w3-hover-white">Đăng ký thi</a>
+                    <a href="#pricing" class="w3-bar-item w3-button w3-hide-small w3-hover-white">Lịch khai giảng</a>
+                    <a href="#contact" class="w3-bar-item w3-button w3-hide-small w3-hover-white">Thông báo</a>
+                    <div class="w3-dropdown-hover w3-hide-small">
+                        <button class="w3-button" title="Notifications">Tin học <i class="fa fa-caret-down"></i></button>
+                        <div class="w3-dropdown-content w3-card-4 w3-bar-block">
+                            <a href="#" class="w3-bar-item w3-button">Ôn thi chứng chỉ</a>
+                            <a href="#" class="w3-bar-item w3-button">Quản trị mạng CCNA</a>
+                            <a href="#" class="w3-bar-item w3-button">Python và khoa học dữ liệu cơ bản</a>
+                        </div>
+                    </div>
+                <div class="w3-dropdown-hover w3-hide-small">
+                    <button class="w3-button" title="Notifications">Tiếng Anh <i class="fa fa-caret-down"></i></button>
+                    <div class="w3-dropdown-content w3-card-4 w3-bar-block">
+                        <a href="#" class="w3-bar-item w3-button">Tiếng anh tăng cường</a>
+                        <a href="#" class="w3-bar-item w3-button">Ôn thi chuẩn đầu ra</a>
+                        <a href="#" class="w3-bar-item w3-button">Ôn thi chứng chỉ B1</a>
+                    </div>
+                </div>
+                <div class="w3-dropdown-hover w3-hide-small">
+                    <button class="w3-button" title="Notifications">Tiếng Trung <i class="fa fa-caret-down"></i></button>
+                    <div class="w3-dropdown-content w3-card-4 w3-bar-block">
+                        <a href="#" class="w3-bar-item w3-button">Tiếng anh tăng cường</a>
+                        <a href="#" class="w3-bar-item w3-button">Ôn thi chuẩn đầu ra</a>
+                        <a href="#" class="w3-bar-item w3-button">Ôn thi chứng chỉ B1</a>
+                    </div>
+                </div>
+                <a href="#contact" class="w3-bar-item w3-button w3-hide-small w3-hover-white">Contact</a>
+                    <a href="#" class="w3-bar-item w3-button w3-hide-small w3-right w3-hover-teal" title="Search"><i class="fa fa-search"></i></a>
+                </div>
+
+                <!-- Navbar on small screens -->
+                <div id="navDemo" class="w3-bar-block w3-theme-d2 w3-hide w3-hide-large w3-hide-medium">
+                    <a href="#team" class="w3-bar-item w3-button">Team</a>
+                    <a href="#work" class="w3-bar-item w3-button">Work</a>
+                    <a href="#pricing" class="w3-bar-item w3-button">Price</a>
+                    <a href="#contact" class="w3-bar-item w3-button">Contact</a>
+                    <a href="#" class="w3-bar-item w3-button">Search</a>
+                </div>
+            </div>
+
+            <!-- Image Header -->
+            <div class="w3-display-container w3-animate-opacity">
+                <img src="https://www.w3schools.com/w3images/sailboat.jpg" alt="boat" style="width:100%;min-height:350px;max-height:600px;">
+                <div class="w3-container w3-display-bottomleft w3-margin-bottom">
+                    <button onclick="document.getElementById('id01').style.display='block'" class="w3-button w3-xlarge w3-theme w3-hover-teal" title="Go To W3.CSS">LEARN W3.CSS</button>
+                </div>
+            </div>
+
+            
+
+            <!-- Team Container -->
+            <div class="w3-container w3-padding-64 w3-center" id="team">
+                <h2>OUR TEAM</h2>
+                <p>Meet the team - our office rats:</p>
+
+                <div class="w3-row">
+                    <br>
+
+                    <div class="w3-quarter">
+                    <img src="https://www.w3schools.com/w3images/avatar.jpg" alt="Boss" style="width:45%" class="w3-circle w3-hover-opacity">
+                        <h3>Johnny Walker</h3>
+                        <p>Web Designer</p>
+                    </div>
+
+                    <div class="w3-quarter">
+                    <img src="https://www.w3schools.com/w3images/avatar.jpg" alt="Boss" style="width:45%" class="w3-circle w3-hover-opacity">
+                        <h3>Rebecca Flex</h3>
+                        <p>Support</p>
+                    </div>
+
+                    <div class="w3-quarter">
+                    <img src="https://www.w3schools.com/w3images/avatar.jpg" alt="Boss" style="width:45%" class="w3-circle w3-hover-opacity">
+                        <h3>Jan Ringo</h3>
+                        <p>Boss man</p>
+                    </div>
+
+                    <div class="w3-quarter">
+                    <img src="https://www.w3schools.com/w3images/avatar.jpg" alt="Boss" style="width:45%" class="w3-circle w3-hover-opacity">
+                        <h3>Kai Ringo</h3>
+                        <p>Fixer</p>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Work Row -->
+            <div class="w3-row-padding w3-padding-64 w3-theme-l1" id="work">
+
+                <div class="w3-quarter">
+                    <h2>Our Work</h2>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                </div>
+
+                <div class="w3-quarter">
+                    <div class="w3-card w3-white">
+                    <img src="https://www.w3schools.com/w3images/snow.jpg" alt="Snow" style="width:100%">
+                        <div class="w3-container">
+                            <h3>Customer 1</h3>
+                            <h4>Trade</h4>
+                            <p>Blablabla</p>
+                            <p>Blablabla</p>
+                            <p>Blablabla</p>
+                            <p>Blablabla</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w3-quarter">
+                    <div class="w3-card w3-white">
+                    <img src="https://www.w3schools.com/w3images/lights.jpg" alt="Lights" style="width:100%">
+                        <div class="w3-container">
+                            <h3>Customer 2</h3>
+                            <h4>Trade</h4>
+                            <p>Blablabla</p>
+                            <p>Blablabla</p>
+                            <p>Blablabla</p>
+                            <p>Blablabla</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w3-quarter">
+                    <div class="w3-card w3-white">
+                        <img src="https://www.w3schools.com/w3images/mountains.jpg" alt="Mountains" style="width:100%">
+                        <div class="w3-container">
+                            <h3>Customer 3</h3>
+                            <h4>Trade</h4>
+                            <p>Blablabla</p>
+                            <p>Blablabla</p>
+                            <p>Blablabla</p>
+                            <p>Blablabla</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Container -->
+            <div class="w3-container" style="position:relative">
+                <a onclick="w3_open()" class="w3-button w3-xlarge w3-circle w3-teal"
+                   style="position:absolute;top:-28px;right:24px">+</a>
+            </div>
+
+            <!-- Pricing Row -->
+            <div class="w3-row-padding w3-center w3-padding-64" id="pricing">
+                <h2>THI CHỨNG CHỈ ỨNG DỤNG CNTT CƠ BẢN</h2>
+                <p>Choose a pricing plan that fits your needs.</p><br>
+                <div class="w3-third w3-margin-bottom">
+                    <ul class="w3-ul w3-border w3-hover-shadow">
+                        <li class="w3-theme">
+                            <p class="w3-xlarge">Thi chứng chỉ Ứng dụng CNTT cơ bản</p>
+                        </li>
+                        <li class="w3-padding-16"><b>10GB</b> Storage</li>
+                        <li class="w3-padding-16"><b>10</b> Emails</li>
+                        <li class="w3-padding-16"><b>10</b> Domains</li>
+                        <li class="w3-padding-16"><b>Endless</b> Support</li>
+                        <li class="w3-padding-16">
+                            <h2 class="w3-wide"><i class="fa fa-usd"></i> 10</h2>
+                            <span class="w3-opacity">per month</span>
+                        </li>
+                        <li class="w3-theme-l5 w3-padding-24">
+                            <button class="w3-button w3-teal w3-padding-large"><i class="fa fa-check"></i>
+                            <a href="/Tinhoc03Register">ĐĂNG KÝ</a>
+                        </button>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="w3-third w3-margin-bottom">
+                    <ul class="w3-ul w3-border w3-hover-shadow">
+                        <li class="w3-theme-l2">
+                            <p class="w3-xlarge">Tiếng anh tăng cường</p>
+                        </li>
+                        <li class="w3-padding-16"><b>25GB</b> Storage</li>
+                        <li class="w3-padding-16"><b>25</b> Emails</li>
+                        <li class="w3-padding-16"><b>25</b> Domains</li>
+                        <li class="w3-padding-16"><b>Endless</b> Support</li>
+                        <li class="w3-padding-16">
+                            <h2 class="w3-wide"><i class="fa fa-usd"></i> 25</h2>
+                            <span class="w3-opacity">per month</span>
+                        </li>
+                        <li class="w3-theme-l5 w3-padding-24">
+                            <button class="w3-button w3-teal w3-padding-large"><i class="fa fa-check"></i> Sign Up</button>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="w3-third w3-margin-bottom">
+                    <ul class="w3-ul w3-border w3-hover-shadow">
+                        <li class="w3-theme">
+                            <p class="w3-xlarge">Tiếng Trung cơ bản</p>
+                        </li>
+                        <li class="w3-padding-16"><b>50GB</b> Storage</li>
+                        <li class="w3-padding-16"><b>50</b> Emails</li>
+                        <li class="w3-padding-16"><b>50</b> Domains</li>
+                        <li class="w3-padding-16"><b>Endless</b> Support</li>
+                        <li class="w3-padding-16">
+                            <h2 class="w3-wide"><i class="fa fa-usd"></i> 50</h2>
+                            <span class="w3-opacity">per month</span>
+                        </li>
+                        <li class="w3-theme-l5 w3-padding-24">
+                            <button class="w3-button w3-teal w3-padding-large"><i class="fa fa-check"></i> Sign Up</button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Contact Container -->
+            <div class="w3-container w3-padding-64 w3-theme-l5" id="contact">
+                <div class="w3-row">
+                    <div class="w3-col m5">
+                        <div class="w3-padding-16"><span class="w3-xlarge w3-border-teal w3-bottombar">Contact Us</span></div>
+                        <h3>Address</h3>
+                        <p>Swing by for a cup of coffee, or whatever.</p>
+                        <p><i class="fa fa-map-marker w3-text-teal w3-xlarge"></i>  Chicago, US</p>
+                        <p><i class="fa fa-phone w3-text-teal w3-xlarge"></i>  +00 1515151515</p>
+                        <p><i class="fa fa-envelope-o w3-text-teal w3-xlarge"></i>  test@test.com</p>
+                    </div>
+                    <div class="w3-col m7">
+                        <form class="w3-container w3-card-4 w3-padding-16 w3-white" action="/action_page.php" target="_blank">
+                            <div class="w3-section">
+                                <label>Name</label>
+                                <input class="w3-input" type="text" name="Name" required>
+                            </div>
+                            <div class="w3-section">
+                                <label>Email</label>
+                                <input class="w3-input" type="text" name="Email" required>
+                            </div>
+                            <div class="w3-section">
+                                <label>Message</label>
+                                <input class="w3-input" type="text" name="Message" required>
+                            </div>
+                            <input class="w3-check" type="checkbox" checked name="Like">
+                            <label>I Like it!</label>
+                            <button type="submit" class="w3-button w3-right w3-theme">Send</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Image of location/map -->
+        <img src="https://www.w3schools.com/w3images/map.jpg" class="w3-image w3-greyscale-min" style="width:100%;">
+
+            <!-- Footer -->
+            <footer class="w3-container w3-padding-32 w3-theme-d1 w3-center">
+                <h4>Follow Us</h4>
+                <a class="w3-button w3-large w3-teal" href="javascript:void(0)" title="Facebook"><i class="fa fa-facebook"></i></a>
+                <a class="w3-button w3-large w3-teal" href="javascript:void(0)" title="Twitter"><i class="fa fa-twitter"></i></a>
+                <a class="w3-button w3-large w3-teal" href="javascript:void(0)" title="Google +"><i class="fa fa-google-plus"></i></a>
+                <a class="w3-button w3-large w3-teal" href="javascript:void(0)" title="Google +"><i class="fa fa-instagram"></i></a>
+                <a class="w3-button w3-large w3-teal w3-hide-small" href="javascript:void(0)" title="Linkedin"><i class="fa fa-linkedin"></i></a>
+                <p>Powered by <a href="https://www.w3schools.com/w3css/default.asp" target="_blank">w3.css</a></p>
+
+                <div style="position:relative;bottom:100px;z-index:1;" class="w3-tooltip w3-right">
+                    <span class="w3-text w3-padding w3-teal w3-hide-small">Go To Top</span>
+                    <a class="w3-button w3-theme" href="#myPage">
+                        <span class="w3-xlarge">
+                            <i class="fa fa-chevron-circle-up"></i>
+                        </span>
+                    </a>
+                </div>
+            </footer>
+
+             <script>
+                // Script for side navigation
+                function w3_open() {
+                    var x = document.getElementById("mySidebar");
+                    x.style.width = "300px";
+                    x.style.paddingTop = "10%";
+                    x.style.display = "block";
+                }
+
+                // Close side navigation
+                function w3_close() {
+                    document.getElementById("mySidebar").style.display = "none";
+                }
+
+                // Used to toggle the menu on smaller screens when clicking on the menu button
+                function openNav() {
+                    var x = document.getElementById("navDemo");
+                    if (x.className.indexOf("w3-show") == -1) {
+                        x.className += " w3-show";
+                    } else {
+                        x.className = x.className.replace(" w3-show", "");
+                    }
+                }
+            </script>
+
+
+
+
+
+
+        @* <h3>Trung tâm Ngoại ngữ - Tin học, Học viện Thanh thiếu niên Việt Nam</h3>
+        <h4>Trang quản lý thông tin đăng ký thi chứng chỉ ứng dụng công nghệ thông tin cơ bản theo thông tư 03/2014</h4>
+        <p style="font-size: 15px">Để đăng ký thi, thực hiện các bước như sau:<br />
+            1. Nhấn chuột Link đăng ký dưới thông báo<br />
+            2. Điền thông tin theo mẫu đăng ký<br />
+            3. Click nút đăng ký, nếu đăng ký thành công hệ thống sẽ gửi một Email thông báo thông tin đăng nhập <br />
+            5. Đăng nhập vào hệ thống với thông tin được cung cấp, kiểm tra thông tin. Nếu thông tin đã chính xác, nhấn nút Tạo phiếu đăng ký<br />
+            6. Sau khi tạo được phiếu đăng ký, sẽ xuất hiện Link để tải phiếu đăng ký<br />
+            7. Tải phiếu đăng ký, in và ký xác nhận lên Phiếu đăng ký<br />
+            8. Nộp Phiếu đăng ký, kèm theo 02 ảnh 3x4, 02 ảnh 4x6 tại <br /> *@
+            @*- Phân viện miền Nam: Phòng Đào tạo (Cô: Trịnh Yến Vy, điện thoại: 090.839.1049) <br />*@
+            @* - Trụ sở chính Học viện Thanh thiếu niên Việt Nam, Hà Nội: Phòng 208, Nhà D (Cô:Phan Ngọc Linh Chi, điện thoại: 037.838.1443, Cô: Nguyễn Thị Lựu, điện thoại: 033.66.246.92 ) *@
+
+        @* </p>
+        <p style="font-size: 16px">
+            <a href="/Tinhoc03Register">ĐĂNG KÝ</a> &nbsp; &nbsp;<a href="/Login">ĐĂNG NHẬP</a>
+        </p> *@
+    </NotAuthorized>
+
+    
+</AuthorizeView>
+<AuthorizeView Roles="TIN03">
+    <p>Trang quản ý thông tin đăng ký thi chứng chỉ tin học ứng dụng theo thông tư 03</p>
+</AuthorizeView>
+
+<AuthorizeView Roles="User">
+    <p></p>
+</AuthorizeView>
+
+<AuthorizeView Roles="SINHVIEN">
+    <p></p>
+</AuthorizeView>
+
+<AuthorizeView Roles="Admin, QUANLY, KETOAN">    
+    
+    <RadzenDataGrid style="height: 335px" @ref="grid" IsLoading=@isLoading Count="@count" Data="@item.student_stats"  LoadData="@LoadData" TItem="StudentStatistic" ColumnWidth="200px">
+        <Columns>
+            <RadzenDataGridColumn TItem="StudentStatistic" Property="KhoahocID" Title="ID"  Width="80px"  />            
+            <RadzenDataGridColumn TItem="StudentStatistic" Property="KhoaID" Title="KhoaID"  Width="160px" />
+            <RadzenDataGridColumn TItem="StudentStatistic" Property="NganhID" Title="NganhID" Width="160px" />
+            <RadzenDataGridColumn TItem="StudentStatistic" Property="LopID" Title="LopID" Width="160px" />
+            <RadzenDataGridColumn TItem="StudentStatistic" Property="NumStudent" Title="NumStudent" Width="160px" />
+          
+        </Columns>
+    </RadzenDataGrid>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12 my-5">
+                <RadzenCard Class="w-100 mb-4">
+                    <RadzenCheckBox @bind-Value="@showDataLabels" Name="dataLabels"></RadzenCheckBox>
+                    <RadzenLabel Text="Show Data Labels" For="dataLabels" Style="margin-left: 8px; vertical-align: middle;" />
+                </RadzenCard>
+                <h4>Thống kê sinh viên theo các ngành/ khóa</h4>
+                <RadzenChart>                    
+                    @foreach(var dt in chartData)
+                    {
+                        <RadzenColumnSeries Data="@dt.data" CategoryProperty="Quarter" Title="@dt.title" ValueProperty="Revenue">
+                            <RadzenSeriesDataLabels Visible="@showDataLabels" />
+                        </RadzenColumnSeries>
+                    }
+                    <RadzenColumnOptions Radius="5" />
+                    <RadzenValueAxis Formatter="@FormatAsUSD">
+                        <RadzenGridLines Visible="true" />
+                        <RadzenAxisTitle Text="Revenue in USD" />
+                    </RadzenValueAxis>
+                </RadzenChart>
+                
+            </div>
+        </div>
+    </div>    
+
+</AuthorizeView>
+@code {
+    private int index; //default value cannot be 0 -> first selectedindex is 0.
+    private string authMessage;
+    private string surnameMessage;
+    private IEnumerable<Claim> claims = Enumerable.Empty<Claim>();
+    private DashboardResult item = new DashboardResult();
+    private IJSObjectReference _jsModule;
+    private IJSObjectReference MyChart;
+    RadzenDataGrid<StudentStatistic> grid;
+    bool isLoading = false;
+    bool showDataLabels = false;
+    int count;
+    //private bool ShowErrors;
+    private string Error = "";
+
+    private LoginModel loginModel = new LoginModel();
+
+    private async Task HandleLogin()
+    {
+        //ShowErrors = false;
+
+        var result = await AuthService.Login(loginModel);
+
+        if (result.Successful)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+        else
+        {
+            Error = result.Error;
+            //ShowErrors = true;
+        }
+    }
+
+    async Task Reset()
+    {
+        grid.Reset(true);
+        await grid.FirstPage(true);
+    }
+
+    async Task LoadData(LoadDataArgs args)
+    {
+        
+    }
+    class DataItem
+    {
+        public string Quarter { get; set; }
+        public double Revenue { get; set; }
+    }
+    class ChartSeriesData
+    {
+        public string title { get; set; }
+        public List<DataItem> data { get; set; }
+    }
+    string FormatAsUSD(object value)
+    {
+        return ((double)value).ToString();// .ToString("C0", CultureInfo.CreateSpecificCulture("en-US"));
+    }
+      
+    List<ChartSeriesData> chartData = new List<ChartSeriesData>();
+    
+ 
+
+    protected override async Task OnInitializedAsync()
+    {        
+
+        try{
+            item = await Http.GetFromJsonAsync<DashboardResult>("api/Dashboard");
+            if (item != null)
+            {
+                if (item.student_stats != null)
+                {
+                    
+                    var khoaList = item.student_stats.Select(m => m.KhoahocID).Distinct();
+                    foreach (var k in khoaList)
+                    {
+                        List<DataItem> dtList = new List<DataItem>();
+                        var ls = item.student_stats.Where(m => m.KhoahocID == k).ToList();
+                        foreach(var st in ls)
+                        {
+                            dtList.Add(new DataItem { Quarter = st.NganhID, Revenue = st.NumStudent.Value });
+                        }
+                        chartData.Add(new ChartSeriesData { title = k, data = dtList });
+                    }
+                                      
+                   
+                }
+            }
+            this.StateHasChanged();
+        }
+        catch (Exception e){
+            Console.WriteLine("Error" + e.Message.ToString());
+        }
+
+    }
+
+    private async Task GetClaimsPrincipalData()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            authMessage = $"{user.Identity.Name} is authenticated.";
+            claims = user.Claims;
+            surnameMessage =
+                $"Surname: {user.FindFirst(c => c.Type == ClaimTypes.Surname)?.Value}";
+        }
+        else
+        {
+            authMessage = "The user is NOT authenticated.";
+        }
+    }
+}
+

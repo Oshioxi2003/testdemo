@@ -1,0 +1,276 @@
+﻿@page "/ThutienImportTrangthai/"
+
+@inject HttpClient Http
+@using System.IO
+@using Flic.Shared
+@using Newtonsoft.Json
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+<style>
+    .tracuu_table {
+        border-collapse: collapse;
+        font-family: Tahoma, Geneva, sans-serif;
+        width: 100%;
+    }
+
+        .tracuu_table td {
+            padding: 15px;
+        }
+
+        .tracuu_table thead td {
+            background-color: #80b3ff;
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 13px;
+            border: 1px solid #80b3ff;
+        }
+
+        .tracuu_table tbody td {
+            color: #636363;
+            border: 1px solid #dddfe1;
+        }
+
+        .tracuu_table tbody tr {
+            background-color: #f9fafb;
+        }
+
+            .tracuu_table tbody tr:nth-child(odd) {
+                background-color: #ffffff;
+            }
+</style>
+<h3>Nhập danh sách thu tiền</h3>
+<p>File Import có các cột sau 0: STT; 1: Mã sinh viên; 2: Họ đêm; 3: Tên; 4: Lớp; 5:Số tiền; 6: Trạng thái (0: chưa thanh toán/ 1: đã thanh toán)</p>
+<h4>@Message</h4>
+
+<EditForm Model="@item" OnValidSubmit="@OnSubmit">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="form-group">
+                Khoản thu:
+                <RadzenDropDown Data=@LoaiKhoanthuList TextProperty="MoTa" ValueProperty="MaLoaiKhoanThu"
+                @bind-Value=@item.LoaiKhoanthu Placeholder="--Chọn Khoản thu--"
+                                AllowClear="true" Multiple="false" TValue="string"
+                                Change=@LoaiKhoanthuHasChanged />
+
+                Kỳ thanh toán: <RadzenDropDown Data=@KyThanhtoanList TextProperty="Name" ValueProperty="Id"
+                @bind-Value=@item.KyThanhtoan Placeholder="--Chọn Kỳ thanh toán--"
+                                               AllowClear="true" Multiple="false" TValue="string" />
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="form-group">
+                Chọn file: <InputFile OnChange="OnInputFileChange" />
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="form-group">
+                <button type="submit" class="btn btn-success">Thực hiện </button>
+                <button class="btn btn-secondary" type="reset">Hủy</button>
+            </div>
+        </div>
+    </div>
+
+</EditForm>
+@if (result != null)
+{
+    <div>
+
+        @if (result.ImportedList != null)
+        {
+            <p>Danh sách sinh viên Imported thành công!</p>
+            <table class="tracuu_table">
+                <thead>
+                    <tr>
+                        <td>STT</td>
+                        <td>Mã SV</td>
+                        <td>Họ đệm</td>
+                        <td>Tên</td>
+                        <td>Lớp</td>
+                        <td>Số tiền</td>
+                        <td>Ghi chú</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var it in result.ImportedList)
+                    {
+                        <tr>
+                            <td>@it.STT</td>
+                            <td>@it.MaSinhVien</td>
+                            <td>@it.HoDem</td>
+                            <td>@it.Ten</td>
+                            <td>@it.LopID</td>
+                            <td>@it.SoTien</td>
+                            <td>@it.Ghichu</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+    </div>
+    <div>
+
+        @if (result.ExistList != null)
+        {
+            <p>Danh sách sinh viên đã tồn tại trong hệ thông!</p>
+            <table class="tracuu_table">
+                <thead>
+                    <tr>
+                        <td>STT</td>
+                        <td>Mã SV</td>
+                        <td>Họ đệm</td>
+                        <td>Tên</td>
+                        <td>Lớp</td>
+                        <td>Số tiền</td>
+                        <td>Ghi chú</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var it in result.ExistList)
+                    {
+                        <tr>
+                            <td>@it.STT</td>
+                            <td>@it.MaSinhVien</td>
+                            <td>@it.HoDem</td>
+                            <td>@it.Ten</td>
+                            <td>@it.LopID</td>
+                            <td>@it.SoTien</td>
+                            <td>@it.Ghichu</td>
+                        </tr>
+                    }
+                </tbody>
+
+            </table>
+        }
+
+    </div>
+    <div>
+        @if (result.ErrorList != null)
+        {
+            <p>Danh sách Import lỗi!</p>
+            <table class="tracuu_table">
+                <thead>
+                    <tr>
+                        <td>STT</td>
+                        <td>Mã SV</td>
+                        <td>Họ đệm</td>
+                        <td>Tên</td>
+                        <td>Lớp</td>
+                        <td>Số tiền</td>
+                        <td>Ghi chú</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var it in result.ErrorList)
+                    {
+                        <tr>
+                            <td>@it.STT</td>
+                            <td>@it.MaSinhVien</td>
+                            <td>@it.HoDem</td>
+                            <td>@it.Ten</td>
+                            <td>@it.LopID</td>
+                            <td>@it.SoTien</td>
+                            <td>@it.Ghichu</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+    </div>
+}
+@code {
+    public ThutienImportView item = new ThutienImportView();
+    string Message = "";
+    IReadOnlyList<IBrowserFile> selectedFiles;
+
+    List<LoaiKhoanthu> LoaiKhoanthuList = new List<LoaiKhoanthu>();
+    List<KyThanhtoan> KyThanhtoanList = new List<KyThanhtoan>();
+    private ThutienImportResult result;
+
+
+
+    private void OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        selectedFiles = e.GetMultipleFiles();
+        Message = $"{selectedFiles.Count} file(s) selected";
+        this.StateHasChanged();
+    }
+
+    private async void OnSubmit()
+    {
+        //
+        try
+        {
+            foreach (var file in selectedFiles)
+            {
+                Stream stream = file.OpenReadStream();
+                MemoryStream ms = new MemoryStream();
+                await stream.CopyToAsync(ms);
+                stream.Close();
+
+                item.FileName = file.Name;
+                item.FileContent = ms.ToArray();
+                ms.Close();
+
+                var rs = await Http.PostAsJsonAsync<ThutienImportView>("/api/Thutien/ThutienImportTrangthai", item);
+                result = await rs.Content.ReadFromJsonAsync<ThutienImportResult>();
+
+            }
+            Message = $"{selectedFiles.Count} file(s) uploaded on server";
+            this.StateHasChanged();
+        }
+        catch (Exception e)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error:" + e.Message);
+            Message = e.Message;
+        }
+
+        this.StateHasChanged();
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            LoaiKhoanthuList = await Http.GetFromJsonAsync<List<LoaiKhoanthu>>("api/LoaiKhoanthu/LoaiKhoanthuGetList");
+
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Error" + e.Message.ToString());
+        }
+
+    }
+
+
+    private async Task LoaiKhoanthuHasChanged(object value)
+    {
+        //item.LoaiKhoanthuID = value;
+        if (item.LoaiKhoanthu != "")
+        {
+
+            var response = await Http.GetAsync("api/KyThanhtoan/KyThanhtoanGetByKhoanthu/" + item.LoaiKhoanthu);
+            if (response.IsSuccessStatusCode)
+            {
+                KyThanhtoanList = await response.Content.ReadFromJsonAsync<List<KyThanhtoan>>();
+                this.StateHasChanged();
+            }
+            else
+            {
+                await JsRuntime.InvokeVoidAsync("alert", "Lỗi trong khi lấy danh sách:" + response.StatusCode);
+            }
+
+        }
+        else
+        {
+            KyThanhtoanList.Clear();
+        }
+        this.StateHasChanged();
+    }
+
+}
